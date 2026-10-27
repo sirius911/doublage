@@ -10,3 +10,8 @@
 }
 #phrases li { padding: .15em .3em; border-radius: .2em; }
 #phrases li.en-cours { background: #fff3b0; }
+#sur-image.modifiable { pointer-events: auto; cursor: text; outline: 2px dashed rgba(255, 255, 255, .6); }
+#sur-image:focus { outline: 2px solid #ffd54a; }
+#phrases .texte { padding: 0 .2em; }
+#phrases .texte:focus { outline: 1px solid #888; background: #fff; }
+#enregistrement.erreur { color: #b00; }

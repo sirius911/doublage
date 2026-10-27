@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : correction du texte
+- Correction sur l'image (vidéo en pause : le texte devient modifiable) ou dans la liste ; les deux restent
+  synchronisés. Enregistrement automatique 0,8 s après la dernière frappe et en quittant la phrase, état
+  affiché (« Modifié… », « Enregistré. », erreur). Entrée valide la phrase. Avertissement si on quitte la page
+  avant l'envoi. Texte original de Whisper conservé (infobulle).
+- Une phrase déjà synthétisée dont le texte change passe à l'état « modifiée » (voix à régénérer).
+- Non vérifié dans un vrai navigateur. Suite : clic sur une phrase → la vidéo se place au timecode.
+
 ## 2026-10-27 — Phase 2 : éditeur (affichage sur l'image)
 - Une fois transcrit, le projet s'ouvre sur l'éditeur : vidéo, phrase en cours affichée sur l'image façon
   sous-titre (suivi image par image pendant la lecture), phrase en cours surlignée dans la liste.

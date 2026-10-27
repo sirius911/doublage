@@ -1,5 +1,6 @@
 """Application web (FastAPI)."""
 
+import threading
 import time
 from datetime import datetime
 from html import escape
@@ -9,6 +10,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from . import __version__
 from .auth import SESSION_DURATION, UserStore
@@ -233,18 +235,22 @@ def editor(project: Project) -> str:
     transcript = Transcript.load(project.transcript_path)
     rows = "".join(
         f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}">'
-        f'<code>{timecode(s.start)}</code> <span class="texte">{escape(s.text)}</span></li>'
+        f'<code>{timecode(s.start)}</code> <span class="texte" contenteditable="plaintext-only" '
+        f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span></li>'
         for s in transcript.segments
     )
     n = len(transcript.segments)
     return f"""<link rel="stylesheet" href="/static/editeur.css">
 <div class="ecran">
 <video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
-<div id="sur-image" hidden></div>
+<div id="sur-image" hidden spellcheck="true"></div>
 </div>
+<p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
+les modifications sont enregistrées automatiquement. <span id="enregistrement"></span></small></p>
 <h2>Phrases</h2>
 <p>{n} phrase{"s" if n > 1 else ""}.</p>
 <ol id="phrases">{rows}</ol>
+<script>const PROJET = {project.id};</script>
 <script src="/static/editeur.js"></script>"""
 
 
@@ -304,6 +310,28 @@ def project_state(user: User, project: CurrentProject, jobs: Jobs) -> dict:
     if job is None:
         return {"etat": None}
     return {"traitement": job.kind, "etat": job.state, "etape": job.step, "erreur": job.error}
+
+
+class TextUpdate(BaseModel):
+    texte: str
+
+
+# Les corrections arrivent en rafale (enregistrement automatique) : une écriture à la fois.
+_transcript_lock = threading.Lock()
+
+
+@app.put("/projets/{project_id}/phrases/{segment_id}")
+def update_segment(user: User, project: CurrentProject, segment_id: int, update: TextUpdate) -> dict:
+    if not project.transcript_path.exists():
+        raise HTTPException(404, "Pas encore de transcription")
+    with _transcript_lock:
+        transcript = Transcript.load(project.transcript_path)
+        try:
+            segment = transcript.set_text(segment_id, update.texte)
+        except KeyError:
+            raise HTTPException(404, "Phrase introuvable") from None
+        transcript.save(project.transcript_path)
+    return {"id": segment.id, "texte": segment.text, "etat": segment.status}
 
 
 @app.get("/projets/{project_id}/video")

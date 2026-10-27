@@ -1,14 +1,20 @@
-// Éditeur : affiche sur l'image le texte de la phrase en cours de lecture.
+// Éditeur : affiche sur l'image le texte de la phrase en cours de lecture, et permet de le corriger
+// sur l'image (vidéo en pause) ou dans la liste. Les corrections sont enregistrées automatiquement.
 (() => {
   const video = document.getElementById("video");
   const surImage = document.getElementById("sur-image");
+  const etatEnregistrement = document.getElementById("enregistrement");
   const phrases = [...document.querySelectorAll("#phrases li")].map((li) => ({
     li,
+    id: li.dataset.id,
     debut: parseFloat(li.dataset.debut),
     fin: parseFloat(li.dataset.fin),
     texte: li.querySelector(".texte"),
+    minuterie: null,
   }));
   let enCours = null;
+
+  // --- Affichage sur l'image ---
 
   function phraseA(t) {
     return phrases.find((p) => p.debut <= t && t < p.fin) || null;
@@ -17,6 +23,7 @@
   function afficher() {
     const p = phraseA(video.currentTime);
     if (p === enCours) return;
+    if (document.activeElement === surImage) surImage.blur();  // enregistre la phrase quittée
     if (enCours) enCours.li.classList.remove("en-cours");
     enCours = p;
     surImage.hidden = !p;
@@ -24,13 +31,85 @@
     if (p) p.li.classList.add("en-cours");
   }
 
+  // Correction sur l'image possible seulement à l'arrêt (sinon le texte change sous le curseur).
+  function modeEdition() {
+    const edition = video.paused;
+    try {
+      surImage.contentEditable = edition ? "plaintext-only" : "false";
+    } catch {
+      surImage.contentEditable = edition ? "true" : "false";  // navigateur ancien
+    }
+    surImage.classList.toggle("modifiable", edition);
+  }
+
   // timeupdate n'arrive que ~4 fois par seconde : pendant la lecture, on suit chaque image.
   function suivre() {
     afficher();
     if (!video.paused) requestAnimationFrame(suivre);
   }
-  video.addEventListener("play", suivre);
+  video.addEventListener("play", () => { modeEdition(); suivre(); });
+  video.addEventListener("pause", modeEdition);
   video.addEventListener("seeked", afficher);
   video.addEventListener("timeupdate", afficher);
+
+  // --- Enregistrement automatique ---
+
+  async function enregistrer(p) {
+    clearTimeout(p.minuterie);
+    p.minuterie = null;
+    const texte = p.texte.textContent;
+    etatEnregistrement.textContent = "Enregistrement…";
+    try {
+      const r = await fetch(`/projets/${PROJET}/phrases/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texte }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      etatEnregistrement.textContent = "Enregistré.";
+      etatEnregistrement.className = "";
+    } catch (e) {
+      etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
+      etatEnregistrement.className = "erreur";
+    }
+  }
+
+  function modifie(p) {
+    clearTimeout(p.minuterie);
+    p.minuterie = setTimeout(() => enregistrer(p), 800);
+    etatEnregistrement.textContent = "Modifié…";
+  }
+
+  // Entrée valide la phrase au lieu d'insérer un retour à la ligne.
+  function entreeValide(element) {
+    element.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); element.blur(); }
+    });
+  }
+
+  surImage.addEventListener("input", () => {
+    if (!enCours) return;
+    enCours.texte.textContent = surImage.textContent;
+    modifie(enCours);
+  });
+  surImage.addEventListener("blur", () => {
+    if (enCours && enCours.minuterie) enregistrer(enCours);
+  });
+  entreeValide(surImage);
+
+  for (const p of phrases) {
+    p.texte.addEventListener("input", () => {
+      if (p === enCours) surImage.textContent = p.texte.textContent;
+      modifie(p);
+    });
+    p.texte.addEventListener("blur", () => { if (p.minuterie) enregistrer(p); });
+    entreeValide(p.texte);
+  }
+
+  window.addEventListener("beforeunload", (e) => {
+    if (phrases.some((p) => p.minuterie !== null)) e.preventDefault();  // correction pas encore envoyée
+  });
+
+  modeEdition();
   afficher();
 })();

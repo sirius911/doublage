@@ -31,6 +31,18 @@ class Transcript:
     duration: float
     segments: list[Segment] = field(default_factory=list)
 
+    def set_text(self, segment_id: int, text: str) -> Segment:
+        """Corrige le texte d'une phrase ; une voix déjà générée devient périmée."""
+        segment = next((s for s in self.segments if s.id == segment_id), None)
+        if segment is None:
+            raise KeyError(segment_id)
+        text = " ".join(text.split())
+        if text != segment.text:
+            segment.text = text
+            if segment.status == Status.SYNTHESIZED:
+                segment.status = Status.MODIFIED
+        return segment
+
     def save(self, path: Path) -> None:
         data = {"duration": self.duration, "segments": [asdict(s) for s in self.segments]}
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

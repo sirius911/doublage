@@ -164,3 +164,19 @@ def test_suivi_de_l_envoi(client):
     login(client)
     page = client.get("/").text
     assert 'id="envoi-barre"' in page and "xhr.upload.onprogress" in page
+
+
+def test_correction_d_une_phrase(client, store, tmp_path):
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Ouvrez Zim bra.", "Ouvrez Zim bra.")]).save(projet.transcript_path)
+
+    r = client.put(url + "/phrases/0", json={"texte": "Ouvrez Zimbra."})
+    assert r.status_code == 200 and r.json()["texte"] == "Ouvrez Zimbra."
+    enregistre = Transcript.load(projet.transcript_path).segments[0]
+    assert enregistre.text == "Ouvrez Zimbra." and enregistre.original_text == "Ouvrez Zim bra."
+    page = client.get(url).text
+    assert "Ouvrez Zimbra." in page and 'title="Original : Ouvrez Zim bra."' in page
+
+    assert client.put(url + "/phrases/42", json={"texte": "x"}).status_code == 404
