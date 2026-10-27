@@ -54,8 +54,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [~] Ressources : synthèse limitée à 2 cœurs et en priorité basse (cgroups v1 : `--cpus`/`--memory` ignorés, voir Q9)
 - [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
 - [~] Démarrage automatique avec la VM (service systemd modèle `deploiement/doublage@.service`) + script `deploiement/mettre-a-jour` — écrits, à installer sur la VM
-- [?] Environnement de test (staging) sur la VM, validé par l'utilisateur (Q11)
-- [?] Mise en production (uniquement après validation de l'utilisateur) (Q11, Q12)
+- [x] ~~Environnement de test (staging)~~ : abandonné, une seule instance (Q11)
+- [ ] Mise en production : fusion `dev` → `main` par l'utilisateur, instance sur `main` (uniquement après validation)
+- [ ] HTTPS (Q12)
 
 ## Phase 5 — Voix
 - [ ] Choix de la voix par projet parmi un catalogue

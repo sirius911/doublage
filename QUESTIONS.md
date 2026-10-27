@@ -5,33 +5,19 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-### Q11 — Organisation test / production sur la VM (bloque le staging et la mise en production)
-Proposition :
-
-| | Production | Test (staging) |
-|---|---|---|
-| Dossier | `/srv/apps/doublage` | `/srv/apps/doublage-test` |
-| Branche | `main` (version validée) | `dev` |
-| Port | 8091 | 8092 |
-| Données, comptes | `/srv/apps/doublage/data` (les actuelles) | `/srv/apps/doublage-test/data` (séparées) |
-| Service | `doublage@doublage` | `doublage@doublage-test` |
-
-Même stockage Podman dédié pour les deux. Mémoire : chaque instance charge Pocket TTS (~1 à 2 Go) dès sa
-première voix et le garde ; deux instances utilisées le même jour = jusqu'à ~4 Go. L'instance actuelle
-(sur `dev`) deviendra la production quand tu auras fusionné `dev` dans `main` : tu gardes tes projets.
-
-Réponse :
-
-### Q12 — Accès des utilisateurs (bloque la mise en production)
-Tu passes par un tunnel SSH. Pour les utilisateurs de l'établissement :
-- le port 8091 de la VM est-il joignable depuis leurs postes (pare-feu) ?
-- faut-il une adresse lisible (nom DNS, reverse proxy existant comme pour scribe ?) et du **HTTPS** ? Sans
-  HTTPS, les mots de passe de l'application circulent en clair sur le réseau interne : je le déconseille
-  pour une mise en production, même interne.
+### Q12 — HTTPS (non bloquant pour une première mise en production, à trancher ensuite)
+`10.1.147.219:8091` est joignable depuis le réseau de l'hôpital (réponse de l'utilisateur). Reste le
+**HTTPS** : sans lui, les mots de passe de l'application et les vidéos circulent en clair sur le réseau
+interne. Options : (a) reverse proxy existant de l'établissement s'il y en a un (le plus simple à
+maintenir) ; (b) certificat de l'autorité interne servi directement par l'application ; (c) rester en
+HTTP en connaissance de cause. Y a-t-il un reverse proxy ou une autorité de certification interne ?
 
 Réponse :
 
 ## Résolues
+- Q11 : une seule instance, la production (`/srv/apps/doublage`, port 8091, branche `main`) ; pas d'instance
+  de test séparée, les essais se font directement sur la production (utilisateurs = collègues). Le travail
+  continue sur la branche `dev`, fusionnée dans `main` par l'utilisateur à chaque version validée.
 - Q8 : données dans `/srv/apps/doublage/data` ; à revoir si le volume grossit.
 - Q9 : on s'en tient au bridage applicatif (2 cœurs, `nice`) en cgroups v1 ; à revoir si la VM souffre
   pendant les synthèses (passage en cgroups v2 à décider avec l'administrateur).
