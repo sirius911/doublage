@@ -61,3 +61,9 @@ def test_erreur_serveur(tmp_path):
 def test_transcription_simulee(sample_video):
     t = FakeTranscriber().transcribe(sample_video)
     assert len(t.segments) == 3 and t.duration == pytest.approx(10, abs=0.2)
+
+
+def test_whisper_sans_proxy(monkeypatch):
+    monkeypatch.setenv("HTTP_PROXY", "http://proxy.exemple:8080")
+    monkeypatch.setenv("http_proxy", "http://proxy.exemple:8080")
+    assert WhisperApiTranscriber("http://10.0.0.1/v1/audio/transcriptions").client.trust_env is False

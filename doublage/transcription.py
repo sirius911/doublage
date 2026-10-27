@@ -41,7 +41,9 @@ class WhisperApiTranscriber:
         self.url = url
         self.language = language
         self.model = model
-        self.client = client or httpx.Client(timeout=timeout)
+        # Serveur interne : on ignore les variables http_proxy de la VM, sinon la requête
+        # partirait vers le proxy de l'établissement.
+        self.client = client or httpx.Client(timeout=timeout, trust_env=False)
 
     def transcribe(self, audio: Path) -> Transcript:
         fields = {"language": self.language, "response_format": "verbose_json"}
