@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     # Dossier où sont rangés les projets (une vidéo = un sous-dossier).
     data_dir: Path = Path("data")
 
+    # Essai sans serveur Whisper ni Pocket TTS (transcription et voix factices), par ex. sur un poste
+    # de développement.
+    simuler: bool = False
+
     # Serveur Whisper interne (API compatible OpenAI).
     whisper_url: str = "http://10.1.147.251:30000/v1/audio/transcriptions"
     whisper_language: str = "fr"

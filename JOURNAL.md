@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : transcription depuis l'interface
+- Traitements longs en tâche de fond (`jobs.py`) : un seul à la fois (VM partagée), état en mémoire
+  (perdu au redémarrage, il suffit de relancer ; les résultats sont enregistrés dans le projet).
+- Page projet : bouton « Lancer la transcription », barre indéterminée avec l'étape et le temps écoulé
+  (le serveur Whisper ne renvoie pas d'avancement), message en cas d'erreur avec possibilité de relancer,
+  puis liste des phrases avec leur timecode. Une transcription existante n'est jamais écrasée.
+- `DOUBLAGE_SIMULER=1` pour essayer l'interface sans Whisper ni Pocket TTS.
+- Les tests qui demandent ffmpeg sont ignorés s'il est absent (poste Windows) ; ils tournent en CI.
+- Suite : éditeur (vidéo en fond, texte de la phrase en cours sur l'image).
+
 ## 2026-10-27 — Phase 2 : projets
 - Relevé sur la VM après limitation : priorité basse effective (NI 10), mais ~290 % de processeur au lieu de
   200 % (Pocket TTS utilise d'autres fils que ceux de PyTorch) ; laissé tel quel, la priorité basse protège

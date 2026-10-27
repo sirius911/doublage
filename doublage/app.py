@@ -1,5 +1,6 @@
 """Application web (FastAPI)."""
 
+import time
 from datetime import datetime
 from html import escape
 from typing import Annotated
@@ -10,7 +11,11 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from . import __version__
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
+from .jobs import Job, JobManager, JobState
+from .pipeline import transcribe_video
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
+from .segments import Transcript
+from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 
 SESSION_COOKIE = "doublage_session"
 
@@ -30,6 +35,23 @@ def get_projects() -> ProjectStore:
 
 
 Projects = Annotated[ProjectStore, Depends(get_projects)]
+
+_jobs = JobManager()
+
+
+def get_jobs() -> JobManager:
+    return _jobs
+
+
+Jobs = Annotated[JobManager, Depends(get_jobs)]
+
+
+def get_transcriber() -> Transcriber:
+    settings = get_settings()
+    if settings.simuler:
+        return FakeTranscriber()
+    return WhisperApiTranscriber(settings.whisper_url, settings.whisper_language,
+                                 settings.whisper_model, settings.whisper_timeout)
 
 
 class LoginRequired(Exception):
@@ -150,14 +172,68 @@ def get_project(project_id: int, projects: Projects) -> Project:
 CurrentProject = Annotated[Project, Depends(get_project)]
 
 
+def timecode(seconds: float) -> str:
+    return f"{int(seconds // 60):02d}:{seconds % 60:04.1f}"
+
+
+def transcription_section(project: Project, job: Job | None) -> str:
+    if project.transcript_path.exists():
+        transcript = Transcript.load(project.transcript_path)
+        rows = "".join(f"<li><code>{timecode(s.start)}</code> {escape(s.text)}</li>"
+                       for s in transcript.segments)
+        return f"""<h2>Transcription</h2>
+<p>{len(transcript.segments)} phrase{"s" if len(transcript.segments) > 1 else ""}. L'éditeur arrive dans une prochaine étape.</p>
+<ol>{rows}</ol>"""
+    if job and job.kind == "transcription" and job.active:
+        # Le serveur Whisper ne donne pas d'avancement : barre indéterminée, étape et temps écoulé.
+        return f"""<h2>Transcription</h2>
+<p><progress style="width: 100%"></progress></p>
+<p id="etape">{escape(job.step)}</p>
+<script>
+const debut = Date.now() / 1000 - {time.time() - job.started:.0f};
+setInterval(async () => {{
+  const etat = await (await fetch("/projets/{project.id}/etat")).json();
+  if (etat.etat === "termine" || etat.etat === "erreur") location.reload();
+  const s = Math.round(Date.now() / 1000 - debut);
+  document.getElementById("etape").textContent = `${{etat.etape}} (${{Math.floor(s / 60)}} min ${{s % 60}} s)`;
+}}, 2000);
+</script>"""
+    error = ""
+    if job and job.kind == "transcription" and job.state == JobState.FAILED:
+        error = f'<p style="color: #b00">La transcription a échoué : {escape(job.error)}</p>'
+    return f"""<h2>Transcription</h2>
+{error}
+<form method="post" action="/projets/{project.id}/transcription">
+<button type="submit">Lancer la transcription</button>
+</form>"""
+
+
 @app.get("/projets/{project_id}", response_class=HTMLResponse)
-def project_page(user: User, project: CurrentProject) -> str:
+def project_page(user: User, project: CurrentProject, jobs: Jobs) -> str:
     return page(f"{escape(project.name)} — Doublage", f"""{header(user)}
 <p><a href="/">← Projets</a></p>
 <h1>{escape(project.name)}</h1>
 <p><small>{escape(project.video_name)}, déposé par {escape(project.owner)}</small></p>
 <video src="/projets/{project.id}/video" controls preload="metadata" style="width: 100%"></video>
-<p>La transcription et l'éditeur arrivent dans les prochaines étapes.</p>""")
+{transcription_section(project, jobs.get(project.id))}""")
+
+
+@app.post("/projets/{project_id}/transcription")
+def start_transcription(user: User, project: CurrentProject, jobs: Jobs,
+                        transcriber: Annotated[Transcriber, Depends(get_transcriber)]) -> RedirectResponse:
+    # Une transcription existante n'est jamais écrasée : elle contient peut-être des corrections.
+    if not project.transcript_path.exists():
+        jobs.submit(project.id, "transcription",
+                    lambda progress: transcribe_video(project.video, project.folder, transcriber, progress))
+    return RedirectResponse(f"/projets/{project.id}", status_code=303)
+
+
+@app.get("/projets/{project_id}/etat")
+def project_state(user: User, project: CurrentProject, jobs: Jobs) -> dict:
+    job = jobs.get(project.id)
+    if job is None:
+        return {"etat": None}
+    return {"traitement": job.kind, "etat": job.state, "etape": job.step, "erreur": job.error}
 
 
 @app.get("/projets/{project_id}/video")

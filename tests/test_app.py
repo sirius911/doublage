@@ -1,9 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from doublage.app import app, get_projects, get_store
+import doublage.app
+from doublage.app import app, get_jobs, get_projects, get_store, get_transcriber
 from doublage.auth import UserStore
+from doublage.jobs import JobManager
 from doublage.projects import ProjectStore
+from doublage.segments import Segment, Transcript
+from doublage.transcription import FakeTranscriber
 
 
 @pytest.fixture
@@ -13,6 +17,9 @@ def store(tmp_path) -> UserStore:
     projects = ProjectStore(tmp_path / "doublage.db", tmp_path)
     app.dependency_overrides[get_store] = lambda: store
     app.dependency_overrides[get_projects] = lambda: projects
+    jobs = JobManager()
+    app.dependency_overrides[get_jobs] = lambda: jobs
+    app.dependency_overrides[get_transcriber] = FakeTranscriber
     yield store
     app.dependency_overrides.clear()
 
@@ -99,3 +106,52 @@ def test_projets_reserves_aux_utilisateurs_connectes(client):
     assert client.get("/projets/1/video", follow_redirects=False).status_code == 303
     r = client.post("/projets", files={"video": ("a.mp4", b"x", "video/mp4")}, follow_redirects=False)
     assert r.status_code == 303
+
+
+def creer_projet(client, contenu=b"video", nom="zimbra.mp4") -> str:
+    r = client.post("/projets", files={"video": (nom, contenu, "video/mp4")}, follow_redirects=False)
+    return r.headers["location"]
+
+
+def test_transcription_en_tache_de_fond(client, monkeypatch):
+    def faux_transcribe(video, workdir, transcriber, progress):
+        progress("Transcription…")
+        Transcript(5.0, [Segment(0, 0.0, 2.5, "Ouvrez Zimbra.", "Ouvrez Zimbra.")]).save(workdir / "segments.json")
+
+    monkeypatch.setattr(doublage.app, "transcribe_video", faux_transcribe)
+    login(client)
+    url = creer_projet(client)
+    assert "Lancer la transcription" in client.get(url).text
+    assert client.get(url + "/etat").json() == {"etat": None}
+
+    r = client.post(url + "/transcription", follow_redirects=False)
+    assert r.status_code == 303
+    app.dependency_overrides[get_jobs]().wait(int(url.rsplit("/", 1)[1]), timeout=5)
+
+    assert client.get(url + "/etat").json()["etat"] == "termine"
+    page = client.get(url).text
+    assert "1 phrase." in page and "Ouvrez Zimbra." in page and "00:00.0" in page
+    assert "Lancer la transcription" not in page
+
+
+def test_transcription_en_erreur(client, monkeypatch):
+    def en_panne(video, workdir, transcriber, progress):
+        raise RuntimeError("Le serveur Whisper n'a pas répondu correctement")
+
+    monkeypatch.setattr(doublage.app, "transcribe_video", en_panne)
+    login(client)
+    url = creer_projet(client)
+    client.post(url + "/transcription")
+    app.dependency_overrides[get_jobs]().wait(int(url.rsplit("/", 1)[1]), timeout=5)
+    page = client.get(url).text
+    assert "La transcription a échoué" in page and "Whisper" in page
+    assert "Lancer la transcription" in page  # on peut relancer
+
+
+def test_transcription_reelle_simulee(client, sample_video):
+    """De bout en bout avec ffmpeg et la transcription simulée."""
+    login(client)
+    url = creer_projet(client, sample_video.read_bytes())
+    client.post(url + "/transcription")
+    app.dependency_overrides[get_jobs]().wait(int(url.rsplit("/", 1)[1]), timeout=30)
+    assert "3 phrases" in client.get(url).text

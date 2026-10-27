@@ -29,7 +29,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 ## Phase 2 — Interface web
 - [x] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
 - [x] Liste des projets + dépôt d'une vidéo (projets visibles par tous les utilisateurs)
-- [ ] Lancement de la transcription avec barre de progression
+- [x] Lancement de la transcription avec barre de progression (étape + temps écoulé : Whisper ne donne pas d'avancement)
 - [ ] Éditeur : vidéo en fond, texte de la phrase en cours affiché sur l'image au bon timecode
 - [ ] Modification du texte sur l'image et dans la liste des phrases, enregistrement automatique
 - [ ] Clic sur une phrase → la vidéo se place au timecode

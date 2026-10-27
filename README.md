@@ -23,6 +23,15 @@ cp .env.exemple .env          # adapter si besoin
 La vidéo doublée est créée à côté de l'original (`ma_video_double.mp4`). Les fichiers de travail
 (audio extrait, `segments.json`, une piste par phrase) sont dans `data/ma_video/`.
 
+### Interface web en local
+
+```bash
+.venv/bin/doublage utilisateur ajouter moi
+DOUBLAGE_SIMULER=1 .venv/bin/doublage serveur    # transcription et voix factices (ffmpeg requis)
+```
+
+Puis ouvrir http://127.0.0.1:8000.
+
 ## Tests
 
 ```bash

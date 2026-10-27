@@ -27,6 +27,10 @@ class Project:
     def video(self) -> Path:
         return self.folder / f"video{Path(self.video_name).suffix.lower()}"
 
+    @property
+    def transcript_path(self) -> Path:
+        return self.folder / "segments.json"
+
 
 class ProjectStore:
     def __init__(self, db_path: Path, data_dir: Path):
