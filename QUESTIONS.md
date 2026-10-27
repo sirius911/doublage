@@ -5,16 +5,10 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-### Q12 — HTTPS (non bloquant pour une première mise en production, à trancher ensuite)
-`10.1.147.219:8091` est joignable depuis le réseau de l'hôpital (réponse de l'utilisateur). Reste le
-**HTTPS** : sans lui, les mots de passe de l'application et les vidéos circulent en clair sur le réseau
-interne. Options : (a) reverse proxy existant de l'établissement s'il y en a un (le plus simple à
-maintenir) ; (b) certificat de l'autorité interne servi directement par l'application ; (c) rester en
-HTTP en connaissance de cause. Y a-t-il un reverse proxy ou une autorité de certification interne ?
-
-Réponse :
-
 ## Résolues
+- Q12 : HTTP en connaissance de cause (mots de passe et vidéos en clair sur le réseau interne). Un reverse
+  proxy viendra plus tard pour donner un nom à l'application, sans HTTPS. Il devra la publier à la racine
+  d'un nom (`http://doublage…/`), pas sous un sous-chemin : les liens de l'application sont absolus.
 - Q11 : une seule instance, la production (`/srv/apps/doublage`, port 8091, branche `main`) ; pas d'instance
   de test séparée, les essais se font directement sur la production (utilisateurs = collègues). Le travail
   continue sur la branche `dev`, fusionnée dans `main` par l'utilisateur à chaque version validée.

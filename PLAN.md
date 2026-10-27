@@ -58,7 +58,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Interface : barre de titre compacte sur toutes les pages, éditeur à la hauteur de l'écran (vidéo toujours visible, phrases qui défilent à droite, actions sur une ligne à part)
 - [x] Suppression d'un projet depuis la liste (croix à droite, confirmation ; supprime vidéo, transcription, voix et exports ; refusée pendant un traitement en cours)
 - [ ] Mise en production : fusion `dev` → `main` par l'utilisateur, instance sur `main` (uniquement après validation)
-- [ ] HTTPS (Q12)
+- [x] ~~HTTPS~~ : non, HTTP en connaissance de cause ; nom via un reverse proxy plus tard, à la racine (Q12)
 
 ## Phase 5 — Voix
 - [ ] Choix de la voix par projet parmi un catalogue
