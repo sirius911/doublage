@@ -185,6 +185,19 @@ Le script récupère le code (`git pull`), construit la nouvelle image pendant q
 remplace le conteneur, relance le service et vérifie que l'application répond (sinon, il affiche le journal).
 Les données et le cache du modèle sont conservés.
 
+### Voix créées à partir d'un échantillon
+
+Le modèle de clonage de voix de Pocket TTS est en accès restreint sur Hugging Face (les voix prédéfinies,
+comme estelle, ne le sont pas) : sans lui, l'ajout d'une voix fonctionne mais sa synthèse échoue
+(« We could not download the weights for the model with voice cloning »).
+
+1. Avec un compte Hugging Face, accepter les conditions d'utilisation sur
+   https://huggingface.co/kyutai/pocket-tts (notamment : pas de clonage sans le consentement de la personne).
+2. Créer un jeton en **lecture** (Settings > Access Tokens) et l'ajouter dans `.env` : `HF_TOKEN=hf_...`
+   (et commenter `HF_HUB_OFFLINE=1` le temps du téléchargement, s'il est actif).
+3. `deploiement/mettre-a-jour`, puis générer une phrase avec la voix : les poids sont téléchargés
+   (via le proxy) dans le volume du modèle. Seuls des poids descendent : aucun audio ne sort de l'établissement.
+
 ## Comptes utilisateurs
 
 Les comptes de l'application web se gèrent en ligne de commande (mots de passe chiffrés avec scrypt,
