@@ -67,3 +67,10 @@ def test_whisper_sans_proxy(monkeypatch):
     monkeypatch.setenv("HTTP_PROXY", "http://proxy.exemple:8080")
     monkeypatch.setenv("http_proxy", "http://proxy.exemple:8080")
     assert WhisperApiTranscriber("http://10.0.0.1/v1/audio/transcriptions").client.trust_env is False
+
+
+def test_fin_bornee_a_la_duree():
+    # Réponse réelle du serveur interne sur un bip de 2 s.
+    t = parse_verbose_json({"duration": 2.0, "text": "Sous-titrage ST' 501",
+                            "segments": [{"start": 0.0, "end": 29.98, "text": " Sous-titrage ST' 501"}]})
+    assert (t.segments[0].start, t.segments[0].end) == (0.0, 2.0)

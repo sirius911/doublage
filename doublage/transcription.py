@@ -18,18 +18,17 @@ class Transcriber(Protocol):
 
 def parse_verbose_json(data: dict) -> Transcript:
     """Convertit une réponse `verbose_json` (format OpenAI) en Transcript."""
-    segments = []
-    for raw in data.get("segments") or []:
-        text = (raw.get("text") or "").strip()
-        if not text:
-            continue
-        segments.append(
-            Segment(id=len(segments), start=float(raw["start"]), end=float(raw["end"]),
-                    original_text=text, text=text)
-        )
-    if not segments and (data.get("text") or "").strip():
+    raw_segments = [r for r in data.get("segments") or [] if (r.get("text") or "").strip()]
+    if not raw_segments and (data.get("text") or "").strip():
         raise TranscriptionError("La réponse du serveur ne contient pas de segments horodatés.")
-    duration = float(data.get("duration") or (segments[-1].end if segments else 0.0))
+    duration = float(data.get("duration") or (raw_segments[-1]["end"] if raw_segments else 0.0))
+    segments = []
+    for raw in raw_segments:
+        # Whisper renvoie parfois une fin au-delà de la durée réelle (fenêtre de 30 s) : on la borne.
+        start = min(float(raw["start"]), duration)
+        end = min(float(raw["end"]), duration)
+        text = raw["text"].strip()
+        segments.append(Segment(id=len(segments), start=start, end=end, original_text=text, text=text))
     return Transcript(duration=duration, segments=segments)
 
 
