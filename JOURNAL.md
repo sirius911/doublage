@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Premier doublage réel sur la VM
+- Image construite dans le stockage Podman dédié ; scribe intact.
+- Q6 : vidéo de 90 s → 20 phrases, 56 s de traitement, doublage jugé très bon, pas de phrase inventée.
+- Constaté : `--cpus`/`--memory` ignorés (cgroups v1 sans root). Synthèse limitée à 2 cœurs
+  (`DOUBLAGE_TTS_THREADS`, `OMP_NUM_THREADS`) et lancée avec `nice -n 10` ; Q9 ouverte (cgroups v2).
+- Timecodes arrondis à la milliseconde (bruit de virgule flottante dans la réponse de Whisper).
+- À faire sur la VM : reconstruire l'image (limitation des cœurs). Suite : Phase 2 (liste des projets).
+
 ## 2026-10-27 — Préparation de la VM
 - Q5 résolue : Internet via le proxy de l'établissement. Whisper appelé sans proxy (sinon la requête partait
   vers le proxy) ; requête réelle de transcription réussie depuis la VM.

@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Synthèse vocale Pocket TTS.
     tts_language: str = "french"
     tts_voice: str = "estelle"
+    # Cœurs utilisés par la synthèse. Sur la VM (cgroups v1, Podman sans root), les limites --cpus
+    # du conteneur sont ignorées : c'est ce réglage qui protège les autres applications.
+    tts_threads: int = 2
 
 
 @lru_cache

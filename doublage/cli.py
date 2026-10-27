@@ -22,7 +22,8 @@ def cmd_traiter(args: argparse.Namespace) -> None:
         transcriber = WhisperApiTranscriber(settings.whisper_url, settings.whisper_language,
                                             settings.whisper_model, settings.whisper_timeout)
         print("Chargement de Pocket TTS…")
-        synthesizer = PocketSynthesizer(settings.tts_language, settings.tts_voice)
+        synthesizer = PocketSynthesizer(settings.tts_language, settings.tts_voice,
+                                        settings.tts_threads)
 
     transcript = transcribe_video(video, workdir, transcriber)
     dub_video(video, transcript, workdir, output, synthesizer)

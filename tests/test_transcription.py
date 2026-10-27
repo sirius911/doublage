@@ -74,3 +74,9 @@ def test_fin_bornee_a_la_duree():
     t = parse_verbose_json({"duration": 2.0, "text": "Sous-titrage ST' 501",
                             "segments": [{"start": 0.0, "end": 29.98, "text": " Sous-titrage ST' 501"}]})
     assert (t.segments[0].start, t.segments[0].end) == (0.0, 2.0)
+
+
+def test_timecodes_arrondis_a_la_milliseconde():
+    t = parse_verbose_json({"duration": 20.0, "segments": [
+        {"start": 6.1000000000000005, "end": 14.780000000000001, "text": "Ensuite."}]})
+    assert (t.segments[0].start, t.segments[0].end) == (6.1, 14.78)

@@ -5,18 +5,23 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-### Q6 — Premier essai réel
-Quand la VM sera prête, pouvez-vous y lancer (procédure dans README.md, étape 4 du déploiement) :
-`doublage traiter une_video_courte.mp4` sur un tutoriel de 1 à 2 minutes, et me dire le résultat
-(messages affichés, qualité de la voix, synchronisation) ?
-
-Réponse :
-
 ### Q8 — Emplacement des données (non bloquant)
 Par défaut, les données (vidéos déposées, projets, comptes) vont dans `/srv/apps/doublage/data`, sur `/`
 (42 Go libres, partagés avec le système). Une alternative est `/var/lib/containers/doublage/data` (197 Go).
 Pour quelques tutoriels de quelques centaines de Mo, `/srv` suffit largement ; je recommande de le garder
 et de revoir si le volume grossit. D'accord ?
+
+Réponse :
+
+### Q9 — Limites de ressources du conteneur (non bloquant)
+Sur la VM, Podman sans root en **cgroups v1** ignore `--cpus` et `--memory` (message « Resource limits are
+not supported and ignored on cgroups V1 rootless systems ») : les limites de `compose.yml` sont sans effet.
+En attendant, la synthèse est bridée à 2 cœurs dans l'application (`DOUBLAGE_TTS_THREADS`, `OMP_NUM_THREADS`)
+et tourne en priorité basse (`nice`). Il n'y a en revanche **aucune limite de mémoire** (Pocket TTS : ~1 à 2 Go).
+La vraie solution serait de passer la VM en **cgroups v2** (paramètre de démarrage
+`systemd.unified_cgroup_hierarchy=1` + redémarrage) : cela concerne toutes les applications de la VM (scribe,
+ce-transcripteur-v2), donc à décider avec l'administrateur. Je recommande de s'en contenter pour l'instant
+et d'y revenir si la VM souffre pendant les synthèses.
 
 Réponse :
 
@@ -44,3 +49,6 @@ Réponse :
   (XFS, 197 Go, SELinux Enforcing), le code dans `/srv/apps/doublage`. Pas de modification de la configuration
   Podman globale, pas d'intervention sur ce-transcripteur-v2. Préparation (droits, SELinux) et procédure dans
   README.md, « Déploiement sur la VM ». Nettoyage des images inutilisées traité séparément.
+- Q6 — Premier essai réel (2026-10-27) : vidéo de 90 s, 20 phrases, 56 s de traitement au total (modèle déjà
+  chargé exclu du téléchargement). Doublage jugé très bon, synchronisation correcte, aucune phrase inventée
+  sur les silences.

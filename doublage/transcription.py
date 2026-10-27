@@ -25,8 +25,8 @@ def parse_verbose_json(data: dict) -> Transcript:
     segments = []
     for raw in raw_segments:
         # Whisper renvoie parfois une fin au-delà de la durée réelle (fenêtre de 30 s) : on la borne.
-        start = min(float(raw["start"]), duration)
-        end = min(float(raw["end"]), duration)
+        start = round(min(float(raw["start"]), duration), 3)
+        end = round(min(float(raw["end"]), duration), 3)
         text = raw["text"].strip()
         segments.append(Segment(id=len(segments), start=start, end=end, original_text=text, text=text))
     return Transcript(duration=duration, segments=segments)

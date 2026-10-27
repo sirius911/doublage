@@ -21,10 +21,10 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Extraction de l'audio de la vidéo (ffmpeg)
 - [x] Adaptateur de transcription : interface commune + version « serveur Whisper interne » + version simulée pour les tests
 - [x] Format des phrases (`segments.json` : id, début, fin, texte original, texte corrigé, état)
-- [~] Synthèse d'une phrase avec Pocket TTS (voix estelle, modèle chargé une seule fois) — code écrit, essai réel à faire (`pytest -m tts`), voir Q5
+- [x] Synthèse d'une phrase avec Pocket TTS (voix estelle, modèle chargé une seule fois) — validée sur la VM
 - [x] Assemblage de la bande son : chaque phrase placée à son timecode, silence ailleurs
 - [x] Remplacement de la bande son dans la vidéo (sans ré-encoder l'image)
-- [~] Commande `doublage traiter video.mp4` qui enchaîne tout → fonctionne en mode `--simuler` ; essai réel (Whisper + Pocket TTS) à faire depuis la VM
+- [x] Commande `doublage traiter video.mp4` qui enchaîne tout — essai réel validé sur la VM (vidéo de 90 s)
 
 ## Phase 2 — Interface web
 - [x] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
@@ -47,7 +47,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Relevé des ressources consommées sur la VM par les applications existantes ; choix du volume de données (ex. `/srv/apps`)
 - [~] Stockage Podman rootless dédié (`/var/lib/containers/doublage/storage`), code dans `/srv/apps/doublage` — en place et vérifié (stockage, état d'exécution et verrous séparés de scribe)
 - [~] Choix d'un port libre (8091), réseau et volumes dédiés, aucune interférence avec ce-transcripteur-v2 et `scribe` — à vérifier au déploiement
-- [ ] Essai réel du serveur Whisper avec l'audio d'une vidéo complète (taille et durée maximales acceptées)
+- [~] Essai réel du serveur Whisper avec l'audio d'une vidéo complète — OK sur 90 s ; durée maximale acceptée à mesurer
+- [~] Ressources : synthèse limitée à 2 cœurs et en priorité basse (cgroups v1 : `--cpus`/`--memory` ignorés, voir Q9)
 - [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
 - [ ] Démarrage automatique avec la VM (service systemd utilisateur, `deploiement/doublage.service`)
 - [ ] Environnement de test (staging) sur la VM, validé par l'utilisateur

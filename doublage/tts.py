@@ -16,8 +16,12 @@ class Synthesizer(Protocol):
 class PocketSynthesizer:
     """Pocket TTS (Kyutai), sur processeur. Le modèle et la voix sont chargés une seule fois."""
 
-    def __init__(self, language: str = "french", voice: str = "estelle"):
-        from pocket_tts import TTSModel  # import tardif : PyTorch est lourd
+    def __init__(self, language: str = "french", voice: str = "estelle", threads: int | None = None):
+        import torch  # import tardif : PyTorch est lourd
+        from pocket_tts import TTSModel
+
+        if threads:
+            torch.set_num_threads(threads)
 
         self.model = TTSModel.load_model(language=language)
         self.voice_state = self.model.get_state_for_audio_prompt(voice)

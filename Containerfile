@@ -19,7 +19,13 @@ RUN pip install --no-cache-dir ".[tts]"
 RUN useradd --create-home --uid 1000 doublage && mkdir -p /data && chown doublage /data
 USER doublage
 
+# Bibliothèques de calcul limitées à 2 cœurs : sur la VM (cgroups v1, Podman sans root),
+# les limites --cpus du conteneur sont ignorées.
 ENV DOUBLAGE_DATA_DIR=/data \
-    HF_HOME=/home/doublage/.cache/huggingface
+    HF_HOME=/home/doublage/.cache/huggingface \
+    OMP_NUM_THREADS=2 \
+    MKL_NUM_THREADS=2
 EXPOSE 8000
+# Priorité basse : les applications déjà en production sur la VM passent avant.
+ENTRYPOINT ["nice", "-n", "10"]
 CMD ["doublage", "serveur", "--hote", "0.0.0.0", "--port", "8000"]
