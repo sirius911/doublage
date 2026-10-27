@@ -25,6 +25,20 @@ et d'y revenir si la VM souffre pendant les synthèses.
 
 Réponse :
 
+### Q10 — Fusionner / couper des phrases, ajuster début et fin (bloque cette tâche de la Phase 3)
+Proposition d'ergonomie, à valider ou corriger :
+- **Couper** : placer le curseur dans le texte à l'endroit voulu, puis bouton ✂ (ou Ctrl+Entrée). Le moment
+  de la coupure est estimé au prorata des caractères (Whisper ne donne que des timecodes par phrase), puis
+  ajustable. Alternative plus précise : demander à Whisper les timecodes par mot (à tester, le serveur ne le
+  permet peut-être pas).
+- **Fusionner** : Retour arrière (⌫) au tout début du texte d'une phrase la fusionne avec la précédente,
+  comme dans un traitement de texte (pas de bouton supplémentaire).
+- **Ajuster début et fin** : vidéo en pause au bon endroit, boutons « début ici » / « fin ici » qui prennent
+  la position actuelle de la vidéo (plus simple et plus précis que de taper des timecodes).
+Une phrase coupée, fusionnée ou recalée perd sa voix (à recréer).
+
+Réponse :
+
 ## Résolues
 - Entrée : la vidéo complète (pas seulement l'audio).
 - Voix de départ : « estelle » ; catalogue de voix plus tard.

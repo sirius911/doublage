@@ -42,7 +42,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 ## Phase 3 — Calage et confort d'édition
 - [x] Indicateur par phrase : la voix synthétique tient-elle dans son créneau ? (vert / orange / rouge)
 - [x] Solutions automatiques : accélération légère (limite raisonnable), débord sur le silence suivant
-- [ ] Fusionner / couper des phrases, ajuster début et fin
+- [?] Fusionner / couper des phrases, ajuster début et fin (Q10)
 - [ ] Aperçu de la vidéo avec la nouvelle voix avant l'export
 - [ ] Export complémentaire : sous-titres (SRT/VTT) et audio seul
 
