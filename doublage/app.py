@@ -138,13 +138,62 @@ def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
 <h1>Doublage</h1>
 <h2>Nouveau projet</h2>
 {message}
-<form method="post" action="/projets" enctype="multipart/form-data">
+<form id="depot" method="post" action="/projets" enctype="multipart/form-data">
 <p><label>Vidéo du tutoriel<br><input type="file" name="video" accept="video/*,{",".join(sorted(VIDEO_EXTENSIONS))}" required></label></p>
 <p><label>Nom du projet (facultatif)<br><input name="nom" size="40"></label></p>
 <p><button type="submit">Déposer la vidéo</button></p>
+<div id="envoi" hidden>
+<p><progress id="envoi-barre" max="100" value="0" style="width: 100%"></progress></p>
+<p id="envoi-texte"></p>
+</div>
 </form>
+{UPLOAD_SCRIPT}
 <h2>Projets</h2>
 {f"<ul>{rows}</ul>" if rows else "<p>Aucun projet pour l'instant.</p>"}""")
+
+
+# Envoi de la vidéo avec suivi de l'avancement (sans JavaScript, le formulaire classique fonctionne).
+UPLOAD_SCRIPT = """<script>
+document.getElementById("depot").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.target;
+  const barre = document.getElementById("envoi-barre");
+  const texte = document.getElementById("envoi-texte");
+  const mo = (octets) => (octets / 1048576).toFixed(1).replace(".", ",") + " Mo";
+  form.querySelector("button").disabled = true;
+  document.getElementById("envoi").hidden = false;
+  texte.textContent = "Envoi en cours…";
+
+  const xhr = new XMLHttpRequest();
+  const debut = Date.now();
+  xhr.upload.onprogress = (e) => {
+    if (!e.lengthComputable) return;
+    barre.value = Math.round(100 * e.loaded / e.total);
+    const secondes = (Date.now() - debut) / 1000;
+    const debit = e.loaded / Math.max(secondes, 0.1);
+    const reste = Math.round((e.total - e.loaded) / Math.max(debit, 1));
+    texte.textContent = `${barre.value} % — ${mo(e.loaded)} sur ${mo(e.total)}`
+      + (e.loaded < e.total ? ` — encore environ ${reste} s` : "");
+  };
+  xhr.upload.onload = () => {
+    barre.removeAttribute("value");  // barre animée pendant l'enregistrement sur le serveur
+    texte.textContent = "Envoi terminé, enregistrement de la vidéo…";
+  };
+  xhr.onload = () => {
+    if (xhr.status < 400) {
+      location.href = xhr.responseURL;  // page du nouveau projet
+    } else {
+      document.open(); document.write(xhr.responseText); document.close();
+    }
+  };
+  xhr.onerror = () => {
+    texte.textContent = "L'envoi a échoué (connexion interrompue ?). Réessayez.";
+    form.querySelector("button").disabled = false;
+  };
+  xhr.open("POST", form.action);
+  xhr.send(new FormData(form));
+});
+</script>"""
 
 
 @app.get("/", response_class=HTMLResponse)

@@ -155,3 +155,9 @@ def test_transcription_reelle_simulee(client, sample_video):
     client.post(url + "/transcription")
     app.dependency_overrides[get_jobs]().wait(int(url.rsplit("/", 1)[1]), timeout=30)
     assert "3 phrases" in client.get(url).text
+
+
+def test_suivi_de_l_envoi(client):
+    login(client)
+    page = client.get("/").text
+    assert 'id="envoi-barre"' in page and "xhr.upload.onprogress" in page

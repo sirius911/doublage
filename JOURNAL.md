@@ -2,6 +2,11 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : suivi de l'envoi
+- Demande après essai sur la VM : aucun retour pendant l'envoi de la vidéo. Envoi en JavaScript avec barre de
+  progression (pourcentage, Mo, temps restant), puis « enregistrement » jusqu'à l'ouverture du projet.
+  Sans JavaScript, le formulaire classique fonctionne toujours.
+
 ## 2026-10-27 — Phase 2 : transcription depuis l'interface
 - Traitements longs en tâche de fond (`jobs.py`) : un seul à la fois (VM partagée), état en mémoire
   (perdu au redémarrage, il suffit de relancer ; les résultats sont enregistrés dans le projet).
