@@ -1,0 +1,32 @@
+# Déploiement avec podman-compose (testé pour la version 1.0.6) :
+#   cp .env.exemple .env   # puis adapter
+#   podman-compose up -d --build
+#
+# Tout est préfixé « doublage » (conteneur, réseau, volumes) pour rester isolé
+# des autres applications de la VM.
+services:
+  doublage:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/doublage:latest
+    container_name: doublage
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${DOUBLAGE_PORT:-8090}:8000"
+    volumes:
+      # :Z = étiquette SELinux (Oracle Linux)
+      - "${DOUBLAGE_DONNEES:-/srv/apps/doublage/data}:/data:Z"
+      - doublage-modeles:/home/doublage/.cache/huggingface
+    # Pocket TTS utilise ~2 cœurs : on borne pour ne pas gêner les autres applications.
+    cpus: 2
+    mem_limit: 4g
+    networks:
+      - doublage-reseau
+
+volumes:
+  doublage-modeles:
+
+networks:
+  doublage-reseau:
