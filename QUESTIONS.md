@@ -18,7 +18,7 @@ Note : l'environnement cloud de Claude bloque aussi `huggingface.co` et `downloa
 sessions automatiques puissent tester la vraie voix, ces deux domaines peuvent être ajoutés dans les
 réglages réseau de l'environnement (sinon, les tests continuent avec une voix simulée).
 
-Réponse :
+Réponse : Pour la VM je crois que oui elle peut acceder a internet
 
 ### Q6 — Premier essai réel
 Quand la VM sera prête, pouvez-vous y lancer (procédure dans README.md) :

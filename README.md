@@ -3,7 +3,37 @@
 Remplace la voix d'un tutoriel vidéo par une voix de synthèse (Pocket TTS), à partir de la transcription
 du serveur Whisper de l'établissement. Voir [SPEC.md](SPEC.md) pour le descriptif et [PLAN.md](PLAN.md) pour l'avancement.
 
-## Essai en ligne de commande (sans conteneur)
+## Premier essai réel sur la VM (dans le conteneur)
+
+C'est l'essai à faire en priorité : il vérifie en une fois la construction de l'image, l'accès au serveur
+Whisper et la voix Pocket TTS, dans les conditions de la production. Pas besoin d'installer Python ni
+ffmpeg sur la VM : tout est dans l'image.
+
+```bash
+bash <<'EOF'
+cd ~/doublage                                  # dossier où le dépôt a été cloné
+cp -n .env.exemple .env
+mkdir -p /srv/apps/doublage/data
+# Podman sans droits root : l'utilisateur 1000 du conteneur doit pouvoir écrire dans le dossier
+podman unshare chown 1000:1000 /srv/apps/doublage/data
+podman build -t localhost/doublage:latest -f Containerfile .
+EOF
+```
+
+Puis, avec une vidéo courte (1 à 2 minutes) copiée dans `/srv/apps/doublage/data/` :
+
+```bash
+bash <<'EOF'
+cd ~/doublage
+podman run --rm --env-file .env   -v /srv/apps/doublage/data:/data:Z   -v doublage-modeles:/home/doublage/.cache/huggingface   localhost/doublage:latest doublage traiter /data/ma_video.mp4
+ls -lh /srv/apps/doublage/data/
+EOF
+```
+
+La vidéo doublée est créée à côté de l'original (`ma_video_double.mp4`). Le premier lancement télécharge
+le modèle Pocket TTS (quelques centaines de Mo), conservé ensuite dans le volume `doublage-modeles`.
+
+## Essai sur un poste de développement Linux (sans conteneur)
 
 Prérequis : Python 3.11+ et ffmpeg.
 
