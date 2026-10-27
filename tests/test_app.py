@@ -1,3 +1,6 @@
+import os
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -232,6 +235,15 @@ def test_video_doublee(client, monkeypatch):
     export = client.get(url + "/export")
     assert export.status_code == 200 and export.content == b"video"
     assert "doubl" in export.headers["content-disposition"]
+
+    # Aperçu dans l'éditeur : choix du son, vidéo servie sans téléchargement forcé.
+    assert 'name="son" value="doublee"' in page and "Des corrections ont été faites" not in page
+    apercu = client.get(url + "/export?apercu=1")
+    assert apercu.status_code == 200 and "content-disposition" not in apercu.headers
+    # Une correction après la génération : l'aperçu est signalé comme périmé.
+    os.utime(projet.dubbed_video, (time.time() - 60, time.time() - 60))
+    client.put(url + "/phrases/0", json={"texte": "Bonjour à tous."})
+    assert "Des corrections ont été faites" in client.get(url).text
 
 
 def test_calage_affiche_dans_l_editeur(client):

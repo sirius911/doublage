@@ -128,8 +128,36 @@
     p.etat.textContent = "voix" in p.li.dataset ? (ETATS[p.li.dataset.etat] || "") : "";
   }
 
-  function ecouterOriginal(p) {
+  // --- Aperçu : le lecteur bascule entre la vidéo d'origine et la vidéo doublée ---
+
+  let sonDouble = false;
+
+  // Change la source du lecteur en gardant la position et l'état lecture / pause.
+  function changerSon(double) {
+    if (double === sonDouble) return Promise.resolve();
+    sonDouble = double;
+    const choix = document.getElementById("choix-son");
+    const t = video.currentTime, enLecture = !video.paused;
+    video.src = double ? `/projets/${PROJET}/export?apercu=1&v=${choix.dataset.version}`
+                       : `/projets/${PROJET}/video`;
+    for (const r of document.querySelectorAll('input[name="son"]')) r.checked = (r.value === "doublee") === double;
+    return new Promise((ok) => {
+      video.addEventListener("loadedmetadata", () => {
+        video.currentTime = t;
+        if (enLecture) video.play();
+        ok();
+      }, { once: true });
+    });
+  }
+
+  // Délégation : la section « Vidéo doublée » est remplacée à la fin de chaque génération.
+  document.addEventListener("change", (e) => {
+    if (e.target.name === "son") changerSon(e.target.value === "doublee");
+  });
+
+  async function ecouterOriginal(p) {
     lecteurVoix.pause();
+    await changerSon(false);  // « Original » : toujours le son d'origine
     allerA(p);
     finExtrait = p.fin;
     video.play();
@@ -190,6 +218,7 @@
   // sans recharger la page (la position de la vidéo et les corrections en cours sont conservées).
   window.rafraichirDoublage = async () => {
     const page = new DOMParser().parseFromString(await (await fetch(location.href)).text(), "text/html");
+    await changerSon(false);  // l'ancienne vidéo doublée vient d'être remplacée
     document.getElementById("doublage").replaceWith(page.getElementById("doublage"));
     for (const p of phrases) {
       const li = page.querySelector(`#phrases li[data-id="${p.id}"]`);

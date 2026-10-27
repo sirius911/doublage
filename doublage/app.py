@@ -330,7 +330,15 @@ def dubbing_section(project: Project, job: Job | None) -> str:
     if job and job.kind == "doublage" and job.state == JobState.FAILED:
         parts.append(f'<p style="color: #b00">La génération a échoué : {escape(job.error)}</p>')
     if project.dubbed_video.exists():
-        date = datetime.fromtimestamp(project.dubbed_video.stat().st_mtime).strftime("%d/%m/%Y à %H:%M")
+        generated = project.dubbed_video.stat().st_mtime
+        date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")
+        # Aperçu : le lecteur ci-dessus bascule sur la vidéo doublée, avec le texte et la liste synchronisés.
+        parts.append(f"""<p id="choix-son" data-version="{generated:.0f}">Son de la vidéo :
+<label><input type="radio" name="son" value="original" checked> original</label>
+<label><input type="radio" name="son" value="doublee"> nouvelle voix (aperçu)</label></p>""")
+        if project.transcript_path.stat().st_mtime > generated:
+            parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
+                         "mettez à jour la vidéo doublée pour les entendre.</small></p>")
         parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
                      f'<small>(générée le {date})</small></p>')
     label = "Mettre à jour la vidéo doublée" if project.dubbed_video.exists() else "Générer la vidéo doublée"
@@ -394,9 +402,11 @@ def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
 
 
 @app.get("/projets/{project_id}/export")
-def dubbed_video(user: User, project: CurrentProject) -> FileResponse:
+def dubbed_video(user: User, project: CurrentProject, apercu: bool = False) -> FileResponse:
     if not project.dubbed_video.exists():
         raise HTTPException(404, "La vidéo doublée n'a pas encore été générée")
+    if apercu:  # lue dans l'éditeur (requêtes partielles), pas téléchargée
+        return FileResponse(project.dubbed_video, media_type="video/mp4")
     return FileResponse(project.dubbed_video, filename=f"{project.name} (doublée).mp4")
 
 

@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 3 : aperçu avec la nouvelle voix
+- Accélération validée par l'utilisateur sur la VM. Fusionner / couper / recaler : repoussé (Q10).
+- Aperçu : une fois la vidéo doublée générée, « Son de la vidéo : original / nouvelle voix » sous le
+  lecteur de l'éditeur. Le lecteur change de source en gardant sa position ; texte sur l'image et liste
+  restent synchronisés. « ▶ Original » repasse sur le son d'origine. Avertissement si des corrections ont
+  été faites depuis la dernière génération.
+- Choix : l'aperçu réutilise la génération de la vidéo doublée (l'assemblage vidéo sans ré-encodage ne
+  prend que quelques secondes) plutôt qu'une piste audio synchronisée à part dans le navigateur.
 ## 2026-10-27 — Phase 3 : solutions automatiques de calage
 - Débord sur le silence : déjà le cas (la voix est posée à son timecode et peut finir dans le silence
   qui suit, sans gêner la phrase suivante).
