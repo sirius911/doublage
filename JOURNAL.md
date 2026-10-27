@@ -2,6 +2,13 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 4 : service installé sur la VM
+- `doublage@doublage` activé ; premier passage de `deploiement/mettre-a-jour` réussi (conteneur recréé,
+  service relancé, `/sante` OK) ; le conteneur est bien tenu par systemd (`podman start --attach`).
+- Q11 : une seule instance (production), pas de staging. Q12 réduite au HTTPS (port 8091 joignable depuis
+  le réseau de l'hôpital).
+- Bloque : mise en production = fusion `dev` → `main` par l'utilisateur, puis instance sur `main`.
+  Non éprouvé : redémarrage complet de la VM.
 ## 2026-10-27 — Phase 4 : démarrage avec la VM, script de mise à jour
 - Aperçu et exports validés par l'utilisateur sur la VM.
 - `deploiement/doublage@.service` (modèle, une instance = un nom = un dossier `/srv/apps/<nom>`) remplace

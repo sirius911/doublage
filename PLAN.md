@@ -53,7 +53,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [~] Essai réel du serveur Whisper avec l'audio d'une vidéo complète — OK sur 90 s ; durée maximale acceptée à mesurer
 - [~] Ressources : synthèse limitée à 2 cœurs et en priorité basse (cgroups v1 : `--cpus`/`--memory` ignorés, voir Q9)
 - [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
-- [~] Démarrage automatique avec la VM (service systemd modèle `deploiement/doublage@.service`) + script `deploiement/mettre-a-jour` — écrits, à installer sur la VM
+- [x] Démarrage automatique avec la VM (service systemd modèle `deploiement/doublage@.service`) + script `deploiement/mettre-a-jour` — installés et vérifiés sur la VM (redémarrage de la VM pas encore éprouvé)
 - [x] ~~Environnement de test (staging)~~ : abandonné, une seule instance (Q11)
 - [ ] Mise en production : fusion `dev` → `main` par l'utilisateur, instance sur `main` (uniquement après validation)
 - [ ] HTTPS (Q12)
