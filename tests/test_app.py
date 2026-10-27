@@ -236,6 +236,15 @@ def test_video_doublee(client, monkeypatch):
     assert export.status_code == 200 and export.content == b"video"
     assert "doubl" in export.headers["content-disposition"]
 
+    # Exports complémentaires : voix seule et sous-titres du texte corrigé.
+    audio = client.get(url + "/audio")
+    assert audio.status_code == 200 and audio.content[:4] == b"RIFF"
+    srt = client.get(url + "/sous-titres.srt")
+    assert srt.status_code == 200 and "00:00:00,000 --> 00:00:02,500\nBonjour." in srt.text
+    assert "attachment" in srt.headers["content-disposition"]
+    assert client.get(url + "/sous-titres.vtt").text.startswith("WEBVTT")
+    assert client.get(url + "/sous-titres.txt").status_code == 404
+
     # Aperçu dans l'éditeur : choix du son, vidéo servie sans téléchargement forcé.
     assert 'name="son" value="doublee"' in page and "Des corrections ont été faites" not in page
     apercu = client.get(url + "/export?apercu=1")

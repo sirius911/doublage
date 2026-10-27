@@ -2,6 +2,12 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 3 : exports complémentaires (fin de la Phase 3, hors tâche repoussée)
+- Sous la vidéo doublée : liens « voix seule (WAV) » (bande son de la dernière génération) et sous-titres
+  SRT / VTT, générés à la demande à partir du texte corrigé, aux timecodes des phrases d'origine (pas
+  ceux de la voix décalée ou accélérée).
+- Reste en Phase 3 : fusionner / couper / recaler (repoussé, Q10).
+- Suite : Phase 4 (service systemd, staging, production) — étapes à faire sur la VM avec l'utilisateur.
 ## 2026-10-27 — Phase 3 : aperçu avec la nouvelle voix
 - Accélération validée par l'utilisateur sur la VM. Fusionner / couper / recaler : repoussé (Q10).
 - Aperçu : une fois la vidéo doublée générée, « Son de la vidéo : original / nouvelle voix » sous le

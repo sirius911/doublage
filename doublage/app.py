@@ -7,9 +7,10 @@ from functools import lru_cache
 from html import escape
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -21,6 +22,7 @@ from .jobs import Job, JobManager, JobState
 from .pipeline import clip_path, dub_project, mark_synthesized, synthesize_segment, transcribe_video
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
 from .segments import Segment, Transcript
+from .subtitles import to_srt, to_vtt
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 from .tts import FakeSynthesizer, Synthesizer
 
@@ -340,7 +342,10 @@ def dubbing_section(project: Project, job: Job | None) -> str:
             parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
                          "mettez à jour la vidéo doublée pour les entendre.</small></p>")
         parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
-                     f'<small>(générée le {date})</small></p>')
+                     f'<small>(générée le {date})</small><br><small>Aussi : '
+                     f'<a href="/projets/{project.id}/audio" download>voix seule (WAV)</a>, sous-titres '
+                     f'<a href="/projets/{project.id}/sous-titres.srt" download>SRT</a> / '
+                     f'<a href="/projets/{project.id}/sous-titres.vtt" download>VTT</a></small></p>')
     label = "Mettre à jour la vidéo doublée" if project.dubbed_video.exists() else "Générer la vidéo doublée"
     parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
 <button type="submit">{label}</button>
@@ -399,6 +404,28 @@ def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
                                              progress, get_settings().acceleration_max,
                                              _synthesis_lock, _transcript_lock))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
+
+
+@app.get("/projets/{project_id}/audio")
+def dubbed_audio(user: User, project: CurrentProject) -> FileResponse:
+    """Bande son de la dernière vidéo doublée (voix seule, sans l'image)."""
+    path = project.folder / "doublage.wav"
+    if not project.dubbed_video.exists() or not path.exists():
+        raise HTTPException(404, "La vidéo doublée n'a pas encore été générée")
+    return FileResponse(path, media_type="audio/wav", filename=f"{project.name} (voix).wav")
+
+
+@app.get("/projets/{project_id}/sous-titres.{format}")
+def subtitles(user: User, project: CurrentProject, format: str) -> Response:
+    """Sous-titres du texte corrigé, aux timecodes des phrases d'origine."""
+    if format not in ("srt", "vtt") or not project.transcript_path.exists():
+        raise HTTPException(404, "Sous-titres indisponibles")
+    transcript = Transcript.load(project.transcript_path)
+    content, media_type = ((to_srt(transcript), "application/x-subrip") if format == "srt"
+                           else (to_vtt(transcript), "text/vtt"))
+    filename = quote(f"{project.name}.{format}")
+    return Response(content, media_type=f"{media_type}; charset=utf-8",
+                    headers={"Content-Disposition": f"attachment; filename*=utf-8''{filename}"})
 
 
 @app.get("/projets/{project_id}/export")

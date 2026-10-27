@@ -44,7 +44,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Solutions automatiques : accélération légère (limite raisonnable), débord sur le silence suivant
 - [ ] Fusionner / couper des phrases, ajuster début et fin — repoussé (Q10) : à faire si le besoin apparaît
 - [x] Aperçu de la vidéo avec la nouvelle voix avant l'export
-- [ ] Export complémentaire : sous-titres (SRT/VTT) et audio seul
+- [x] Export complémentaire : sous-titres (SRT/VTT) et audio seul
 
 ## Phase 4 — Mise en service
 - [x] Relevé des ressources consommées sur la VM par les applications existantes ; choix du volume de données (ex. `/srv/apps`)
