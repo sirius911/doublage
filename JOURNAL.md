@@ -2,6 +2,18 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : retours après essai sur la VM
+- Essai de l'utilisateur : tout fonctionne, mais la vidéo disparaissait en faisant défiler les phrases.
+- Éditeur en deux colonnes : vidéo (+ section « Vidéo doublée ») à gauche, fixe ; liste des phrases à droite
+  dans sa propre zone qui défile, et qui suit la phrase en cours pendant la lecture. Écran étroit : la vidéo
+  reste collée en haut.
+- Bouton « Générer la voix » supprimé : « ▶ Voix » joue la voix si elle est à jour, sinon la crée d'abord ;
+  curseur d'attente pendant la création. Conséquence : plus de moyen de refaire une voix déjà à jour
+  (une prise différente) sans modifier le texte.
+- Phrase d'explication sous « Générer la vidéo doublée » supprimée (jugée incompréhensible).
+- Déploiement : un conteneur `doublage-essai` (arrêté, pas supprimé) et l'ancien volume `doublage-modeles`
+  restent à nettoyer dans le stockage dédié ; compose utilise `doublage_doublage-modeles`.
+
 ## 2026-10-27 — Phase 2 : génération complète et export (fin de la Phase 2)
 - Section « Vidéo doublée » sous la liste des phrases : génération en tâche de fond avec barre de
   progression ; seules les phrases sans voix à jour sont synthétisées, les voix déjà écoutées sont reprises.

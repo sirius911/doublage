@@ -30,6 +30,10 @@
     surImage.hidden = !p;
     surImage.textContent = p ? p.texte.textContent : "";
     if (p) p.li.classList.add("en-cours");
+    // Pendant la lecture, la liste suit la phrase en cours (sauf si on y corrige un texte).
+    if (p && !video.paused && !p.li.parentElement.contains(document.activeElement)) {
+      p.li.scrollIntoView({ block: "nearest" });
+    }
   }
 
   // Correction sur l'image possible seulement à l'arrêt (sinon le texte change sous le curseur).
@@ -116,11 +120,12 @@
   const lecteurVoix = new Audio();
   const ETATS = { synthetisee: "voix à jour", modifiee: "texte modifié : voix à régénérer" };
 
+  function voixAJour(p) {
+    return "voix" in p.li.dataset && p.li.dataset.etat === "synthetisee";
+  }
+
   function majVoix(p) {
-    const aVoix = "voix" in p.li.dataset;
-    p.boutonVoix.disabled = !aVoix;
-    p.boutonGenerer.textContent = aVoix ? "Régénérer" : "Générer la voix";
-    p.etat.textContent = aVoix ? (ETATS[p.li.dataset.etat] || "") : "";
+    p.etat.textContent = "voix" in p.li.dataset ? (ETATS[p.li.dataset.etat] || "") : "";
   }
 
   function ecouterOriginal(p) {
@@ -136,10 +141,13 @@
     lecteurVoix.play();
   }
 
-  async function generer(p) {
+  // « ▶ Voix » : joue la voix si elle est à jour, sinon la crée d'abord (texte nouveau ou corrigé).
+  async function voix(p) {
     if (p.minuterie) await enregistrer(p);  // la voix doit suivre le texte corrigé
-    p.boutonGenerer.disabled = true;
-    p.etat.textContent = "Génération en cours…";
+    if (voixAJour(p)) { ecouterVoix(p); return; }
+    p.boutonVoix.disabled = true;
+    document.documentElement.classList.add("travail");
+    p.etat.textContent = "Création de la voix…";
     try {
       const r = await fetch(`/projets/${PROJET}/phrases/${p.id}/voix`, { method: "POST" });
       if (!r.ok) throw new Error(r.status);
@@ -150,18 +158,17 @@
     } catch (e) {
       p.etat.textContent = "Échec de la génération.";
     } finally {
-      p.boutonGenerer.disabled = false;
+      p.boutonVoix.disabled = false;
+      document.documentElement.classList.remove("travail");
     }
   }
 
   for (const p of phrases) {
     p.boutonVoix = p.li.querySelector(".voix");
-    p.boutonGenerer = p.li.querySelector(".generer");
     p.etat = p.li.querySelector(".etat");
     majVoix(p);
     p.li.querySelector(".original").addEventListener("click", () => ecouterOriginal(p));
-    p.boutonVoix.addEventListener("click", () => ecouterVoix(p));
-    p.boutonGenerer.addEventListener("click", () => generer(p));
+    p.boutonVoix.addEventListener("click", () => voix(p));
 
     p.li.addEventListener("click", (e) => {
       if (e.target.closest(".actions")) return;

@@ -132,7 +132,7 @@ def test_transcription_en_tache_de_fond(client, monkeypatch):
 
     assert client.get(url + "/etat").json()["etat"] == "termine"
     page = client.get(url).text
-    assert "1 phrase." in page and "Ouvrez Zimbra." in page and "00:00.0" in page
+    assert "Phrases <small>(1)</small>" in page and "Ouvrez Zimbra." in page and "00:00.0" in page
     assert "Lancer la transcription" not in page
     # Éditeur : phrase affichable sur l'image au bon timecode
     assert 'id="sur-image"' in page and 'data-debut="0.0" data-fin="2.5"' in page
@@ -160,7 +160,7 @@ def test_transcription_reelle_simulee(client, sample_video):
     url = creer_projet(client, sample_video.read_bytes())
     client.post(url + "/transcription")
     app.dependency_overrides[get_jobs]().wait(int(url.rsplit("/", 1)[1]), timeout=30)
-    assert "3 phrases" in client.get(url).text
+    assert "Phrases <small>(3)</small>" in client.get(url).text
 
 
 def test_suivi_de_l_envoi(client):
@@ -220,7 +220,7 @@ def test_video_doublee(client, monkeypatch):
     projet_id = int(url.rsplit("/", 1)[1])
     projet = app.dependency_overrides[get_projects]().get(projet_id)
     Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
-    assert "Générer la vidéo doublée" in client.get(url).text
+    assert "Générer la vidéo doublée" in client.get(url).text and "Générer la voix" not in client.get(url).text
     assert client.get(url + "/export").status_code == 404
 
     r = client.post(url + "/doublage", follow_redirects=False)

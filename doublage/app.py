@@ -98,11 +98,11 @@ def current_user(request: Request, store: Store) -> str:
 User = Annotated[str, Depends(current_user)]
 
 
-def page(title: str, body: str, wide: bool = False) -> str:
+def page(title: str, body: str, width: int = 40) -> str:
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>{title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="font-family: system-ui, sans-serif; max-width: {64 if wide else 40}rem; margin: 3rem auto; padding: 0 1rem">
+<body style="font-family: system-ui, sans-serif; max-width: {width}rem; margin: 3rem auto; padding: 0 1rem">
 {body}
 </body></html>"""
 
@@ -260,23 +260,28 @@ def editor(project: Project, job: Job | None) -> str:
         f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span>'
         f'<span class="actions"><button type="button" class="original">▶ Original</button>'
         f'<button type="button" class="voix">▶ Voix</button>'
-        f'<button type="button" class="generer">Générer la voix</button>'
         f'<span class="etat"></span></span></li>'
         for s in transcript.segments
     )
     n = len(transcript.segments)
     return f"""<link rel="stylesheet" href="/static/editeur.css">
+<div class="editeur">
+<div class="colonne-video">
 <div class="ecran">
 <video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
 <div id="sur-image" hidden spellcheck="true"></div>
 </div>
 <p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
 les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
-« ▶ Original » rejoue la phrase d'origine, « Générer la voix » crée la voix de synthèse. <span id="enregistrement"></span></small></p>
-<h2>Phrases</h2>
-<p>{n} phrase{"s" if n > 1 else ""}.</p>
-<ol id="phrases">{rows}</ol>
+« ▶ Original » rejoue la phrase d'origine, « ▶ Voix » fait entendre la voix de synthèse (créée si besoin).
+<span id="enregistrement"></span></small></p>
 {dubbing_section(project, job)}
+</div>
+<div class="colonne-phrases">
+<h2>Phrases <small>({n})</small></h2>
+<ol id="phrases">{rows}</ol>
+</div>
+</div>
 <script>const PROJET = {project.id};</script>
 <script src="/static/editeur.js"></script>"""
 
@@ -314,7 +319,6 @@ def dubbing_section(project: Project, job: Job | None) -> str:
     parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
 <button type="submit">{label}</button>
 </form>
-<p><small>Les phrases dont la voix est à jour sont reprises telles quelles ; les autres sont générées.</small></p>
 </section>""")
     return "\n".join(parts)
 
@@ -346,7 +350,7 @@ def project_page(user: User, project: CurrentProject, jobs: Jobs) -> str:
 <p><a href="/">← Projets</a></p>
 <h1>{escape(project.name)}</h1>
 <p><small>{escape(project.video_name)}, déposé par {escape(project.owner)}</small></p>
-{content}""", wide=True)
+{content}""", width=96 if project.transcript_path.exists() else 64)
 
 
 @app.post("/projets/{project_id}/transcription")

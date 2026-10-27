@@ -20,3 +20,20 @@
 #phrases .actions button { font-size: inherit; margin-right: .2em; }
 #phrases .etat { color: #666; }
 #phrases li[data-etat="modifiee"] .etat { color: #b65c00; }
+
+/* Deux colonnes : la vidéo reste visible, seule la liste des phrases défile. */
+.editeur { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
+.colonne-video { position: sticky; top: 1rem; }
+.colonne-phrases { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
+.colonne-phrases h2 { margin-top: 0; position: sticky; top: 0; background: #fff; }
+#phrases { padding-left: 2em; margin: 0; }
+#phrases li { margin-bottom: .3em; }
+/* Écran étroit : la vidéo reste en haut, la liste défile dessous. */
+@media (max-width: 900px) {
+  .editeur { grid-template-columns: 1fr; }
+  .colonne-video { position: static; }
+  .ecran { position: sticky; top: 0; z-index: 1; }
+  .colonne-phrases { position: static; max-height: none; overflow: visible; }
+}
+/* Voix en cours de génération : curseur d'attente sur toute la page. */
+html.travail, html.travail * { cursor: progress !important; }

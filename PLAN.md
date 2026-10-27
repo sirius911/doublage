@@ -36,6 +36,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Clic sur une phrase → la vidéo se place au timecode
 - [x] Écoute de l'original / de la voix synthétique d'une phrase ; régénération d'une seule phrase
 - [x] Génération de toutes les phrases + export de la vidéo finale à télécharger
+- [x] Retours après essai sur la VM : vidéo toujours visible (liste des phrases à côté, qui défile seule),
+      bouton « ▶ Voix » unique (crée la voix si besoin, curseur d'attente)
 
 ## Phase 3 — Calage et confort d'édition
 - [ ] Indicateur par phrase : la voix synthétique tient-elle dans son créneau ? (vert / orange / rouge)
