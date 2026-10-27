@@ -5,36 +5,21 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-### Q1 — Interface du serveur Whisper (bloque : adaptateur réel, Phase 1)
-Comment interroge-t-on le serveur ? Idéalement :
-- l'adresse (URL) et la méthode d'appel (exemple de commande `curl` ou de code existant) ;
-- le format de réponse : renvoie-t-il les **timecodes par phrase** (segments), voire par mot ?
-- faut-il une authentification (clé, jeton) ?
-- limite de taille ou de durée des fichiers envoyés ?
-
-En attendant, Claude développe avec un serveur simulé.
-
-Réponse :
-
-### Q2 — La VM d'hébergement (bloque : Phase 4)
-- Système (Linux ? quelle distribution ?), nombre de cœurs, mémoire, espace disque ?
-- Docker peut-il y être installé ?
-- La VM peut-elle joindre le serveur Whisper ?
-
-Réponse :
-
-### Q3 — Accès à l'application (bloque : Phase 4)
-Un accès libre depuis le réseau interne suffit-il, ou faut-il un mot de passe / les comptes de l'établissement ?
-
-Réponse :
-
-### Q4 — Validation des choix techniques (voir PLAN.md, « Choix techniques »)
-Python + FastAPI, interface web simple, Docker Compose sur la VM. D'accord ?
-
-Réponse :
+_(aucune pour l'instant)_
 
 ## Résolues
 - Entrée : la vidéo complète (pas seulement l'audio).
 - Voix de départ : « estelle » ; catalogue de voix plus tard.
 - Utilisateurs : 2 à 3 auteurs de tutoriels.
 - Type d'application : application web sur une VM de l'établissement.
+- Q1 — Serveur Whisper : API compatible OpenAI, `POST http://10.1.147.251:30000/v1/audio/transcriptions`,
+  `multipart/form-data`, champ `file`, `language=fr`, `response_format=verbose_json` ; la réponse contient
+  `text`, `duration` et `segments` (`start`, `end`, `text`). Testé avec succès sur un petit fichier audio
+  (pas encore sur l'audio d'une vidéo complète). Le serveur n'est pas joignable depuis les sessions cloud de Claude :
+  les essais réels se feront depuis la VM.
+- Q2 — VM : `svp-recvoc-a3p` (10.1.147.219), Oracle Linux 8.10, 4 vCPU, 15 Gio de RAM, **Podman 4.9.4 +
+  podman-compose 1.0.6** (pas de Docker). VM partagée avec d'autres applications en production (dont
+  ce-transcripteur-v2) : isolation complète obligatoire (conteneurs, réseau, ports, volumes, variables),
+  vérification des ressources avant déploiement, choix d'un volume adapté pour les données.
+- Q3 — Accès : connexion simple par mot de passe, sans sécurité poussée.
+- Q4 — Choix techniques : Python validé.

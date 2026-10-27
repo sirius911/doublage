@@ -2,12 +2,12 @@
 
 Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir QUESTIONS.md)
 
-## Choix techniques (proposés, à valider)
+## Choix techniques (validés)
 - Serveur : **Python + FastAPI** (Pocket TTS est une bibliothèque Python).
 - Interface : **HTML + JavaScript simple** servi par FastAPI (pas d'étape de compilation, facile à maintenir).
 - Stockage : un dossier par projet (vidéo, audio, `segments.json`, fichiers générés) + SQLite pour la liste des projets.
 - Traitements longs (transcription, synthèse, export) en tâche de fond, avec suivi de progression dans l'interface.
-- Déploiement : **Docker Compose** sur la VM.
+- Déploiement : **Podman + podman-compose 1.0.6** sur la VM (pas de Docker) ; fichier compose simple, compatible avec cette version.
 - Tests : pytest, avec une petite vidéo d'exemple et des faux services (Whisper simulé) pour tester sans le vrai serveur.
 
 ## Phase 0 — Socle
@@ -15,7 +15,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [ ] Application FastAPI minimale + page d'accueil
 - [ ] Configuration par fichier `.env` (adresse du serveur Whisper, dossier de données, modèle TTS, voix)
 - [ ] Intégration continue GitHub Actions (tests à chaque envoi)
-- [ ] Dockerfile + `docker-compose.yml` (avec ffmpeg et Pocket TTS en version processeur)
+- [ ] `Containerfile` + `compose.yml` compatibles Podman (ffmpeg, Pocket TTS version processeur, limite de CPU/mémoire)
 
 ## Phase 1 — Chaîne de traitement complète en ligne de commande
 - [ ] Extraction de l'audio de la vidéo (ffmpeg)
@@ -27,6 +27,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [ ] Commande `doublage traiter video.mp4` qui enchaîne tout → première vidéo doublée de bout en bout
 
 ## Phase 2 — Interface web
+- [ ] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
 - [ ] Liste des projets + dépôt d'une vidéo
 - [ ] Lancement de la transcription avec barre de progression
 - [ ] Éditeur : vidéo en fond, texte de la phrase en cours affiché sur l'image au bon timecode
@@ -43,7 +44,10 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [ ] Export complémentaire : sous-titres (SRT/VTT) et audio seul
 
 ## Phase 4 — Mise en service
-- [ ] Documentation d'installation sur la VM
+- [ ] Relevé des ressources consommées sur la VM par les applications existantes ; choix du volume de données (ex. `/srv/apps`)
+- [ ] Choix d'un port libre, réseau et volumes dédiés, aucune interférence avec ce-transcripteur-v2 et `scribe`
+- [ ] Essai réel du serveur Whisper avec l'audio d'une vidéo complète (taille et durée maximales acceptées)
+- [ ] Documentation d'installation sur la VM (Podman, sans droits administrateur si possible)
 - [ ] Environnement de test (staging) sur la VM, validé par l'utilisateur
 - [ ] Mise en production (uniquement après validation de l'utilisateur)
 

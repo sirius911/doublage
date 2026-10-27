@@ -10,6 +10,8 @@ Le traitement est **entièrement interne à l'établissement** : aucune donnée 
 ## Utilisateurs
 - 2 à 3 personnes : les auteurs des tutoriels.
 - Accès depuis le réseau interne, via un navigateur.
+- Connexion par identifiant et mot de passe (sécurité simple : le site peut être visible de tout le réseau
+  interne, mais seuls les utilisateurs ayant un compte y accèdent).
 
 ## Parcours utilisateur
 1. **Dépôt** d'un fichier vidéo complet (MP4, MKV, MOV…).
@@ -33,12 +35,14 @@ Le traitement est **entièrement interne à l'établissement** : aucune donnée 
    seule et un fichier de sous-titres).
 
 ## Briques techniques
-- **Transcription** : serveur Whisper interne (modèle finetuné). Accès via un module « adaptateur »
-  isolé, pour pouvoir s'adapter à son interface exacte.
+- **Transcription** : serveur Whisper interne (modèle finetuné), API compatible OpenAI
+  (`/v1/audio/transcriptions`, réponse `verbose_json` avec segments horodatés). Accès via un module
+  « adaptateur » isolé.
 - **Synthèse vocale** : [Pocket TTS](https://github.com/kyutai-labs/pocket-tts) (Kyutai), sur processeur,
   modèle `french` (ou `french_24l`, plus fin mais plus lent).
 - **Vidéo / audio** : ffmpeg (extraction, assemblage, ré-encodage de la bande son).
-- **Application** : application web hébergée sur une VM de l'établissement.
+- **Application** : application web Python hébergée sur la VM `svp-recvoc-a3p`, dans des conteneurs
+  **Podman** (podman-compose), isolée des applications déjà présentes.
 
 ## Voix
 - **Version 1** : voix « estelle » (fournie avec Pocket TTS).
