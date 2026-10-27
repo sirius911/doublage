@@ -2,6 +2,17 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Phase 5 : voix
+- Mise en production faite par l'utilisateur (VM sur `main`, `879ceed`).
+- Choix de la voix par projet : catalogue = voix prédéfinies de `DOUBLAGE_TTS_VOICES` + voix ajoutées ;
+  changer de voix efface les voix générées (texte conservé). Moteur Pocket TTS unique, voix en mémoire.
+- Voix à partir d'un échantillon (page « Voix ») : 30 premières secondes d'un fichier audio ou vidéo,
+  accord obligatoire, état exporté en `.safetensors` par modèle à la première utilisation.
+- Constat : estelle est la seule voix française de Pocket TTS ; les autres sont étrangères (à écouter).
+- Non éprouvé (Pocket TTS absent du poste) : `export_model_state`, relecture du `.safetensors`,
+  modèle `french_24l`. Essai sur la VM nécessaire.
+- Q13 : idée sur les sous-titres incomplète.
+
 ## 2026-10-27 — Interface compacte, suppression des projets
 - `main` mis à jour (avance rapide jusqu'à `4842483`) à la demande de l'utilisateur.
 - Barre de titre d'une ligne sur toutes les pages ; éditeur à la hauteur de l'écran (vidéo toujours

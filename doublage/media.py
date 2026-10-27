@@ -35,6 +35,16 @@ def extract_audio(video: Path, output: Path, sample_rate: int = 16000) -> Path:
     return output
 
 
+def prepare_voice_sample(source: Path, output: Path, max_seconds: float = 30,
+                         sample_rate: int = 24000) -> Path:
+    """Échantillon de voix (fichier audio ou vidéo) en WAV mono, limité à ses `max_seconds` premières secondes."""
+    _run([
+        "ffmpeg", "-y", "-v", "error", "-i", str(source), "-t", str(max_seconds),
+        "-vn", "-ac", "1", "-ar", str(sample_rate), "-c:a", "pcm_s16le", str(output),
+    ])
+    return output
+
+
 def write_wav(path: Path, audio: np.ndarray, sample_rate: int) -> Path:
     """Écrit un signal flottant (-1..1) mono en WAV 16 bits."""
     pcm = (np.clip(audio, -1.0, 1.0) * 32767).astype("<i2")

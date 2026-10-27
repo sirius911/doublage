@@ -1,5 +1,6 @@
 """Synthèse vocale d'une phrase."""
 
+from pathlib import Path
 from typing import Protocol
 
 import numpy as np
@@ -41,13 +42,29 @@ class PocketEngine:
         if threads:
             torch.set_num_threads(threads)
 
+        self.language = language
         self.model = TTSModel.load_model(language=language)
         self._voices: dict[str, PocketVoice] = {}
 
     def voice(self, voice: str) -> PocketVoice:
         if voice not in self._voices:
-            self._voices[voice] = PocketVoice(self.model, self.model.get_state_for_audio_prompt(voice))
+            self._voices[voice] = PocketVoice(self.model, self._state(voice))
         return self._voices[voice]
+
+    def _state(self, voice: str):
+        """État de la voix. Celui d'un échantillon (WAV) est long à calculer : il est exporté une fois
+        en .safetensors à côté du WAV, pour chaque modèle (french, french_24l…), puis relu."""
+        sample = Path(voice)
+        if sample.suffix != ".wav":
+            return self.model.get_state_for_audio_prompt(voice)
+        cache = sample.with_name(f"{sample.stem}.{self.language}.safetensors")
+        if not cache.exists():
+            from pocket_tts import export_model_state
+
+            partial = cache.with_name(f"{sample.stem}.{self.language}.partiel.safetensors")
+            export_model_state(self.model.get_state_for_audio_prompt(str(sample)), str(partial))
+            partial.replace(cache)
+        return self.model.get_state_for_audio_prompt(str(cache))
 
 
 class FakeSynthesizer:

@@ -28,7 +28,7 @@ def store(tmp_path) -> UserStore:
     app.dependency_overrides[get_transcriber] = FakeTranscriber
     engine = FakeEngine()
     app.dependency_overrides[get_engine] = lambda: engine
-    app.dependency_overrides[get_catalog] = lambda: VoiceCatalog(["estelle", "alba"], "estelle")
+    app.dependency_overrides[get_catalog] = lambda: VoiceCatalog(["estelle", "alba"], "estelle", tmp_path / "voix")
     yield store
     app.dependency_overrides.clear()
 
@@ -338,3 +338,42 @@ def test_calage_affiche_dans_l_editeur(client):
     page = client.get(url).text
     assert 'data-calage="vert"' in page and 'data-calage="rouge"' in page
     assert page.count("data-calage=") == 2  # pas d'indicateur sans voix
+
+
+def test_page_des_voix(client, monkeypatch):
+    from doublage import media
+    from test_voices import faux_echantillon
+
+    monkeypatch.setattr(media, "prepare_voice_sample", faux_echantillon(10))
+    login(client)
+    page = client.get("/voix").text
+    assert "Estelle" in page and "Alba" in page and 'name="accord"' in page and 'href="/voix"' in page
+
+    fichier = {"echantillon": ("moi.m4a", b"son", "audio/mp4")}
+    r = client.post("/voix", data={"nom": "Cyrille"}, files=fichier)
+    assert r.status_code == 400 and "accord" in r.text
+    r = client.post("/voix", data={"nom": "Cyrille", "accord": "1"}, files=fichier, follow_redirects=False)
+    assert r.status_code == 303
+    voix = app.dependency_overrides[get_catalog]().custom()[0]
+    page = client.get("/voix").text
+    assert "Cyrille" in page and "ajoutée par alice" in page
+    wav = client.get(f"/voix/{voix.id}/echantillon")
+    assert wav.status_code == 200 and wav.content[:4] == b"RIFF"
+    assert client.get("/voix/estelle/echantillon").status_code == 404
+
+    # Choisie dans un projet : proposée dans l'éditeur, transmise au moteur, non supprimable.
+    url = creer_projet(client)
+    projets = app.dependency_overrides[get_projects]()
+    projet_id = int(url.rsplit("/", 1)[1])
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projets.get(projet_id).transcript_path)
+    assert f'<option value="{voix.id}">Cyrille</option>' in client.get(url).text
+    client.post(url + "/voix", data={"voix": voix.id})
+    client.post(url + "/phrases/0/voix")
+    assert app.dependency_overrides[get_engine]().voices[-1] == voix.ref
+    r = client.post(f"/voix/{voix.id}/suppression")
+    assert r.status_code == 409 and "utilisée par" in r.text
+
+    client.post(url + "/voix", data={"voix": "estelle"})
+    r = client.post(f"/voix/{voix.id}/suppression", follow_redirects=False)
+    assert r.status_code == 303 and app.dependency_overrides[get_catalog]().custom() == []
+    assert client.post("/voix/estelle/suppression").status_code == 404

@@ -26,7 +26,7 @@ from .segments import Segment, Transcript
 from .subtitles import to_srt, to_vtt
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 from .tts import Engine, FakeEngine, Synthesizer
-from .voices import VoiceCatalog
+from .voices import SAMPLE_MAX_SECONDS, SAMPLE_MIN_SECONDS, Voice, VoiceCatalog, VoiceError
 
 SESSION_COOKIE = "doublage_session"
 
@@ -79,7 +79,8 @@ def get_engine() -> Engine:
 
 def get_catalog() -> VoiceCatalog:
     settings = get_settings()
-    return VoiceCatalog(settings.tts_voices.replace(" ", "").split(","), settings.tts_voice)
+    return VoiceCatalog(settings.tts_voices.replace(" ", "").split(","), settings.tts_voice,
+                        settings.data_dir / "voix")
 
 
 Catalog = Annotated[VoiceCatalog, Depends(get_catalog)]
@@ -166,7 +167,7 @@ def logout(request: Request, store: Store) -> RedirectResponse:
 def header(user: str, title: str = "") -> str:
     """Barre de titre : retour aux projets, titre de la page (HTML), utilisateur et déconnexion."""
     return f"""<header class="barre"><a class="marque" href="/">Doublage</a>{title}
-<span class="espace"></span><span>{escape(user)}</span>
+<span class="espace"></span><a href="/voix">Voix</a><span>{escape(user)}</span>
 <form method="post" action="/deconnexion"><button type="submit">Se déconnecter</button></form></header>"""
 
 
@@ -257,6 +258,79 @@ def create_project(user: User, projects: Projects, video: UploadFile,
     return RedirectResponse(f"/projets/{project.id}", status_code=303)
 
 
+def voices_page(user: str, catalog: VoiceCatalog, error: str = "") -> str:
+    rows = []
+    for v in catalog.list():
+        if v.added_by is None:
+            rows.append(f"<li><span>{escape(v.label)} <small>— voix prédéfinie de Pocket TTS</small></span></li>")
+            continue
+        rows.append(
+            f'<li><span>{escape(v.label)} <small>— ajoutée par {escape(v.added_by)} le '
+            f'{datetime.fromtimestamp(v.added):%d/%m/%Y}</small> '
+            f'<audio controls preload="none" src="/voix/{escape(v.id)}/echantillon"></audio></span>'
+            f'<form method="post" action="/voix/{escape(v.id)}/suppression" data-nom="{escape(v.label)}" '
+            f'onsubmit="return confirm(\'Supprimer la voix « \' + this.dataset.nom + \' » ?\')">'
+            f'<button type="submit" class="supprimer" title="Supprimer la voix">×</button></form></li>')
+    message = f'<p style="color: #b00">{escape(error)}</p>' if error else ""
+    return page("Voix — Doublage", f"""<h2>Voix disponibles</h2>
+<ul class="projets">{"".join(rows)}</ul>
+<h2>Ajouter une voix à partir d'un échantillon</h2>
+{message}
+<p><small>Un enregistrement de {SAMPLE_MIN_SECONDS} à {SAMPLE_MAX_SECONDS} secondes d'une seule personne
+qui parle naturellement, sans musique ni bruit de fond : la qualité de l'échantillon (écho, souffle)
+se retrouve dans la voix produite. Fichier audio ou vidéo ; seules les {SAMPLE_MAX_SECONDS} premières
+secondes sont gardées. L'échantillon reste sur le serveur de l'établissement.</small></p>
+<form method="post" action="/voix" enctype="multipart/form-data">
+<p><label>Nom de la voix<br><input name="nom" size="30" required></label></p>
+<p><label>Échantillon<br><input type="file" name="echantillon" accept="audio/*,video/*" required></label></p>
+<p><label><input type="checkbox" name="accord" value="1" required> La personne enregistrée a donné son
+accord pour que sa voix soit utilisée dans les tutoriels.</label></p>
+<p><button type="submit">Ajouter la voix</button></p>
+</form>""", bar=header(user, '<span>›</span><span class="titre">Voix</span>'))
+
+
+@app.get("/voix", response_class=HTMLResponse)
+def voices(user: User, catalog: Catalog) -> str:
+    return voices_page(user, catalog)
+
+
+@app.post("/voix", response_model=None)
+def add_voice(user: User, catalog: Catalog, nom: Annotated[str, Form()], echantillon: UploadFile,
+              accord: Annotated[bool, Form()] = False) -> RedirectResponse | HTMLResponse:
+    try:
+        if not accord:
+            raise VoiceError("L'accord de la personne enregistrée est obligatoire.")
+        catalog.add(nom, echantillon.file, user)
+    except VoiceError as e:
+        return HTMLResponse(voices_page(user, catalog, str(e)), status_code=400)
+    return RedirectResponse("/voix", status_code=303)
+
+
+def custom_voice(voice_id: str, catalog: Catalog) -> Voice:
+    voice = catalog.get(voice_id)
+    if voice is None or voice.added_by is None:
+        raise HTTPException(404, "Voix introuvable")
+    return voice
+
+
+@app.get("/voix/{voice_id}/echantillon")
+def voice_sample(user: User, voice: Annotated[Voice, Depends(custom_voice)]) -> FileResponse:
+    return FileResponse(voice.ref, media_type="audio/wav")
+
+
+@app.post("/voix/{voice_id}/suppression", response_model=None)
+def delete_voice(user: User, voice: Annotated[Voice, Depends(custom_voice)], catalog: Catalog,
+                 projects: Projects) -> RedirectResponse | HTMLResponse:
+    used = [p.name for p in projects.list() if p.voice == voice.id]
+    if used:  # ces projets repasseraient sans prévenir sur la voix par défaut
+        return HTMLResponse(voices_page(user, catalog, f"« {voice.label} » est utilisée par : "
+                                        f"{', '.join(used)}. Choisissez une autre voix dans ces projets "
+                                        f"avant de la supprimer."), status_code=409)
+    with _synthesis_lock:
+        catalog.delete(voice.id)
+    return RedirectResponse("/voix", status_code=303)
+
+
 def get_project(project_id: int, projects: Projects) -> Project:
     project = projects.get(project_id)
     if project is None:
@@ -326,7 +400,7 @@ def voice_choice(project: Project, catalog: VoiceCatalog) -> str:
                       f'{escape(v.label)}</option>' for v in voices)
     return f"""<form id="choix-voix" method="post" action="/projets/{project.id}/voix"
  onchange="if (confirm('Changer de voix efface les voix déjà générées pour ce projet (le texte corrigé est conservé). Continuer ?')) this.submit(); else this.reset()">
-<label>Voix : <select name="voix">{options}</select></label>
+<label>Voix : <select name="voix">{options}</select></label> <small><a href="/voix">ajouter une voix</a></small>
 <noscript><button type="submit">Changer</button></noscript></form>"""
 
 
