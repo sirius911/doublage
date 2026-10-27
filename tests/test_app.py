@@ -280,6 +280,13 @@ def test_choix_de_la_voix(client):
     assert (projet.folder / "phrases" / "0000.wav").exists()
     assert client.post(url + "/voix", data={"voix": "inconnue"}).status_code == 400
 
+    # alba retirée du catalogue : le projet affiche estelle, et choisir estelle refait bien les voix.
+    app.dependency_overrides[get_catalog] = lambda: VoiceCatalog(["estelle"], "estelle")
+    assert '<option value="estelle" selected>' in client.get(url).text
+    client.post(url + "/voix", data={"voix": "estelle"})
+    assert projets.get(projet_id).voice == "estelle"
+    assert not (projet.folder / "phrases").exists()
+
 
 def test_video_doublee(client, monkeypatch):
     from doublage import media

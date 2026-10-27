@@ -12,6 +12,11 @@ Historique des sessions, la plus récente en haut.
 - Non éprouvé (Pocket TTS absent du poste) : `export_model_state`, relecture du `.safetensors`,
   modèle `french_24l`. Essai sur la VM nécessaire.
 - Q13 : idée sur les sous-titres incomplète.
+- Suite : clonage de voix validé sur la VM après acceptation des conditions Hugging Face (modèle à accès
+  restreint, `HF_TOKEN` dans `.env`) ; export / relecture `.safetensors` OK. Voix retenues : estelle et
+  marius. Q13 résolue (sous-titres gravés, case décochée).
+- Corrigé : un échec de préparation de voix donnait une erreur 500 muette ; une voix retirée du catalogue
+  laissait ses voix générées marquées à jour (mélange de voix possible).
 
 ## 2026-10-27 — Interface compacte, suppression des projets
 - `main` mis à jour (avance rapide jusqu'à `4842483`) à la demande de l'utilisateur.

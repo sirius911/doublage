@@ -568,7 +568,10 @@ def change_voice(user: User, project: CurrentProject, projects: Projects, jobs: 
     job = jobs.get(project.id)
     if job is not None and job.active:  # le doublage en cours mélangerait les deux voix
         raise HTTPException(409, "Impossible de changer de voix pendant un traitement en cours")
-    if voice != catalog.for_project(project.voice):
+    # Voix enregistrée retirée du catalogue : les voix générées ne sont pas celles de la voix affichée
+    # (voix par défaut), il faut les refaire même si c'est celle-ci qu'on choisit.
+    current = catalog.get(project.voice) if project.voice else catalog.for_project(None)
+    if voice != current:
         with _synthesis_lock, _transcript_lock:
             projects.set_voice(project.id, voice.id)
             reset_voices(project.folder)
