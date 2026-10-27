@@ -8,7 +8,8 @@
   font-size: clamp(14px, 2.2vw, 26px); line-height: 1.35;
   pointer-events: none;
 }
-#phrases li { padding: .15em .3em; border-radius: .2em; }
+#phrases li { padding: .15em .3em; border-radius: .2em; cursor: pointer; }
+#phrases .aller { font: .85em monospace; padding: 0 .3em; cursor: pointer; }
 #phrases li.en-cours { background: #fff3b0; }
 #sur-image.modifiable { pointer-events: auto; cursor: text; outline: 2px dashed rgba(255, 255, 255, .6); }
 #sur-image:focus { outline: 2px solid #ffd54a; }

@@ -97,7 +97,17 @@
   });
   entreeValide(surImage);
 
+  // Clic sur une phrase : la vidéo se place à son début (lecture ou pause conservée). Un clic dans
+  // le texte de la phrase déjà en cours ne déplace pas la vidéo, pour pouvoir corriger tranquillement.
+  function allerA(p) {
+    video.currentTime = p.debut;
+    afficher();
+  }
+
   for (const p of phrases) {
+    p.li.addEventListener("click", (e) => {
+      if (e.target.closest(".aller") || p !== enCours) allerA(p);
+    });
     p.texte.addEventListener("input", () => {
       if (p === enCours) surImage.textContent = p.texte.textContent;
       modifie(p);

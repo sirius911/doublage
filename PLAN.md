@@ -33,7 +33,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Lancement de la transcription avec barre de progression (étape + temps écoulé : Whisper ne donne pas d'avancement)
 - [x] Éditeur : vidéo en fond, texte de la phrase en cours affiché sur l'image au bon timecode
 - [x] Modification du texte sur l'image et dans la liste des phrases, enregistrement automatique
-- [ ] Clic sur une phrase → la vidéo se place au timecode
+- [x] Clic sur une phrase → la vidéo se place au timecode
 - [ ] Écoute de l'original / de la voix synthétique d'une phrase ; régénération d'une seule phrase
 - [ ] Génération de toutes les phrases + export de la vidéo finale à télécharger
 

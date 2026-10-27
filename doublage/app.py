@@ -235,7 +235,8 @@ def editor(project: Project) -> str:
     transcript = Transcript.load(project.transcript_path)
     rows = "".join(
         f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}">'
-        f'<code>{timecode(s.start)}</code> <span class="texte" contenteditable="plaintext-only" '
+        f'<button type="button" class="aller" title="Aller à ce moment de la vidéo">'
+        f'{timecode(s.start)}</button> <span class="texte" contenteditable="plaintext-only" '
         f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span></li>'
         for s in transcript.segments
     )
@@ -246,7 +247,7 @@ def editor(project: Project) -> str:
 <div id="sur-image" hidden spellcheck="true"></div>
 </div>
 <p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
-les modifications sont enregistrées automatiquement. <span id="enregistrement"></span></small></p>
+les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo. <span id="enregistrement"></span></small></p>
 <h2>Phrases</h2>
 <p>{n} phrase{"s" if n > 1 else ""}.</p>
 <ol id="phrases">{rows}</ol>

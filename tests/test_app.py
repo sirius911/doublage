@@ -134,6 +134,7 @@ def test_transcription_en_tache_de_fond(client, monkeypatch):
     assert "Lancer la transcription" not in page
     # Éditeur : phrase affichable sur l'image au bon timecode
     assert 'id="sur-image"' in page and 'data-debut="0.0" data-fin="2.5"' in page
+    assert 'class="aller"' in page and ">00:00.0</button>" in page  # clic → timecode
     assert client.get("/static/editeur.js").status_code == 200
 
 

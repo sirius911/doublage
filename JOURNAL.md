@@ -2,6 +2,11 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : clic sur une phrase
+- Clic sur une phrase de la liste (ou sur son timecode, devenu un bouton) : la vidéo se place à son début,
+  lecture ou pause conservée. Un clic dans le texte de la phrase déjà en cours ne déplace pas la vidéo.
+- Non vérifié dans un vrai navigateur. Suite : écoute original / voix synthétique, régénération d'une phrase.
+
 ## 2026-10-27 — Phase 2 : correction du texte
 - Correction sur l'image (vidéo en pause : le texte devient modifiable) ou dans la liste ; les deux restent
   synchronisés. Enregistrement automatique 0,8 s après la dernière frappe et en quittant la phrase, état
