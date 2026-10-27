@@ -232,3 +232,19 @@ def test_video_doublee(client, monkeypatch):
     export = client.get(url + "/export")
     assert export.status_code == 200 and export.content == b"video"
     assert "doubl" in export.headers["content-disposition"]
+
+
+def test_calage_affiche_dans_l_editeur(client):
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    # Voix simulée : 0,06 s par caractère → 10 caractères = 0,6 s ; 60 caractères = 3,6 s.
+    Transcript(10.0, [Segment(0, 0.0, 1.0, "Bonjour !!", "Bonjour !!"),
+                      Segment(1, 2.0, 3.0, "x" * 60, "x" * 60),
+                      Segment(2, 4.0, 5.0, "Fin.", "Fin.")]).save(projet.transcript_path)
+    assert client.post(url + "/phrases/0/voix").json()["calage"] == "vert"
+    r = client.post(url + "/phrases/1/voix").json()
+    assert r["calage"] == "rouge" and "1,6 s" in r["calage_texte"]
+    page = client.get(url).text
+    assert 'data-calage="vert"' in page and 'data-calage="rouge"' in page
+    assert page.count("data-calage=") == 2  # pas d'indicateur sans voix

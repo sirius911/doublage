@@ -52,6 +52,12 @@ def read_wav(path: Path) -> tuple[np.ndarray, int]:
         return np.frombuffer(frames, dtype="<i2").astype(np.float32) / 32767, f.getframerate()
 
 
+def wav_duration(path: Path) -> float:
+    """Durée d'un WAV (secondes), lue dans l'en-tête sans charger le signal."""
+    with wave.open(str(path), "rb") as f:
+        return f.getnframes() / f.getframerate()
+
+
 def replace_audio(video: Path, audio: Path, output: Path) -> Path:
     """Remplace la bande son de la vidéo, sans ré-encoder l'image."""
     _run([

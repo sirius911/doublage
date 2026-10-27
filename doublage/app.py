@@ -13,13 +13,14 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import __version__
+from . import __version__, media
+from .assembly import Fit, fit
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
 from .pipeline import clip_path, dub_project, mark_synthesized, synthesize_segment, transcribe_video
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
-from .segments import Transcript
+from .segments import Segment, Transcript
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 from .tts import FakeSynthesizer, Synthesizer
 
@@ -249,20 +250,33 @@ def timecode(seconds: float) -> str:
     return f"{int(seconds // 60):02d}:{seconds % 60:04.1f}"
 
 
-def editor(project: Project, job: Job | None) -> str:
-    """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
-    transcript = Transcript.load(project.transcript_path)
-    rows = "".join(
-        f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"'
-        f'{" data-voix" if clip_path(project.folder, s.id).exists() else ""}>'
+def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tuple[Fit, str] | None:
+    """Calage de la voix existante d'une phrase dans son créneau (None : pas encore de voix)."""
+    path = clip_path(project.folder, segment.id)
+    if not path.exists():
+        return None
+    return fit(segment, transcript.slot_end(segment), media.wav_duration(path))
+
+
+def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
+    calage = voice_fit(project, transcript, s)
+    voice = f' data-voix data-calage="{calage[0]}"' if calage else ""
+    return (
+        f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"{voice}>'
         f'<button type="button" class="aller" title="Aller à ce moment de la vidéo">'
         f'{timecode(s.start)}</button> <span class="texte" contenteditable="plaintext-only" '
         f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span>'
         f'<span class="actions"><button type="button" class="original">▶ Original</button>'
         f'<button type="button" class="voix">▶ Voix</button>'
+        f'<span class="calage" title="{escape(calage[1]) if calage else ""}">●</span>'
         f'<span class="etat"></span></span></li>'
-        for s in transcript.segments
     )
+
+
+def editor(project: Project, job: Job | None) -> str:
+    """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
+    transcript = Transcript.load(project.transcript_path)
+    rows = "".join(segment_row(project, transcript, s) for s in transcript.segments)
     n = len(transcript.segments)
     return f"""<link rel="stylesheet" href="/static/editeur.css">
 <div class="editeur">
@@ -274,6 +288,9 @@ def editor(project: Project, job: Job | None) -> str:
 <p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
 les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
 « ▶ Original » rejoue la phrase d'origine, « ▶ Voix » fait entendre la voix de synthèse (créée si besoin).
+La pastille indique si la voix tient dans le temps de la phrase d'origine : <span style="color: #2e7d32">●</span> oui,
+<span style="color: #ef8a00">●</span> elle déborde sur le silence qui suit, <span style="color: #c62828">●</span> elle
+empiète sur la phrase suivante (détail au survol).
 <span id="enregistrement"></span></small></p>
 {dubbing_section(project, job)}
 </div>
@@ -420,7 +437,10 @@ def synthesize_one(user: User, project: CurrentProject, segment_id: int,
         synthesize_segment(segment, project.folder, synthesizer)
     with _transcript_lock:
         current = mark_synthesized(project.transcript_path, segment)
-    return {"id": segment_id, "etat": current.status if current else None}
+        transcript = Transcript.load(project.transcript_path)
+    level, explanation = voice_fit(project, transcript, segment)
+    return {"id": segment_id, "etat": current.status if current else None,
+            "calage": level, "calage_texte": explanation}
 
 
 @app.get("/projets/{project_id}/phrases/{segment_id}/voix")

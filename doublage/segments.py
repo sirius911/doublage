@@ -43,6 +43,11 @@ class Transcript:
                 segment.status = Status.MODIFIED
         return segment
 
+    def slot_end(self, segment: Segment) -> float:
+        """Fin du créneau d'une phrase : début de la suivante, ou fin de la vidéo."""
+        later = [s.start for s in self.segments if s.start > segment.start]
+        return min(later) if later else max(self.duration, segment.end)
+
     def save(self, path: Path) -> None:
         data = {"duration": self.duration, "segments": [asdict(s) for s in self.segments]}
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

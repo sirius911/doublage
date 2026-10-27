@@ -151,8 +151,11 @@
     try {
       const r = await fetch(`/projets/${PROJET}/phrases/${p.id}/voix`, { method: "POST" });
       if (!r.ok) throw new Error(r.status);
+      const reponse = await r.json();
       p.li.dataset.voix = "";
-      p.li.dataset.etat = (await r.json()).etat;
+      p.li.dataset.etat = reponse.etat;
+      p.li.dataset.calage = reponse.calage;
+      p.calage.title = reponse.calage_texte;
       majVoix(p);
       ecouterVoix(p);
     } catch (e) {
@@ -166,6 +169,7 @@
   for (const p of phrases) {
     p.boutonVoix = p.li.querySelector(".voix");
     p.etat = p.li.querySelector(".etat");
+    p.calage = p.li.querySelector(".calage");
     majVoix(p);
     p.li.querySelector(".original").addEventListener("click", () => ecouterOriginal(p));
     p.boutonVoix.addEventListener("click", () => voix(p));
@@ -191,7 +195,11 @@
       const li = page.querySelector(`#phrases li[data-id="${p.id}"]`);
       if (!li) continue;
       p.li.dataset.etat = li.dataset.etat;
-      if ("voix" in li.dataset) p.li.dataset.voix = "";
+      if ("voix" in li.dataset) {
+        p.li.dataset.voix = "";
+        p.li.dataset.calage = li.dataset.calage;
+        p.calage.title = li.querySelector(".calage").title;
+      }
       majVoix(p);
     }
   };

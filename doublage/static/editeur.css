@@ -20,6 +20,13 @@
 #phrases .actions button { font-size: inherit; margin-right: .2em; }
 #phrases .etat { color: #666; }
 #phrases li[data-etat="modifiee"] .etat { color: #b65c00; }
+/* Calage de la voix dans son créneau (explication au survol). Grisé si la voix est périmée. */
+#phrases .calage { display: none; margin: 0 .3em; cursor: help; }
+#phrases li[data-voix] .calage { display: inline; }
+#phrases li[data-calage="vert"] .calage { color: #2e7d32; }
+#phrases li[data-calage="orange"] .calage { color: #ef8a00; }
+#phrases li[data-calage="rouge"] .calage { color: #c62828; }
+#phrases li[data-etat="modifiee"] .calage { opacity: .35; }
 
 /* Deux colonnes : la vidéo reste visible, seule la liste des phrases défile. */
 .editeur { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }

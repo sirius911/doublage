@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from doublage.assembly import assemble
+from doublage.assembly import Fit, assemble, fit
+from doublage.segments import Segment, Transcript
 
 SR = 100
 
@@ -26,3 +27,15 @@ def test_debordement_decale_la_suivante():
 def test_piste_allongee_si_necessaire():
     track, _ = assemble([(0, 0.5, np.ones(100, np.float32))], 1.0, SR)
     assert len(track) == 150
+
+
+def test_calage_dans_le_creneau():
+    t = Transcript(10.0, [Segment(0, 1.0, 3.0, "a", "a"), Segment(1, 4.0, 6.0, "b", "b")])
+    premier, dernier = t.segments
+    assert t.slot_end(premier) == 4.0 and t.slot_end(dernier) == 10.0
+    assert fit(premier, 4.0, 2.0)[0] == Fit.OK
+    assert fit(premier, 4.0, 2.03)[0] == Fit.OK  # écart inaudible
+    niveau, texte = fit(premier, 4.0, 2.8)
+    assert niveau == Fit.OVERFLOW and "2,8 s" in texte and "2,0 s" in texte
+    niveau, texte = fit(premier, 4.0, 3.5)
+    assert niveau == Fit.OVERLAP and "0,5 s" in texte

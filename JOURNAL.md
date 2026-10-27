@@ -2,6 +2,13 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 3 : indicateur de calage par phrase
+- Pastille à côté de « ▶ Voix » (dès qu'une voix existe) : verte si la voix tient dans la durée de la
+  phrase d'origine, orange si elle déborde sur le silence qui suit, rouge si elle empiète sur la phrase
+  suivante (qui sera décalée à l'assemblage). Détail au survol (durées, débordement). Pastille grisée si
+  le texte a changé depuis la voix. Tolérance de 0,05 s.
+- Chaque phrase est jugée isolément : le décalage en cascade d'une phrase rouge sur les suivantes n'est
+  pas reflété. Suite : solutions automatiques (accélération légère, débord sur le silence).
 ## 2026-10-27 — Phase 2 : retours après essai sur la VM
 - Essai de l'utilisateur : tout fonctionne, mais la vidéo disparaissait en faisant défiler les phrases.
 - Éditeur en deux colonnes : vidéo (+ section « Vidéo doublée ») à gauche, fixe ; liste des phrases à droite
