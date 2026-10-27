@@ -11,6 +11,16 @@ body { font-family: system-ui, sans-serif; display: flex; flex-direction: column
 .barre .espace { flex: 1; }
 .barre form { margin: 0; }
 .barre button { font-size: .85em; }
+/* Liste des projets : croix de suppression à droite de chaque ligne. */
+.projets { padding-left: 1.2em; }
+.projets li { display: flex; align-items: baseline; gap: .5rem; padding: .2rem 0; }
+.projets li > span { flex: 1; }
+.projets form { margin: 0; }
+.projets .supprimer {
+  border: none; background: none; color: #999; font-size: 1.2em; line-height: 1;
+  padding: 0 .3em; cursor: pointer;
+}
+.projets .supprimer:hover { color: #c62828; }
 main { width: 100%; box-sizing: border-box; margin: 0 auto; padding: 1rem; }
 
 /* Éditeur : toute la hauteur de l'écran, seules les zones intérieures défilent. */

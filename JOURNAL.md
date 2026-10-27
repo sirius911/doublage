@@ -2,6 +2,15 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Interface compacte, suppression des projets
+- `main` mis à jour (avance rapide jusqu'à `4842483`) à la demande de l'utilisateur.
+- Barre de titre d'une ligne sur toutes les pages ; éditeur à la hauteur de l'écran (vidéo toujours
+  visible, phrases qui défilent à droite, boutons sur une ligne à part). Validé (« c'est mieux »).
+- Suppression d'un projet (idée de l'utilisateur) : croix à droite dans la liste, confirmation du
+  navigateur, tout le dossier est effacé ; refusée (409) pendant une transcription ou un doublage, attend
+  la fin d'une voix ou d'une correction en cours. Ouverte à tout utilisateur connecté (collègues).
+- Suite : fusion `dev` → `main` par l'utilisateur, comptes des collègues ; puis HTTPS (Q12) ou Phase 5.
+
 ## 2026-10-27 — Phase 4 : service installé sur la VM
 - `doublage@doublage` activé ; premier passage de `deploiement/mettre-a-jour` réussi (conteneur recréé,
   service relancé, `/sante` OK) ; le conteneur est bien tenu par systemd (`podman start --attach`).

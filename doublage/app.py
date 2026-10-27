@@ -162,9 +162,13 @@ def header(user: str, title: str = "") -> str:
 
 def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
     rows = "".join(
-        f'<li><a href="/projets/{p.id}">{escape(p.name)}</a> '
+        f'<li><span><a href="/projets/{p.id}">{escape(p.name)}</a> '
         f'<small>— {escape(p.video_name)}, déposé par {escape(p.owner)} le '
-        f'{datetime.fromtimestamp(p.created):%d/%m/%Y à %H:%M}</small></li>'
+        f'{datetime.fromtimestamp(p.created):%d/%m/%Y à %H:%M}</small></span>'
+        f'<form method="post" action="/projets/{p.id}/suppression" data-nom="{escape(p.name)}" '
+        f'onsubmit="return confirm(\'Supprimer définitivement le projet « \' + this.dataset.nom + '
+        f'\' » ?\\nLa vidéo, la transcription corrigée, les voix et la vidéo doublée seront effacées.\')">'
+        f'<button type="submit" class="supprimer" title="Supprimer le projet">×</button></form></li>'
         for p in projects.list()
     )
     message = f'<p style="color: #b00">{escape(error)}</p>' if error else ""
@@ -181,7 +185,7 @@ def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
 </form>
 {UPLOAD_SCRIPT}
 <h2>Projets</h2>
-{f"<ul>{rows}</ul>" if rows else "<p>Aucun projet pour l'instant.</p>"}""", bar=header(user))
+{f'<ul class="projets">{rows}</ul>' if rows else "<p>Aucun projet pour l'instant.</p>"}""", bar=header(user))
 
 
 # Envoi de la vidéo avec suivi de l'avancement (sans JavaScript, le formulaire classique fonctionne).
@@ -251,6 +255,21 @@ def get_project(project_id: int, projects: Projects) -> Project:
 
 
 CurrentProject = Annotated[Project, Depends(get_project)]
+
+
+@app.post("/projets/{project_id}/suppression", response_model=None)
+def delete_project(user: User, project: CurrentProject, projects: Projects,
+                   jobs: Jobs) -> RedirectResponse | HTMLResponse:
+    """Supprime le projet et tous ses fichiers (la confirmation est demandée par la page)."""
+    job = jobs.get(project.id)
+    if job is not None and job.active:  # le traitement écrirait dans un dossier effacé
+        work = "la transcription" if job.kind == "transcription" else "le doublage"
+        return HTMLResponse(home_page(user, projects, f"« {project.name} » ne peut pas être supprimé "
+                                      f"pendant {work} en cours : réessayez une fois le traitement terminé."),
+                            status_code=409)
+    with _synthesis_lock, _transcript_lock:  # attend la fin d'une voix ou d'une correction en cours
+        projects.delete(project.id)
+    return RedirectResponse("/", status_code=303)
 
 
 def timecode(seconds: float) -> str:

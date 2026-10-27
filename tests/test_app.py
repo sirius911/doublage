@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 
 import pytest
@@ -116,6 +117,39 @@ def test_projets_reserves_aux_utilisateurs_connectes(client):
 def creer_projet(client, contenu=b"video", nom="zimbra.mp4") -> str:
     r = client.post("/projets", files={"video": (nom, contenu, "video/mp4")}, follow_redirects=False)
     return r.headers["location"]
+
+
+def test_suppression_d_un_projet(client, tmp_path):
+    login(client)
+    url = creer_projet(client)
+    dossier = tmp_path / "projets" / url.rsplit("/", 1)[1]
+    assert dossier.exists()
+    accueil = client.get("/").text
+    assert f'action="{url}/suppression"' in accueil and 'class="supprimer"' in accueil and "confirm(" in accueil
+
+    r = client.post(url + "/suppression", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/"
+    assert not dossier.exists()
+    assert client.get(url).status_code == 404
+    assert "Aucun projet" in client.get("/").text
+    assert client.post(url + "/suppression").status_code == 404
+
+
+def test_suppression_refusee_pendant_un_traitement(client, tmp_path):
+    login(client)
+    url = creer_projet(client)
+    project_id = int(url.rsplit("/", 1)[1])
+    fin = threading.Event()
+    jobs = app.dependency_overrides[get_jobs]()
+    jobs.submit(project_id, "doublage", lambda progress: fin.wait(5))
+    try:
+        r = client.post(url + "/suppression")
+        assert r.status_code == 409 and "pendant le doublage en cours" in r.text
+        assert (tmp_path / "projets" / str(project_id)).exists()
+    finally:
+        fin.set()
+        jobs.wait(project_id, timeout=5)
+    assert client.post(url + "/suppression", follow_redirects=False).status_code == 303
 
 
 def test_transcription_en_tache_de_fond(client, monkeypatch):
