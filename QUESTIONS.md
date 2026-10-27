@@ -5,27 +5,36 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-### Q8 — Emplacement des données (non bloquant)
-Par défaut, les données (vidéos déposées, projets, comptes) vont dans `/srv/apps/doublage/data`, sur `/`
-(42 Go libres, partagés avec le système). Une alternative est `/var/lib/containers/doublage/data` (197 Go).
-Pour quelques tutoriels de quelques centaines de Mo, `/srv` suffit largement ; je recommande de le garder
-et de revoir si le volume grossit. D'accord ?
+### Q11 — Organisation test / production sur la VM (bloque le staging et la mise en production)
+Proposition :
 
-Réponse : Oui
+| | Production | Test (staging) |
+|---|---|---|
+| Dossier | `/srv/apps/doublage` | `/srv/apps/doublage-test` |
+| Branche | `main` (version validée) | `dev` |
+| Port | 8091 | 8092 |
+| Données, comptes | `/srv/apps/doublage/data` (les actuelles) | `/srv/apps/doublage-test/data` (séparées) |
+| Service | `doublage@doublage` | `doublage@doublage-test` |
 
-### Q9 — Limites de ressources du conteneur (non bloquant)
-Sur la VM, Podman sans root en **cgroups v1** ignore `--cpus` et `--memory` (message « Resource limits are
-not supported and ignored on cgroups V1 rootless systems ») : les limites de `compose.yml` sont sans effet.
-En attendant, la synthèse est bridée à 2 cœurs dans l'application (`DOUBLAGE_TTS_THREADS`, `OMP_NUM_THREADS`)
-et tourne en priorité basse (`nice`). Il n'y a en revanche **aucune limite de mémoire** (Pocket TTS : ~1 à 2 Go).
-La vraie solution serait de passer la VM en **cgroups v2** (paramètre de démarrage
-`systemd.unified_cgroup_hierarchy=1` + redémarrage) : cela concerne toutes les applications de la VM (scribe,
-ce-transcripteur-v2), donc à décider avec l'administrateur. Je recommande de s'en contenter pour l'instant
-et d'y revenir si la VM souffre pendant les synthèses.
+Même stockage Podman dédié pour les deux. Mémoire : chaque instance charge Pocket TTS (~1 à 2 Go) dès sa
+première voix et le garde ; deux instances utilisées le même jour = jusqu'à ~4 Go. L'instance actuelle
+(sur `dev`) deviendra la production quand tu auras fusionné `dev` dans `main` : tu gardes tes projets.
 
-Réponse : oui
+Réponse :
+
+### Q12 — Accès des utilisateurs (bloque la mise en production)
+Tu passes par un tunnel SSH. Pour les utilisateurs de l'établissement :
+- le port 8091 de la VM est-il joignable depuis leurs postes (pare-feu) ?
+- faut-il une adresse lisible (nom DNS, reverse proxy existant comme pour scribe ?) et du **HTTPS** ? Sans
+  HTTPS, les mots de passe de l'application circulent en clair sur le réseau interne : je le déconseille
+  pour une mise en production, même interne.
+
+Réponse :
 
 ## Résolues
+- Q8 : données dans `/srv/apps/doublage/data` ; à revoir si le volume grossit.
+- Q9 : on s'en tient au bridage applicatif (2 cœurs, `nice`) en cgroups v1 ; à revoir si la VM souffre
+  pendant les synthèses (passage en cgroups v2 à décider avec l'administrateur).
 - Q10 (fusionner / couper / recaler les phrases) : repoussé, besoin pas encore rencontré sur les vidéos réelles.
 - Entrée : la vidéo complète (pas seulement l'audio).
 - Voix de départ : « estelle » ; catalogue de voix plus tard.
