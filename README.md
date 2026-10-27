@@ -9,26 +9,34 @@ C'est l'essai à faire en priorité : il vérifie en une fois la construction de
 Whisper et la voix Pocket TTS, dans les conditions de la production. Pas besoin d'installer Python ni
 ffmpeg sur la VM : tout est dans l'image.
 
+Pour l'essai, les données vont dans `~/doublage-data` (aucun droit administrateur nécessaire) ;
+l'emplacement définitif (par exemple `/srv/apps/doublage`) sera choisi à la mise en service.
+
 ```bash
 bash <<'EOF'
-cd ~/doublage                                  # dossier où le dépôt a été cloné
+set -e
+cd ~
+[ -d doublage ] || git clone https://github.com/sirius911/doublage.git
+cd doublage && git checkout dev && git pull
 cp -n .env.exemple .env
-mkdir -p /srv/apps/doublage/data
-# Podman sans droits root : l'utilisateur 1000 du conteneur doit pouvoir écrire dans le dossier
-podman unshare chown 1000:1000 /srv/apps/doublage/data
+sed -i "s|^DOUBLAGE_DONNEES=.*|DOUBLAGE_DONNEES=$HOME/doublage-data|" .env
+mkdir -p ~/doublage-data
 podman build -t localhost/doublage:latest -f Containerfile .
 EOF
 ```
 
-Puis, avec une vidéo courte (1 à 2 minutes) copiée dans `/srv/apps/doublage/data/` :
+Puis, avec une vidéo courte (1 à 2 minutes) copiée dans `~/doublage-data/` :
 
 ```bash
 bash <<'EOF'
 cd ~/doublage
-podman run --rm --env-file .env   -v /srv/apps/doublage/data:/data:Z   -v doublage-modeles:/home/doublage/.cache/huggingface   localhost/doublage:latest doublage traiter /data/ma_video.mp4
-ls -lh /srv/apps/doublage/data/
+time podman run --rm --env-file .env --cpus 2 --memory 4g --userns keep-id:uid=1000,gid=1000 -v ~/doublage-data:/data:Z   -v doublage-modeles:/home/doublage/.cache/huggingface   localhost/doublage:latest doublage traiter /data/ma_video.mp4
+ls -lh ~/doublage-data/
 EOF
 ```
+
+`--userns keep-id:uid=1000,gid=1000` fait correspondre l'utilisateur du conteneur à votre compte :
+les fichiers produits vous appartiennent et vous pouvez déposer des vidéos dans le dossier.
 
 La vidéo doublée est créée à côté de l'original (`ma_video_double.mp4`). Le premier lancement télécharge
 le modèle Pocket TTS (quelques centaines de Mo), conservé ensuite dans le volume `doublage-modeles`.
@@ -49,6 +57,9 @@ cp .env.exemple .env          # adapter si besoin
 # Essai réel : transcription par le serveur Whisper, voix estelle
 .venv/bin/doublage traiter ma_video.mp4
 ```
+
+`--userns keep-id:uid=1000,gid=1000` fait correspondre l'utilisateur du conteneur à votre compte :
+les fichiers produits vous appartiennent et vous pouvez déposer des vidéos dans le dossier.
 
 La vidéo doublée est créée à côté de l'original (`ma_video_double.mp4`). Les fichiers de travail
 (audio extrait, `segments.json`, une piste par phrase) sont dans `data/ma_video/`.

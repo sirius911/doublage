@@ -12,6 +12,9 @@ services:
     image: localhost/doublage:latest
     container_name: doublage
     restart: unless-stopped
+    # Podman sans droits root : l'utilisateur du conteneur (1000) = le compte qui lance l'application,
+    # pour que les fichiers du dossier de données lui appartiennent.
+    userns_mode: "keep-id:uid=1000,gid=1000"
     env_file: .env
     ports:
       - "${DOUBLAGE_PORT:-8091}:8000"
