@@ -11,8 +11,7 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-Environment=CONTAINERS_STORAGE_CONF=/srv/apps/doublage/deploiement/storage.conf
-Environment=CONTAINERS_CONF_OVERRIDE=/srv/apps/doublage/deploiement/containers.conf
+Environment=XDG_CONFIG_HOME=/srv/apps/doublage/deploiement/config
 ExecStart=/usr/bin/podman start --attach doublage
 ExecStop=/usr/bin/podman stop -t 30 doublage
 Restart=on-failure

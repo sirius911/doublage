@@ -11,7 +11,9 @@ Historique des sessions, la plus récente en haut.
 - Q7 résolue (solution C) : stockage Podman rootless dédié dans `/var/lib/containers/doublage/storage`,
   sélectionné par `CONTAINERS_STORAGE_CONF` / `CONTAINERS_CONF_OVERRIDE` via `deploiement/podman-doublage` ;
   état d'exécution et verrous séparés de scribe ; service systemd utilisateur. Procédure dans README.md.
-- Non vérifié sur la VM : prise en compte de `CONTAINERS_CONF_OVERRIDE` et `lock_type = "file"` par Podman 4.9.4
+- Essai sur la VM : `CONTAINERS_STORAGE_CONF` ignoré pour graphroot/runroot en mode sans root (rien n'a été
+  construit dans le mauvais stockage). Remplacé par `XDG_CONFIG_HOME` → `deploiement/config/containers/`.
+- Non vérifié sur la VM : prise en compte de la configuration via `XDG_CONFIG_HOME` et `lock_type = "file"` par Podman 4.9.4
   (contrôlé par l'étape 3 du déploiement), réglage overlay natif / fuse-overlayfs selon le noyau.
 - Bloquant : préparation par l'administrateur (étape 2), puis premier essai réel (Q6). Q8 ouverte (données).
 

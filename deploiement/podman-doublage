@@ -2,7 +2,8 @@
 # Lance une commande Podman avec le stockage dédié à doublage, sans toucher à celui de scribe.
 #   deploiement/podman-doublage podman ps
 #   deploiement/podman-doublage podman-compose up -d --build
+# XDG_CONFIG_HOME fait lire deploiement/config/containers/ (storage.conf, containers.conf) comme
+# configuration utilisateur ; les réseaux CNI de doublage y sont aussi rangés (config/cni/).
 DIR=$(cd "$(dirname "$0")" && pwd)
-export CONTAINERS_STORAGE_CONF="$DIR/storage.conf"
-export CONTAINERS_CONF_OVERRIDE="$DIR/containers.conf"
+export XDG_CONFIG_HOME="$DIR/config"
 exec "$@"

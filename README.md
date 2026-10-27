@@ -46,11 +46,13 @@ modèle). Doublage utilise donc **son propre stockage Podman**, toujours sans dr
 | Fichiers temporaires de construction | `/var/lib/containers/doublage/tmp` |
 | État d'exécution | `/run/user/1002/doublage/` |
 
-Ce stockage est sélectionné par deux variables, positionnées par `deploiement/podman-doublage` :
-`CONTAINERS_STORAGE_CONF` (→ `deploiement/storage.conf`) et `CONTAINERS_CONF_OVERRIDE`
-(→ `deploiement/containers.conf`, état d'exécution et verrous séparés). Sans ce lanceur, `podman`
-continue d'utiliser le stockage habituel : **scribe n'est pas touché**, la configuration globale de
-Podman non plus, et `/var/lib/containers/storage` (stockage de root) n'est jamais utilisé.
+Ce stockage est sélectionné par `deploiement/podman-doublage`, qui positionne `XDG_CONFIG_HOME` sur
+`deploiement/config` : Podman y lit `containers/storage.conf` (emplacement du stockage) et
+`containers/containers.conf` (état d'exécution et verrous séparés) comme configuration utilisateur, et y range
+ses réseaux CNI. (`CONTAINERS_STORAGE_CONF` ne convient pas : en mode sans root, Podman ignore alors
+`graphroot` et `runroot`, constaté sur la VM.) Sans ce lanceur, `podman` continue d'utiliser le stockage
+habituel : **scribe n'est pas touché**, la configuration globale de Podman non plus, et
+`/var/lib/containers/storage` (stockage de root) n'est jamais utilisé.
 
 Toutes les commandes Podman de doublage passent donc par le lanceur :
 
