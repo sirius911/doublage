@@ -2,6 +2,15 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : écoute et voix d'une phrase
+- Par phrase : « ▶ Original » rejoue l'extrait de la vidéo (arrêt automatique en fin de phrase),
+  « Générer la voix » / « Régénérer » synthétise la phrase avec son texte actuel puis la fait écouter,
+  « ▶ Voix » réécoute. État affiché : « voix à jour » ou « texte modifié : voix à régénérer ».
+- Le modèle Pocket TTS est chargé au premier usage puis gardé en mémoire : la toute première génération
+  prend donc plus de temps. Une seule synthèse à la fois (verrou partagé, à réutiliser pour la génération
+  complète). Si le texte change pendant la synthèse, la phrase reste « à régénérer ».
+- Non vérifié dans un vrai navigateur. Suite : génération de toutes les phrases + export de la vidéo.
+
 ## 2026-10-27 — Phase 2 : clic sur une phrase
 - Clic sur une phrase de la liste (ou sur son timecode, devenu un bouton) : la vidéo se place à son début,
   lecture ou pause conservée. Un clic dans le texte de la phrase déjà en cours ne déplace pas la vidéo.

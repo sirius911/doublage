@@ -16,3 +16,7 @@
 #phrases .texte { padding: 0 .2em; }
 #phrases .texte:focus { outline: 1px solid #888; background: #fff; }
 #enregistrement.erreur { color: #b00; }
+#phrases .actions { margin-left: .5em; white-space: nowrap; font-size: .85em; }
+#phrases .actions button { font-size: inherit; margin-right: .2em; }
+#phrases .etat { color: #666; }
+#phrases li[data-etat="modifiee"] .etat { color: #b65c00; }

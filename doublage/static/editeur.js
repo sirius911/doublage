@@ -13,6 +13,7 @@
     minuterie: null,
   }));
   let enCours = null;
+  let finExtrait = null;  // « ▶ Original » : la vidéo s'arrête à la fin de la phrase
 
   // --- Affichage sur l'image ---
 
@@ -44,11 +45,15 @@
 
   // timeupdate n'arrive que ~4 fois par seconde : pendant la lecture, on suit chaque image.
   function suivre() {
+    if (finExtrait !== null && video.currentTime >= finExtrait) {
+      video.pause();
+      finExtrait = null;
+    }
     afficher();
     if (!video.paused) requestAnimationFrame(suivre);
   }
   video.addEventListener("play", () => { modeEdition(); suivre(); });
-  video.addEventListener("pause", modeEdition);
+  video.addEventListener("pause", () => { finExtrait = null; modeEdition(); });
   video.addEventListener("seeked", afficher);
   video.addEventListener("timeupdate", afficher);
 
@@ -68,6 +73,8 @@
       if (!r.ok) throw new Error(r.status);
       etatEnregistrement.textContent = "Enregistré.";
       etatEnregistrement.className = "";
+      p.li.dataset.etat = (await r.json()).etat;
+      majVoix(p);
     } catch (e) {
       etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
       etatEnregistrement.className = "erreur";
@@ -104,8 +111,60 @@
     afficher();
   }
 
+  // --- Écoute et génération de la voix d'une phrase ---
+
+  const lecteurVoix = new Audio();
+  const ETATS = { synthetisee: "voix à jour", modifiee: "texte modifié : voix à régénérer" };
+
+  function majVoix(p) {
+    const aVoix = "voix" in p.li.dataset;
+    p.boutonVoix.disabled = !aVoix;
+    p.boutonGenerer.textContent = aVoix ? "Régénérer" : "Générer la voix";
+    p.etat.textContent = aVoix ? (ETATS[p.li.dataset.etat] || "") : "";
+  }
+
+  function ecouterOriginal(p) {
+    lecteurVoix.pause();
+    allerA(p);
+    finExtrait = p.fin;
+    video.play();
+  }
+
+  function ecouterVoix(p) {
+    video.pause();
+    lecteurVoix.src = `/projets/${PROJET}/phrases/${p.id}/voix?v=${Date.now()}`;  // pas de cache
+    lecteurVoix.play();
+  }
+
+  async function generer(p) {
+    if (p.minuterie) await enregistrer(p);  // la voix doit suivre le texte corrigé
+    p.boutonGenerer.disabled = true;
+    p.etat.textContent = "Génération en cours…";
+    try {
+      const r = await fetch(`/projets/${PROJET}/phrases/${p.id}/voix`, { method: "POST" });
+      if (!r.ok) throw new Error(r.status);
+      p.li.dataset.voix = "";
+      p.li.dataset.etat = (await r.json()).etat;
+      majVoix(p);
+      ecouterVoix(p);
+    } catch (e) {
+      p.etat.textContent = "Échec de la génération.";
+    } finally {
+      p.boutonGenerer.disabled = false;
+    }
+  }
+
   for (const p of phrases) {
+    p.boutonVoix = p.li.querySelector(".voix");
+    p.boutonGenerer = p.li.querySelector(".generer");
+    p.etat = p.li.querySelector(".etat");
+    majVoix(p);
+    p.li.querySelector(".original").addEventListener("click", () => ecouterOriginal(p));
+    p.boutonVoix.addEventListener("click", () => ecouterVoix(p));
+    p.boutonGenerer.addEventListener("click", () => generer(p));
+
     p.li.addEventListener("click", (e) => {
+      if (e.target.closest(".actions")) return;
       if (e.target.closest(".aller") || p !== enCours) allerA(p);
     });
     p.texte.addEventListener("input", () => {

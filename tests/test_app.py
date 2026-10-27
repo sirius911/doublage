@@ -2,12 +2,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 import doublage.app
-from doublage.app import app, get_jobs, get_projects, get_store, get_transcriber
+from doublage.app import app, get_jobs, get_projects, get_store, get_synthesizer, get_transcriber
 from doublage.auth import UserStore
 from doublage.jobs import JobManager
 from doublage.projects import ProjectStore
-from doublage.segments import Segment, Transcript
+from doublage.segments import Segment, Status, Transcript
 from doublage.transcription import FakeTranscriber
+from doublage.tts import FakeSynthesizer
 
 
 @pytest.fixture
@@ -20,6 +21,7 @@ def store(tmp_path) -> UserStore:
     jobs = JobManager()
     app.dependency_overrides[get_jobs] = lambda: jobs
     app.dependency_overrides[get_transcriber] = FakeTranscriber
+    app.dependency_overrides[get_synthesizer] = FakeSynthesizer
     yield store
     app.dependency_overrides.clear()
 
@@ -181,3 +183,29 @@ def test_correction_d_une_phrase(client, store, tmp_path):
     assert "Ouvrez Zimbra." in page and 'title="Original : Ouvrez Zim bra."' in page
 
     assert client.put(url + "/phrases/42", json={"texte": "x"}).status_code == 404
+
+
+def test_voix_d_une_phrase(client, tmp_path):
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour."),
+                     Segment(1, 2.5, 5.0, "Au revoir.", "Au revoir.")]).save(projet.transcript_path)
+    assert "data-voix" not in client.get(url).text
+    assert client.get(url + "/phrases/0/voix").status_code == 404
+
+    r = client.post(url + "/phrases/0/voix")
+    assert r.status_code == 200 and r.json()["etat"] == "synthetisee"
+    wav = client.get(url + "/phrases/0/voix")
+    assert wav.status_code == 200 and wav.headers["content-type"] == "audio/wav"
+    assert wav.content[:4] == b"RIFF"
+    segments = Transcript.load(projet.transcript_path).segments
+    assert segments[0].status == Status.SYNTHESIZED and segments[1].status == Status.TRANSCRIBED
+    assert 'data-etat="synthetisee" data-voix' in client.get(url).text
+
+    # Texte corrigé : la voix devient périmée, puis la régénération la remet à jour.
+    assert client.put(url + "/phrases/0", json={"texte": "Bonjour à tous."}).json()["etat"] == "modifiee"
+    assert client.post(url + "/phrases/0/voix").json()["etat"] == "synthetisee"
+    assert len(client.get(url + "/phrases/0/voix").content) > len(wav.content)  # texte plus long
+
+    assert client.post(url + "/phrases/42/voix").status_code == 404

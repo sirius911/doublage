@@ -34,7 +34,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Éditeur : vidéo en fond, texte de la phrase en cours affiché sur l'image au bon timecode
 - [x] Modification du texte sur l'image et dans la liste des phrases, enregistrement automatique
 - [x] Clic sur une phrase → la vidéo se place au timecode
-- [ ] Écoute de l'original / de la voix synthétique d'une phrase ; régénération d'une seule phrase
+- [x] Écoute de l'original / de la voix synthétique d'une phrase ; régénération d'une seule phrase
 - [ ] Génération de toutes les phrases + export de la vidéo finale à télécharger
 
 ## Phase 3 — Calage et confort d'édition

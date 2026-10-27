@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import media
 from .assembly import Placement, assemble
-from .segments import Status, Transcript
+from .segments import Segment, Status, Transcript
 from .transcription import Transcriber
 from .tts import Synthesizer
 
@@ -24,15 +24,26 @@ def transcribe_video(video: Path, workdir: Path, transcriber: Transcriber,
     return transcript
 
 
+def clip_path(workdir: Path, segment_id: int) -> Path:
+    """Fichier de la voix synthétique d'une phrase."""
+    return workdir / "phrases" / f"{segment_id:04d}.wav"
+
+
+def synthesize_segment(segment: Segment, workdir: Path, synthesizer: Synthesizer):
+    """Génère la voix d'une phrase et l'enregistre ; renvoie le signal."""
+    audio = synthesizer.synthesize(segment.text)
+    path = clip_path(workdir, segment.id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    media.write_wav(path, audio, synthesizer.sample_rate)
+    return audio
+
+
 def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
               synthesizer: Synthesizer, progress: Progress = print) -> list[Placement]:
-    clips_dir = workdir / "phrases"
-    clips_dir.mkdir(parents=True, exist_ok=True)
     clips = []
     for i, seg in enumerate(transcript.segments, 1):
         progress(f"Synthèse de la phrase {i}/{len(transcript.segments)}…")
-        audio = synthesizer.synthesize(seg.text)
-        media.write_wav(clips_dir / f"{seg.id:04d}.wav", audio, synthesizer.sample_rate)
+        audio = synthesize_segment(seg, workdir, synthesizer)
         seg.status = Status.SYNTHESIZED
         clips.append((seg.id, seg.start, audio))
     transcript.save(workdir / "segments.json")

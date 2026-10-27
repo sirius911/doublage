@@ -3,6 +3,7 @@
 import threading
 import time
 from datetime import datetime
+from functools import lru_cache
 from html import escape
 from pathlib import Path
 from typing import Annotated
@@ -16,10 +17,11 @@ from . import __version__
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .pipeline import transcribe_video
+from .pipeline import clip_path, synthesize_segment, transcribe_video
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
-from .segments import Transcript
+from .segments import Status, Transcript
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
+from .tts import FakeSynthesizer, Synthesizer
 
 SESSION_COOKIE = "doublage_session"
 
@@ -57,6 +59,21 @@ def get_transcriber() -> Transcriber:
         return FakeTranscriber()
     return WhisperApiTranscriber(settings.whisper_url, settings.whisper_language,
                                  settings.whisper_model, settings.whisper_timeout)
+
+
+@lru_cache
+def get_synthesizer() -> Synthesizer:
+    """Chargé au premier usage puis gardé en mémoire (le modèle met plusieurs secondes à charger)."""
+    settings = get_settings()
+    if settings.simuler:
+        return FakeSynthesizer()
+    from .tts import PocketSynthesizer  # import tardif : PyTorch est lourd
+
+    return PocketSynthesizer(settings.tts_language, settings.tts_voice, settings.tts_threads)
+
+
+# Une synthèse à la fois : elle occupe le processeur de la VM partagée.
+_synthesis_lock = threading.Lock()
 
 
 class LoginRequired(Exception):
@@ -234,10 +251,15 @@ def editor(project: Project) -> str:
     """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
     transcript = Transcript.load(project.transcript_path)
     rows = "".join(
-        f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}">'
+        f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"'
+        f'{" data-voix" if clip_path(project.folder, s.id).exists() else ""}>'
         f'<button type="button" class="aller" title="Aller à ce moment de la vidéo">'
         f'{timecode(s.start)}</button> <span class="texte" contenteditable="plaintext-only" '
-        f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span></li>'
+        f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span>'
+        f'<span class="actions"><button type="button" class="original">▶ Original</button>'
+        f'<button type="button" class="voix">▶ Voix</button>'
+        f'<button type="button" class="generer">Générer la voix</button>'
+        f'<span class="etat"></span></span></li>'
         for s in transcript.segments
     )
     n = len(transcript.segments)
@@ -247,7 +269,8 @@ def editor(project: Project) -> str:
 <div id="sur-image" hidden spellcheck="true"></div>
 </div>
 <p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
-les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo. <span id="enregistrement"></span></small></p>
+les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
+« ▶ Original » rejoue la phrase d'origine, « Générer la voix » crée la voix de synthèse. <span id="enregistrement"></span></small></p>
 <h2>Phrases</h2>
 <p>{n} phrase{"s" if n > 1 else ""}.</p>
 <ol id="phrases">{rows}</ol>
@@ -333,6 +356,35 @@ def update_segment(user: User, project: CurrentProject, segment_id: int, update:
             raise HTTPException(404, "Phrase introuvable") from None
         transcript.save(project.transcript_path)
     return {"id": segment.id, "texte": segment.text, "etat": segment.status}
+
+
+@app.post("/projets/{project_id}/phrases/{segment_id}/voix")
+def synthesize_one(user: User, project: CurrentProject, segment_id: int,
+                   synthesizer: Annotated[Synthesizer, Depends(get_synthesizer)]) -> dict:
+    """(Ré)génère la voix d'une seule phrase, avec son texte actuel. Attend la fin de la synthèse."""
+    if not project.transcript_path.exists():
+        raise HTTPException(404, "Pas encore de transcription")
+    segment = next((s for s in Transcript.load(project.transcript_path).segments if s.id == segment_id), None)
+    if segment is None:
+        raise HTTPException(404, "Phrase introuvable")
+    with _synthesis_lock:
+        synthesize_segment(segment, project.folder, synthesizer)
+    with _transcript_lock:
+        # Le texte a pu être corrigé pendant la synthèse : la voix n'est à jour que s'il est inchangé.
+        transcript = Transcript.load(project.transcript_path)
+        current = next((s for s in transcript.segments if s.id == segment_id), None)
+        if current is not None:
+            current.status = Status.SYNTHESIZED if current.text == segment.text else Status.MODIFIED
+            transcript.save(project.transcript_path)
+    return {"id": segment_id, "etat": current.status if current else None}
+
+
+@app.get("/projets/{project_id}/phrases/{segment_id}/voix")
+def segment_voice(user: User, project: CurrentProject, segment_id: int) -> FileResponse:
+    path = clip_path(project.folder, segment_id)
+    if not path.exists():
+        raise HTTPException(404, "Pas encore de voix pour cette phrase")
+    return FileResponse(path, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/projets/{project_id}/video")
