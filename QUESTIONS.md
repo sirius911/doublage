@@ -12,6 +12,20 @@ Quand la VM sera prête, pouvez-vous y lancer (procédure dans README.md) :
 
 Réponse :
 
+### Q7 — Place disque pour Podman sur la VM (bloque : construction de l'image)
+Podman sans droits root range images et volumes dans `/home/lorcyr/.local/share/containers`, sur la partition
+`/home` (10 Go, 2,2 Go libres) qu'il partage avec `scribe`. L'image doublage (PyTorch, ffmpeg) et le modèle
+Pocket TTS demandent environ 3 Go, plus autant pendant la construction : ça ne tient pas.
+Il ne faut pas déplacer tout le stockage Podman de l'utilisateur : `scribe` ne retrouverait plus son image.
+Deux solutions, à demander à un administrateur de la VM :
+- **A (recommandée)** : agrandir `/home` de 10 à 20 Go (LVM, si le groupe de volumes `ol` a de la place : `sudo vgs`).
+  Rien ne change pour scribe ni pour les commandes.
+- **B** : créer `/srv/apps/doublage` (sur `/`, 42 Go libres) appartenant à `lorcyr` ; doublage y aurait son propre
+  stockage Podman (option `--root`) et ses données. Plus isolé, mais chaque commande Podman de doublage devra
+  préciser ce stockage.
+
+Réponse :
+
 ## Résolues
 - Entrée : la vidéo complète (pas seulement l'audio).
 - Voix de départ : « estelle » ; catalogue de voix plus tard.
