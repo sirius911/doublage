@@ -83,6 +83,7 @@ EOF
 sudo bash <<'EOF'
 set -e
 install -d -m 0755 /srv/apps
+restorecon -v /srv/apps          # /srv/apps était en unlabeled_t (constaté le 2026-10-27)
 install -d -o lorcyr -g lorcyr -m 0755 /srv/apps/doublage
 install -d -o lorcyr -g lorcyr -m 0700 /var/lib/containers/doublage \
   /var/lib/containers/doublage/storage /var/lib/containers/doublage/tmp
@@ -95,9 +96,8 @@ ls -ldZ /var/lib/containers /var/lib/containers/doublage /var/lib/containers/dou
 EOF
 ```
 
-Point d'attention : si `/var/lib/containers` est en `drwx------` (0700), `lorcyr` ne peut pas le
-traverser. Il faudra alors l'autoriser à le traverser sans le lire (`chmod 0711 /var/lib/containers`),
-ce qui ne donne accès à aucun fichier de root : à valider par l'administrateur.
+Constaté sur la VM : noyau UEK 5.4, réseau CNI, `/var/lib/containers` en 0755 (traversable par `lorcyr`),
+XFS `ftype=1`, linger déjà actif, plages subuid/subgid présentes.
 
 ### 3. Installation et construction (compte lorcyr)
 
@@ -112,6 +112,8 @@ mkdir -p data
 chmod +x deploiement/podman-doublage
 echo "== Stockage doublage (attendu : /var/lib/containers/doublage/storage)"
 deploiement/podman-doublage podman info --format '{{.Store.GraphRoot}}  {{.Store.RunRoot}}'
+echo "== Mode overlay retenu (natif ou fuse-overlayfs)"
+deploiement/podman-doublage podman info --format '{{json .Store.GraphStatus}}'
 echo "== Stockage habituel (attendu : inchangé, ~/.local/share/containers/storage)"
 podman info --format '{{.Store.GraphRoot}}'
 deploiement/podman-doublage podman build -t localhost/doublage:latest -f Containerfile .
