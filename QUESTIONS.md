@@ -49,6 +49,6 @@ Réponse :
   (XFS, 197 Go, SELinux Enforcing), le code dans `/srv/apps/doublage`. Pas de modification de la configuration
   Podman globale, pas d'intervention sur ce-transcripteur-v2. Préparation (droits, SELinux) et procédure dans
   README.md, « Déploiement sur la VM ». Nettoyage des images inutilisées traité séparément.
-- Q6 — Premier essai réel (2026-10-27) : vidéo de 90 s, 20 phrases, 56 s de traitement au total (modèle déjà
-  chargé exclu du téléchargement). Doublage jugé très bon, synchronisation correcte, aucune phrase inventée
+- Q6 — Premier essai réel (2026-10-27) : vidéo de 90 s, 20 phrases, 56 s de traitement au total (téléchargement du modèle
+  compris). Doublage jugé très bon, synchronisation correcte, aucune phrase inventée
   sur les silences.
