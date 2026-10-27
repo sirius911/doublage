@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     # du conteneur sont ignorées : c'est ce réglage qui protège les autres applications.
     tts_threads: int = 2
 
+    # Accélération maximale d'une voix qui empiète sur la phrase suivante (1.15 = 15 % plus rapide).
+    # Au-delà, la voix paraît pressée : mieux vaut raccourcir le texte. 1.0 = jamais d'accélération.
+    acceleration_max: float = 1.15
+
 
 @lru_cache
 def get_settings() -> Settings:

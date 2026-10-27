@@ -2,6 +2,15 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 3 : solutions automatiques de calage
+- Débord sur le silence : déjà le cas (la voix est posée à son timecode et peut finir dans le silence
+  qui suit, sans gêner la phrase suivante).
+- Accélération légère : à l'export, une voix qui empiète sur la phrase suivante est accélérée juste
+  assez pour finir à temps, sans changer la hauteur (filtre atempo de ffmpeg), dans la limite de 15 %
+  (`DOUBLAGE_ACCELERATION_MAX`, choix par défaut à confirmer à l'usage ; 1.0 désactive).
+- Pastilles : orange = corrigé automatiquement (débord ou accélération, détail au survol) ; rouge = même
+  accélérée, la voix déborde : texte à raccourcir. « ▶ Voix » fait entendre la voix non accélérée.
+- Le test de l'accélération réelle (ffmpeg) ne tourne pas sur le poste Windows : à vérifier sur la VM.
 ## 2026-10-27 — Phase 3 : indicateur de calage par phrase
 - Pastille à côté de « ▶ Voix » (dès qu'une voix existe) : verte si la voix tient dans la durée de la
   phrase d'origine, orange si elle déborde sur le silence qui suit, rouge si elle empiète sur la phrase

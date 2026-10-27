@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import tempfile
 import wave
 from pathlib import Path
 
@@ -56,6 +57,16 @@ def wav_duration(path: Path) -> float:
     """Durée d'un WAV (secondes), lue dans l'en-tête sans charger le signal."""
     with wave.open(str(path), "rb") as f:
         return f.getnframes() / f.getframerate()
+
+
+def change_tempo(audio: np.ndarray, sample_rate: int, speed: float) -> np.ndarray:
+    """Accélère un signal sans changer la hauteur de la voix (filtre atempo de ffmpeg)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        source, result = Path(tmp) / "avant.wav", Path(tmp) / "apres.wav"
+        write_wav(source, audio, sample_rate)
+        _run(["ffmpeg", "-y", "-v", "error", "-i", str(source),
+              "-filter:a", f"atempo={speed:.4f}", "-ar", str(sample_rate), str(result)])
+        return read_wav(result)[0]
 
 
 def replace_audio(video: Path, audio: Path, output: Path) -> Path:

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from doublage.assembly import Fit, assemble, fit
+from doublage.assembly import Fit, assemble, fit, fit_clips, speed_factor
 from doublage.segments import Segment, Transcript
 
 SR = 100
@@ -39,3 +39,29 @@ def test_calage_dans_le_creneau():
     assert niveau == Fit.OVERFLOW and "2,8 s" in texte and "2,0 s" in texte
     niveau, texte = fit(premier, 4.0, 3.5)
     assert niveau == Fit.OVERLAP and "0,5 s" in texte
+
+
+def test_acceleration_legere():
+    phrase = Segment(0, 1.0, 3.0, "a", "a")  # créneau : jusqu'à 4,0 (3 s disponibles)
+    assert speed_factor(phrase, 4.0, 2.9, 1.15) == 1.0  # tient en débordant sur le silence
+    assert speed_factor(phrase, 4.0, 3.3, 1.15) == pytest.approx(1.1)
+    assert speed_factor(phrase, 4.0, 6.0, 1.15) == 1.15  # plafonnée
+    niveau, texte = fit(phrase, 4.0, 3.3, 1.15)
+    assert niveau == Fit.OVERFLOW and "accélérée de 10 %" in texte
+    niveau, texte = fit(phrase, 4.0, 3.3, 1.0)  # accélération désactivée
+    assert niveau == Fit.OVERLAP and "Même" not in texte
+    assert fit(phrase, 4.0, 3.6, 1.15)[0] == Fit.OVERLAP
+
+
+def test_seules_les_voix_qui_empietent_sont_accelerees():
+    t = Transcript(10.0, [Segment(0, 0.0, 2.0, "a", "a"), Segment(1, 3.0, 5.0, "b", "b")])
+    clips = [(0, 0.0, np.ones(330, np.float32)), (1, 3.0, np.ones(250, np.float32))]
+    appels = []
+
+    def tempo(audio, sr, vitesse):
+        appels.append(vitesse)
+        return audio[:int(len(audio) / vitesse)]
+
+    resultat, n = fit_clips(t, clips, SR, 1.15, tempo)
+    assert n == 1 and appels == [pytest.approx(1.1)]
+    assert len(resultat[0][2]) == 300 and len(resultat[1][2]) == 250

@@ -26,7 +26,7 @@ def cmd_traiter(args: argparse.Namespace) -> None:
                                         settings.tts_threads)
 
     transcript = transcribe_video(video, workdir, transcriber)
-    dub_video(video, transcript, workdir, output, synthesizer)
+    dub_video(video, transcript, workdir, output, synthesizer, max_speed=settings.acceleration_max)
 
 
 def cmd_serveur(args: argparse.Namespace) -> None:

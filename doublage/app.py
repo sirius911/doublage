@@ -255,7 +255,8 @@ def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tup
     path = clip_path(project.folder, segment.id)
     if not path.exists():
         return None
-    return fit(segment, transcript.slot_end(segment), media.wav_duration(path))
+    return fit(segment, transcript.slot_end(segment), media.wav_duration(path),
+               get_settings().acceleration_max)
 
 
 def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
@@ -289,8 +290,8 @@ def editor(project: Project, job: Job | None) -> str:
 les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
 « ▶ Original » rejoue la phrase d'origine, « ▶ Voix » fait entendre la voix de synthèse (créée si besoin).
 La pastille indique si la voix tient dans le temps de la phrase d'origine : <span style="color: #2e7d32">●</span> oui,
-<span style="color: #ef8a00">●</span> elle déborde sur le silence qui suit, <span style="color: #c62828">●</span> elle
-empiète sur la phrase suivante (détail au survol).
+<span style="color: #ef8a00">●</span> corrigé automatiquement (débord sur le silence qui suit ou légère accélération),
+<span style="color: #c62828">●</span> trop longue, à raccourcir (détail au survol).
 <span id="enregistrement"></span></small></p>
 {dubbing_section(project, job)}
 </div>
@@ -387,7 +388,8 @@ def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
         raise HTTPException(404, "Pas encore de transcription")
     jobs.submit(project.id, "doublage",
                 lambda progress: dub_project(project.video, project.folder, project.dubbed_video, synthesizer,
-                                             progress, _synthesis_lock, _transcript_lock))
+                                             progress, get_settings().acceleration_max,
+                                             _synthesis_lock, _transcript_lock))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
 
 

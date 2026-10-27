@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from . import media
-from .assembly import Placement, assemble
+from .assembly import Placement, assemble, fit_clips
 from .segments import Segment, Status, Transcript
 from .transcription import Transcriber
 from .tts import Synthesizer
@@ -54,10 +54,14 @@ def mark_synthesized(transcript_path: Path, segment: Segment) -> Segment | None:
     return current
 
 
-def _render(video: Path, clips: list[tuple[int, float, np.ndarray]], duration: float,
-            sample_rate: int, workdir: Path, output: Path, progress: Progress) -> list[Placement]:
+def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
+            sample_rate: int, workdir: Path, output: Path, progress: Progress,
+            max_speed: float) -> list[Placement]:
+    clips, accelerated = fit_clips(transcript, clips, sample_rate, max_speed, media.change_tempo)
+    if accelerated:
+        progress(f"{accelerated} phrase(s) légèrement accélérée(s) pour tenir dans leur créneau.")
     progress("Assemblage de la bande son…")
-    total = max(duration, media.probe_duration(video))
+    total = max(transcript.duration, media.probe_duration(video))
     track, placements = assemble(clips, total, sample_rate)
     voice = media.write_wav(workdir / "doublage.wav", track, sample_rate)
 
@@ -72,7 +76,8 @@ def _render(video: Path, clips: list[tuple[int, float, np.ndarray]], duration: f
 
 
 def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
-              synthesizer: Synthesizer, progress: Progress = print) -> list[Placement]:
+              synthesizer: Synthesizer, progress: Progress = print,
+              max_speed: float = 1.0) -> list[Placement]:
     """Doublage d'un seul tenant (ligne de commande) : toutes les phrases sont synthétisées."""
     clips = []
     for i, seg in enumerate(transcript.segments, 1):
@@ -81,11 +86,11 @@ def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
         seg.status = Status.SYNTHESIZED
         clips.append((seg.id, seg.start, audio))
     transcript.save(workdir / "segments.json")
-    return _render(video, clips, transcript.duration, synthesizer.sample_rate, workdir, output, progress)
+    return _render(video, transcript, clips, synthesizer.sample_rate, workdir, output, progress, max_speed)
 
 
 def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesizer,
-                progress: Progress = print,
+                progress: Progress = print, max_speed: float = 1.0,
                 synthesis_lock: AbstractContextManager = nullcontext(),
                 transcript_lock: AbstractContextManager = nullcontext()) -> list[Placement]:
     """Doublage d'un projet corrigé dans l'éditeur.
@@ -111,6 +116,6 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         audio, sample_rate = media.read_wav(clip_path(workdir, seg.id))
         clips.append((seg.id, seg.start, audio))
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
-    placements = _render(video, clips, transcript.duration, sample_rate, workdir, partial, progress)
+    placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed)
     partial.replace(output)  # l'ancienne vidéo reste téléchargeable jusqu'au bout
     return placements

@@ -1,3 +1,6 @@
+import shutil
+
+import numpy as np
 import pytest
 
 from doublage import media
@@ -75,3 +78,14 @@ def test_doublage_d_un_projet_reprend_les_voix_a_jour(tmp_path, monkeypatch):
     dub_project(tmp_path / "video.mp4", tmp_path, sortie, synth, progress=lambda m: None)
     assert synth.textes == ["Deux et trois."]
     assert all(s.status == Status.SYNTHESIZED for s in Transcript.load(tmp_path / "segments.json").segments)
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
+def test_changement_de_tempo_sans_changer_la_hauteur():
+    sr = 24000
+    t = np.arange(2 * sr) / sr
+    signal = (0.3 * np.sin(2 * np.pi * 440 * t)).astype(np.float32)
+    plus_vite = media.change_tempo(signal, sr, 1.25)
+    assert len(plus_vite) / sr == pytest.approx(1.6, abs=0.05)
+    freq = abs(np.fft.rfft(plus_vite)).argmax() * sr / len(plus_vite)
+    assert freq == pytest.approx(440, abs=10)  # même hauteur de voix

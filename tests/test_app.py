@@ -244,7 +244,9 @@ def test_calage_affiche_dans_l_editeur(client):
                       Segment(2, 4.0, 5.0, "Fin.", "Fin.")]).save(projet.transcript_path)
     assert client.post(url + "/phrases/0/voix").json()["calage"] == "vert"
     r = client.post(url + "/phrases/1/voix").json()
-    assert r["calage"] == "rouge" and "1,6 s" in r["calage_texte"]
+    # 3,6 s pour 2 s de créneau : même accélérée de 15 %, elle déborde de 2 + 3,6 / 1,15 - 4 ≈ 1,1 s.
+    assert r["calage"] == "rouge" and "Même accélérée de 15 %" in r["calage_texte"]
+    assert "1,1 s" in r["calage_texte"]
     page = client.get(url).text
     assert 'data-calage="vert"' in page and 'data-calage="rouge"' in page
     assert page.count("data-calage=") == 2  # pas d'indicateur sans voix
