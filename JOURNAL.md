@@ -13,7 +13,8 @@ Historique des sessions, la plus récente en haut.
   état d'exécution et verrous séparés de scribe ; service systemd utilisateur. Procédure dans README.md.
 - Essai sur la VM : `CONTAINERS_STORAGE_CONF` ignoré pour graphroot/runroot en mode sans root (rien n'a été
   construit dans le mauvais stockage). Remplacé par `XDG_CONFIG_HOME` → `deploiement/config/containers/`.
-- Non vérifié sur la VM : prise en compte de la configuration via `XDG_CONFIG_HOME` et `lock_type = "file"` par Podman 4.9.4
+- Vérifié sur la VM : stockage dédié pris en compte (graphroot, runroot, tmp_dir, verrous en fichiers),
+  image construite (1,79 Go), scribe intact. Restait à vérifier à l'origine : configuration via `XDG_CONFIG_HOME` et `lock_type = "file"` par Podman 4.9.4
   (contrôlé par l'étape 3 du déploiement), réglage overlay natif / fuse-overlayfs selon le noyau.
 - Bloquant : préparation par l'administrateur (étape 2), puis premier essai réel (Q6). Q8 ouverte (données).
 

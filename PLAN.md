@@ -15,7 +15,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Application FastAPI minimale + page d'accueil
 - [x] Configuration par fichier `.env` (adresse du serveur Whisper, dossier de données, modèle TTS, voix)
 - [x] Intégration continue GitHub Actions (tests à chaque envoi)
-- [~] `Containerfile` + `compose.yml` compatibles Podman (ffmpeg, Pocket TTS version processeur, limite de CPU/mémoire) — écrits, construction à vérifier sur la VM
+- [x] `Containerfile` + `compose.yml` compatibles Podman (ffmpeg, Pocket TTS version processeur, limite de CPU/mémoire) — image construite sur la VM (1,79 Go)
 
 ## Phase 1 — Chaîne de traitement complète en ligne de commande
 - [x] Extraction de l'audio de la vidéo (ffmpeg)
@@ -45,7 +45,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 
 ## Phase 4 — Mise en service
 - [x] Relevé des ressources consommées sur la VM par les applications existantes ; choix du volume de données (ex. `/srv/apps`)
-- [~] Stockage Podman rootless dédié (`/var/lib/containers/doublage/storage`), code dans `/srv/apps/doublage` — fichiers et procédure prêts (`deploiement/`, README), préparation par l'administrateur à faire
+- [~] Stockage Podman rootless dédié (`/var/lib/containers/doublage/storage`), code dans `/srv/apps/doublage` — en place et vérifié (stockage, état d'exécution et verrous séparés de scribe)
 - [~] Choix d'un port libre (8091), réseau et volumes dédiés, aucune interférence avec ce-transcripteur-v2 et `scribe` — à vérifier au déploiement
 - [ ] Essai réel du serveur Whisper avec l'audio d'une vidéo complète (taille et durée maximales acceptées)
 - [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
