@@ -1,5 +1,6 @@
 """Chaîne complète : vidéo → transcription → voix de synthèse → vidéo doublée."""
 
+import shutil
 from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
@@ -52,6 +53,17 @@ def mark_synthesized(transcript_path: Path, segment: Segment) -> Segment | None:
         current.status = Status.SYNTHESIZED if current.text == segment.text else Status.MODIFIED
         transcript.save(transcript_path)
     return current
+
+
+def reset_voices(workdir: Path) -> None:
+    """Efface les voix de toutes les phrases (changement de voix du projet) ; le texte est conservé."""
+    shutil.rmtree(workdir / "phrases", ignore_errors=True)
+    transcript_path = workdir / "segments.json"
+    if transcript_path.exists():
+        transcript = Transcript.load(transcript_path)
+        for segment in transcript.segments:
+            segment.status = Status.TRANSCRIBED
+        transcript.save(transcript_path)
 
 
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],

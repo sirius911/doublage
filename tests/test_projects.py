@@ -17,6 +17,20 @@ def test_creation_et_liste(tmp_path):
     assert store.get(12345) is None
 
 
+def test_voix_du_projet_et_base_ancienne(tmp_path):
+    import sqlite3
+
+    db_path = tmp_path / "doublage.db"
+    with sqlite3.connect(db_path) as db:  # base créée avant le choix de la voix
+        db.execute("CREATE TABLE projects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, "
+                   "video_name TEXT NOT NULL, owner TEXT NOT NULL, created REAL NOT NULL)")
+        db.execute("INSERT INTO projects (name, video_name, owner, created) VALUES ('a', 'a.mp4', 'alice', 0)")
+    store = ProjectStore(db_path, tmp_path)
+    assert store.get(1).voice is None
+    store.set_voice(1, "alba")
+    assert store.get(1).voice == "alba"
+
+
 def test_format_refuse(tmp_path):
     store = ProjectStore(tmp_path / "doublage.db", tmp_path)
     with pytest.raises(ProjectError):

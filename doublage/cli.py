@@ -9,7 +9,7 @@ from .config import get_settings
 def cmd_traiter(args: argparse.Namespace) -> None:
     from .pipeline import dub_video, transcribe_video
     from .transcription import FakeTranscriber, WhisperApiTranscriber
-    from .tts import FakeSynthesizer, PocketSynthesizer
+    from .tts import FakeSynthesizer, PocketEngine
 
     settings = get_settings()
     video: Path = args.video
@@ -22,8 +22,7 @@ def cmd_traiter(args: argparse.Namespace) -> None:
         transcriber = WhisperApiTranscriber(settings.whisper_url, settings.whisper_language,
                                             settings.whisper_model, settings.whisper_timeout)
         print("Chargement de Pocket TTS…")
-        synthesizer = PocketSynthesizer(settings.tts_language, settings.tts_voice,
-                                        settings.tts_threads)
+        synthesizer = PocketEngine(settings.tts_language, settings.tts_threads).voice(settings.tts_voice)
 
     transcript = transcribe_video(video, workdir, transcriber)
     dub_video(video, transcript, workdir, output, synthesizer, max_speed=settings.acceleration_max)

@@ -19,12 +19,14 @@ from .assembly import Fit, fit
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .pipeline import clip_path, dub_project, mark_synthesized, synthesize_segment, transcribe_video
+from .pipeline import (clip_path, dub_project, mark_synthesized, reset_voices, synthesize_segment,
+                       transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
 from .segments import Segment, Transcript
 from .subtitles import to_srt, to_vtt
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
-from .tts import FakeSynthesizer, Synthesizer
+from .tts import Engine, FakeEngine, Synthesizer
+from .voices import VoiceCatalog
 
 SESSION_COOKIE = "doublage_session"
 
@@ -65,14 +67,22 @@ def get_transcriber() -> Transcriber:
 
 
 @lru_cache
-def get_synthesizer() -> Synthesizer:
+def get_engine() -> Engine:
     """Chargé au premier usage puis gardé en mémoire (le modèle met plusieurs secondes à charger)."""
     settings = get_settings()
     if settings.simuler:
-        return FakeSynthesizer()
-    from .tts import PocketSynthesizer  # import tardif : PyTorch est lourd
+        return FakeEngine()
+    from .tts import PocketEngine  # import tardif : PyTorch est lourd
 
-    return PocketSynthesizer(settings.tts_language, settings.tts_voice, settings.tts_threads)
+    return PocketEngine(settings.tts_language, settings.tts_threads)
+
+
+def get_catalog() -> VoiceCatalog:
+    settings = get_settings()
+    return VoiceCatalog(settings.tts_voices.replace(" ", "").split(","), settings.tts_voice)
+
+
+Catalog = Annotated[VoiceCatalog, Depends(get_catalog)]
 
 
 # Une synthèse à la fois : elle occupe le processeur de la VM partagée.
@@ -257,6 +267,12 @@ def get_project(project_id: int, projects: Projects) -> Project:
 CurrentProject = Annotated[Project, Depends(get_project)]
 
 
+def get_synthesizer(project: CurrentProject, catalog: Catalog,
+                    engine: Annotated[Engine, Depends(get_engine)]) -> Synthesizer:
+    """Synthétiseur de la voix choisie pour le projet."""
+    return engine.voice(catalog.for_project(project.voice).ref)
+
+
 @app.post("/projets/{project_id}/suppression", response_model=None)
 def delete_project(user: User, project: CurrentProject, projects: Projects,
                    jobs: Jobs) -> RedirectResponse | HTMLResponse:
@@ -300,7 +316,21 @@ def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
     )
 
 
-def editor(project: Project, job: Job | None) -> str:
+def voice_choice(project: Project, catalog: VoiceCatalog) -> str:
+    """Choix de la voix du projet ; en changer efface les voix déjà générées (confirmation)."""
+    current = catalog.for_project(project.voice)
+    voices = catalog.list()
+    if current not in voices:
+        voices.insert(0, current)
+    options = "".join(f'<option value="{escape(v.id)}"{" selected" if v == current else ""}>'
+                      f'{escape(v.label)}</option>' for v in voices)
+    return f"""<form id="choix-voix" method="post" action="/projets/{project.id}/voix"
+ onchange="if (confirm('Changer de voix efface les voix déjà générées pour ce projet (le texte corrigé est conservé). Continuer ?')) this.submit(); else this.reset()">
+<label>Voix : <select name="voix">{options}</select></label>
+<noscript><button type="submit">Changer</button></noscript></form>"""
+
+
+def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
     """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
     transcript = Transcript.load(project.transcript_path)
     rows = "".join(segment_row(project, transcript, s) for s in transcript.segments)
@@ -313,6 +343,7 @@ def editor(project: Project, job: Job | None) -> str:
 <div id="sur-image" hidden spellcheck="true"></div>
 </div>
 <div class="sous-video">
+{voice_choice(project, catalog)}
 <p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
 les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
 « ▶ Original » rejoue la phrase d'origine, « ▶ Voix » fait entendre la voix de synthèse (créée si besoin).
@@ -396,9 +427,9 @@ def transcription_section(project: Project, job: Job | None) -> str:
 
 
 @app.get("/projets/{project_id}", response_class=HTMLResponse)
-def project_page(user: User, project: CurrentProject, jobs: Jobs) -> str:
+def project_page(user: User, project: CurrentProject, jobs: Jobs, catalog: Catalog) -> str:
     if project.transcript_path.exists():
-        content = editor(project, jobs.get(project.id))
+        content = editor(project, jobs.get(project.id), catalog)
     else:
         content = (f'<video src="/projets/{project.id}/video" controls preload="metadata" '
                    f'style="width: 100%"></video>\n'
@@ -430,6 +461,22 @@ def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
                                              progress, get_settings().acceleration_max,
                                              _synthesis_lock, _transcript_lock))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
+
+
+@app.post("/projets/{project_id}/voix")
+def change_voice(user: User, project: CurrentProject, projects: Projects, jobs: Jobs, catalog: Catalog,
+                 voix: Annotated[str, Form()]) -> RedirectResponse:
+    voice = catalog.get(voix)
+    if voice is None:
+        raise HTTPException(400, "Voix inconnue")
+    job = jobs.get(project.id)
+    if job is not None and job.active:  # le doublage en cours mélangerait les deux voix
+        raise HTTPException(409, "Impossible de changer de voix pendant un traitement en cours")
+    if voice != catalog.for_project(project.voice):
+        with _synthesis_lock, _transcript_lock:
+            projects.set_voice(project.id, voice.id)
+            reset_voices(project.folder)
+    return RedirectResponse(f"/projets/{project.id}", status_code=303)
 
 
 @app.get("/projets/{project_id}/audio")

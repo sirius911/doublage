@@ -22,6 +22,7 @@ class Project:
     owner: str
     created: float
     folder: Path
+    voice: str | None = None  # identifiant dans le catalogue ; None = voix par défaut
 
     @property
     def video(self) -> Path:
@@ -51,13 +52,20 @@ class ProjectStore:
                     created REAL NOT NULL
                 )
             """)
+            columns = {row[1] for row in db.execute("PRAGMA table_info(projects)")}
+            if "voice" not in columns:  # base créée avant le choix de la voix
+                db.execute("ALTER TABLE projects ADD COLUMN voice TEXT")
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
 
     def _project(self, row: tuple) -> Project:
-        id_, name, video_name, owner, created = row
-        return Project(id_, name, video_name, owner, created, self.root / str(id_))
+        id_, name, video_name, owner, created, voice = row
+        return Project(id_, name, video_name, owner, created, self.root / str(id_), voice)
+
+    def set_voice(self, project_id: int, voice: str) -> None:
+        with self._connect() as db:
+            db.execute("UPDATE projects SET voice = ? WHERE id = ?", (voice, project_id))
 
     def create(self, name: str, video_name: str, video: BinaryIO, owner: str) -> Project:
         """Crée le projet et y copie la vidéo (lue par morceaux : les fichiers sont gros)."""
@@ -81,7 +89,7 @@ class ProjectStore:
         return project
 
     def get(self, project_id: int, db: sqlite3.Connection | None = None) -> Project | None:
-        query = "SELECT id, name, video_name, owner, created FROM projects WHERE id = ?"
+        query = "SELECT id, name, video_name, owner, created, voice FROM projects WHERE id = ?"
         if db is None:
             with self._connect() as db:
                 row = db.execute(query, (project_id,)).fetchone()
@@ -91,7 +99,7 @@ class ProjectStore:
 
     def list(self) -> list[Project]:
         with self._connect() as db:
-            rows = db.execute("SELECT id, name, video_name, owner, created FROM projects "
+            rows = db.execute("SELECT id, name, video_name, owner, created, voice FROM projects "
                               "ORDER BY created DESC, id DESC").fetchall()
         return [self._project(r) for r in rows]
 

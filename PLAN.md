@@ -61,7 +61,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] ~~HTTPS~~ : non, HTTP en connaissance de cause ; nom via un reverse proxy plus tard, à la racine (Q12)
 
 ## Phase 5 — Voix
-- [ ] Choix de la voix par projet parmi un catalogue
+- [x] Choix de la voix par projet parmi un catalogue (voix prédéfinies retenues dans `DOUBLAGE_TTS_VOICES` ; changer de voix efface les voix déjà générées) — estelle est la seule voix française de Pocket TTS : les voix étrangères sont à écouter avant de les proposer
 - [ ] Ajout d'une voix à partir d'un échantillon audio (export en `.safetensors` pour un chargement rapide)
 - [ ] Choix du modèle `french` / `french_24l` (rapidité / qualité)
 

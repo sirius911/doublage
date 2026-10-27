@@ -6,13 +6,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 import doublage.app
-from doublage.app import app, get_jobs, get_projects, get_store, get_synthesizer, get_transcriber
+from doublage.app import app, get_catalog, get_engine, get_jobs, get_projects, get_store, get_transcriber
 from doublage.auth import UserStore
 from doublage.jobs import JobManager
 from doublage.projects import ProjectStore
 from doublage.segments import Segment, Status, Transcript
 from doublage.transcription import FakeTranscriber
-from doublage.tts import FakeSynthesizer
+from doublage.tts import FakeEngine
+from doublage.voices import VoiceCatalog
 
 
 @pytest.fixture
@@ -25,7 +26,9 @@ def store(tmp_path) -> UserStore:
     jobs = JobManager()
     app.dependency_overrides[get_jobs] = lambda: jobs
     app.dependency_overrides[get_transcriber] = FakeTranscriber
-    app.dependency_overrides[get_synthesizer] = FakeSynthesizer
+    engine = FakeEngine()
+    app.dependency_overrides[get_engine] = lambda: engine
+    app.dependency_overrides[get_catalog] = lambda: VoiceCatalog(["estelle", "alba"], "estelle")
     yield store
     app.dependency_overrides.clear()
 
@@ -246,6 +249,36 @@ def test_voix_d_une_phrase(client, tmp_path):
     assert len(client.get(url + "/phrases/0/voix").content) > len(wav.content)  # texte plus long
 
     assert client.post(url + "/phrases/42/voix").status_code == 404
+
+
+def test_choix_de_la_voix(client):
+    login(client)
+    url = creer_projet(client)
+    projet_id = int(url.rsplit("/", 1)[1])
+    projets = app.dependency_overrides[get_projects]()
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projets.get(projet_id).transcript_path)
+    engine = app.dependency_overrides[get_engine]()
+    page = client.get(url).text
+    assert '<option value="estelle" selected>Estelle</option>' in page and '<option value="alba">Alba</option>' in page
+
+    client.post(url + "/phrases/0/voix")
+    assert engine.voices[-1] == "estelle"  # voix par défaut
+
+    r = client.post(url + "/voix", data={"voix": "alba"}, follow_redirects=False)
+    assert r.status_code == 303
+    projet = projets.get(projet_id)
+    assert projet.voice == "alba"
+    # Les voix de l'ancienne voix sont effacées, le texte est conservé.
+    assert not (projet.folder / "phrases").exists()
+    assert Transcript.load(projet.transcript_path).segments[0].status == Status.TRANSCRIBED
+    assert '<option value="alba" selected>Alba</option>' in client.get(url).text
+
+    client.post(url + "/phrases/0/voix")
+    assert engine.voices[-1] == "alba"
+    # Même voix : rien n'est effacé ; voix inconnue : refusée.
+    client.post(url + "/voix", data={"voix": "alba"})
+    assert (projet.folder / "phrases" / "0000.wav").exists()
+    assert client.post(url + "/voix", data={"voix": "inconnue"}).status_code == 400
 
 
 def test_video_doublee(client, monkeypatch):

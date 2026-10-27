@@ -42,7 +42,8 @@
 }
 .colonne-video, .colonne-phrases { display: flex; flex-direction: column; min-height: 0; }
 .sous-video, #phrases { flex: 1; min-height: 0; overflow-y: auto; }
-.sous-video p:first-child { margin-top: .5rem; }
+.sous-video > :first-child { margin-top: .5rem; }
+#choix-voix { margin-bottom: .3rem; }
 .colonne-phrases h2 { margin: 0 0 .3rem; font-size: 1.1rem; flex: none; }
 .colonne-phrases { border: 1px solid #ddd; border-radius: .3rem; padding: .5rem 0 0 .5rem; }
 #doublage h2 { font-size: 1.1rem; }
