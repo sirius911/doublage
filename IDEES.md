@@ -1,0 +1,11 @@
+# Idées et améliorations
+
+Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier de la forme.
+À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
+
+## Nouvelles
+-
+
+## Intégrées
+- Afficher le texte par timecode sur l'image pour le corriger avec la vidéo en fond → PLAN Phase 2
+- Choisir la voix parmi un catalogue plus large → PLAN Phase 5

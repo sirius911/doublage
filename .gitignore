@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+data/
+*.mp4
+*.mkv
+*.mov
+*.wav
+!tests/fixtures/**
