@@ -17,9 +17,9 @@ from . import __version__
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .pipeline import clip_path, synthesize_segment, transcribe_video
+from .pipeline import clip_path, dub_project, mark_synthesized, synthesize_segment, transcribe_video
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
-from .segments import Status, Transcript
+from .segments import Transcript
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 from .tts import FakeSynthesizer, Synthesizer
 
@@ -74,6 +74,8 @@ def get_synthesizer() -> Synthesizer:
 
 # Une synthèse à la fois : elle occupe le processeur de la VM partagée.
 _synthesis_lock = threading.Lock()
+# Les corrections arrivent en rafale (enregistrement automatique) : une écriture à la fois.
+_transcript_lock = threading.Lock()
 
 
 class LoginRequired(Exception):
@@ -247,7 +249,7 @@ def timecode(seconds: float) -> str:
     return f"{int(seconds // 60):02d}:{seconds % 60:04.1f}"
 
 
-def editor(project: Project) -> str:
+def editor(project: Project, job: Job | None) -> str:
     """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
     transcript = Transcript.load(project.transcript_path)
     rows = "".join(
@@ -274,25 +276,54 @@ les modifications sont enregistrées automatiquement. Cliquez sur une phrase pou
 <h2>Phrases</h2>
 <p>{n} phrase{"s" if n > 1 else ""}.</p>
 <ol id="phrases">{rows}</ol>
+{dubbing_section(project, job)}
 <script>const PROJET = {project.id};</script>
 <script src="/static/editeur.js"></script>"""
+
+
+def job_progress(project: Project, job: Job, when_done: str = "location.reload()") -> str:
+    """Barre indéterminée, étape et temps écoulé, mis à jour toutes les 2 s ; `when_done` (JS) à la fin."""
+    return f"""<p><progress style="width: 100%"></progress></p>
+<p id="etape">{escape(job.step)}</p>
+<script>
+(() => {{
+  const debut = Date.now() / 1000 - {time.time() - job.started:.0f};
+  const suivi = setInterval(async () => {{
+    const etat = await (await fetch("/projets/{project.id}/etat")).json();
+    if (etat.etat === "termine" || etat.etat === "erreur") {{ clearInterval(suivi); {when_done}; return; }}
+    const s = Math.round(Date.now() / 1000 - debut);
+    document.getElementById("etape").textContent = `${{etat.etape}} (${{Math.floor(s / 60)}} min ${{s % 60}} s)`;
+  }}, 2000);
+}})();
+</script>"""
+
+
+def dubbing_section(project: Project, job: Job | None) -> str:
+    if job and job.kind == "doublage" and job.active:
+        # À la fin, seule cette section est rafraîchie : la vidéo et les corrections en cours restent.
+        return f"""<section id="doublage"><h2>Vidéo doublée</h2>
+{job_progress(project, job, "rafraichirDoublage()")}</section>"""
+    parts = ['<section id="doublage"><h2>Vidéo doublée</h2>']
+    if job and job.kind == "doublage" and job.state == JobState.FAILED:
+        parts.append(f'<p style="color: #b00">La génération a échoué : {escape(job.error)}</p>')
+    if project.dubbed_video.exists():
+        date = datetime.fromtimestamp(project.dubbed_video.stat().st_mtime).strftime("%d/%m/%Y à %H:%M")
+        parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
+                     f'<small>(générée le {date})</small></p>')
+    label = "Mettre à jour la vidéo doublée" if project.dubbed_video.exists() else "Générer la vidéo doublée"
+    parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
+<button type="submit">{label}</button>
+</form>
+<p><small>Les phrases dont la voix est à jour sont reprises telles quelles ; les autres sont générées.</small></p>
+</section>""")
+    return "\n".join(parts)
 
 
 def transcription_section(project: Project, job: Job | None) -> str:
     if job and job.kind == "transcription" and job.active:
         # Le serveur Whisper ne donne pas d'avancement : barre indéterminée, étape et temps écoulé.
         return f"""<h2>Transcription</h2>
-<p><progress style="width: 100%"></progress></p>
-<p id="etape">{escape(job.step)}</p>
-<script>
-const debut = Date.now() / 1000 - {time.time() - job.started:.0f};
-setInterval(async () => {{
-  const etat = await (await fetch("/projets/{project.id}/etat")).json();
-  if (etat.etat === "termine" || etat.etat === "erreur") location.reload();
-  const s = Math.round(Date.now() / 1000 - debut);
-  document.getElementById("etape").textContent = `${{etat.etape}} (${{Math.floor(s / 60)}} min ${{s % 60}} s)`;
-}}, 2000);
-</script>"""
+{job_progress(project, job)}"""
     error = ""
     if job and job.kind == "transcription" and job.state == JobState.FAILED:
         error = f'<p style="color: #b00">La transcription a échoué : {escape(job.error)}</p>'
@@ -306,7 +337,7 @@ setInterval(async () => {{
 @app.get("/projets/{project_id}", response_class=HTMLResponse)
 def project_page(user: User, project: CurrentProject, jobs: Jobs) -> str:
     if project.transcript_path.exists():
-        content = editor(project)
+        content = editor(project, jobs.get(project.id))
     else:
         content = (f'<video src="/projets/{project.id}/video" controls preload="metadata" '
                    f'style="width: 100%"></video>\n'
@@ -328,6 +359,24 @@ def start_transcription(user: User, project: CurrentProject, jobs: Jobs,
     return RedirectResponse(f"/projets/{project.id}", status_code=303)
 
 
+@app.post("/projets/{project_id}/doublage")
+def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
+                  synthesizer: Annotated[Synthesizer, Depends(get_synthesizer)]) -> RedirectResponse:
+    if not project.transcript_path.exists():
+        raise HTTPException(404, "Pas encore de transcription")
+    jobs.submit(project.id, "doublage",
+                lambda progress: dub_project(project.video, project.folder, project.dubbed_video, synthesizer,
+                                             progress, _synthesis_lock, _transcript_lock))
+    return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
+
+
+@app.get("/projets/{project_id}/export")
+def dubbed_video(user: User, project: CurrentProject) -> FileResponse:
+    if not project.dubbed_video.exists():
+        raise HTTPException(404, "La vidéo doublée n'a pas encore été générée")
+    return FileResponse(project.dubbed_video, filename=f"{project.name} (doublée).mp4")
+
+
 @app.get("/projets/{project_id}/etat")
 def project_state(user: User, project: CurrentProject, jobs: Jobs) -> dict:
     job = jobs.get(project.id)
@@ -338,10 +387,6 @@ def project_state(user: User, project: CurrentProject, jobs: Jobs) -> dict:
 
 class TextUpdate(BaseModel):
     texte: str
-
-
-# Les corrections arrivent en rafale (enregistrement automatique) : une écriture à la fois.
-_transcript_lock = threading.Lock()
 
 
 @app.put("/projets/{project_id}/phrases/{segment_id}")
@@ -370,12 +415,7 @@ def synthesize_one(user: User, project: CurrentProject, segment_id: int,
     with _synthesis_lock:
         synthesize_segment(segment, project.folder, synthesizer)
     with _transcript_lock:
-        # Le texte a pu être corrigé pendant la synthèse : la voix n'est à jour que s'il est inchangé.
-        transcript = Transcript.load(project.transcript_path)
-        current = next((s for s in transcript.segments if s.id == segment_id), None)
-        if current is not None:
-            current.status = Status.SYNTHESIZED if current.text == segment.text else Status.MODIFIED
-            transcript.save(project.transcript_path)
+        current = mark_synthesized(project.transcript_path, segment)
     return {"id": segment_id, "etat": current.status if current else None}
 
 

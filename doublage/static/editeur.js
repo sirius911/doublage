@@ -175,6 +175,20 @@
     entreeValide(p.texte);
   }
 
+  // Fin de la génération de la vidéo doublée : on rafraîchit la section et l'état des phrases
+  // sans recharger la page (la position de la vidéo et les corrections en cours sont conservées).
+  window.rafraichirDoublage = async () => {
+    const page = new DOMParser().parseFromString(await (await fetch(location.href)).text(), "text/html");
+    document.getElementById("doublage").replaceWith(page.getElementById("doublage"));
+    for (const p of phrases) {
+      const li = page.querySelector(`#phrases li[data-id="${p.id}"]`);
+      if (!li) continue;
+      p.li.dataset.etat = li.dataset.etat;
+      if ("voix" in li.dataset) p.li.dataset.voix = "";
+      majVoix(p);
+    }
+  };
+
   window.addEventListener("beforeunload", (e) => {
     if (phrases.some((p) => p.minuterie !== null)) e.preventDefault();  // correction pas encore envoyée
   });

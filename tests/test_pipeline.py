@@ -2,8 +2,8 @@ import pytest
 
 from doublage import media
 from doublage.cli import main
-from doublage.pipeline import dub_video, transcribe_video
-from doublage.segments import Status, Transcript
+from doublage.pipeline import dub_project, dub_video, transcribe_video
+from doublage.segments import Segment, Status, Transcript
 from doublage.transcription import FakeTranscriber
 from doublage.tts import FakeSynthesizer
 
@@ -39,3 +39,39 @@ def test_commande_traiter_simulee(sample_video, tmp_path, capsys):
     main(["traiter", str(sample_video), "-o", str(sortie), "--dossier", str(tmp_path / "w"), "--simuler"])
     assert sortie.exists()
     assert "Vidéo doublée" in capsys.readouterr().out
+
+
+class CompteSynthese(FakeSynthesizer):
+    def __init__(self):
+        super().__init__()
+        self.textes = []
+
+    def synthesize(self, text):
+        self.textes.append(text)
+        return super().synthesize(text)
+
+
+def sans_ffmpeg(monkeypatch):
+    """Remplace les appels à ffmpeg : la « vidéo doublée » est la bande son elle-même."""
+    monkeypatch.setattr(media, "probe_duration", lambda video: 5.0)
+    monkeypatch.setattr(media, "replace_audio", lambda video, audio, output: output.write_bytes(audio.read_bytes()))
+
+
+def test_doublage_d_un_projet_reprend_les_voix_a_jour(tmp_path, monkeypatch):
+    sans_ffmpeg(monkeypatch)
+    Transcript(5.0, [Segment(0, 0.0, 2.0, "Un.", "Un."), Segment(1, 2.0, 4.0, "Deux.", "Deux.")]).save(
+        tmp_path / "segments.json")
+    synth = CompteSynthese()
+    sortie = tmp_path / "video_doublee.mp4"
+    dub_project(tmp_path / "video.mp4", tmp_path, sortie, synth, progress=lambda m: None)
+    assert synth.textes == ["Un.", "Deux."] and sortie.exists()
+    assert not (tmp_path / "video_doublee.partiel.mp4").exists()
+
+    # Seule la phrase corrigée est régénérée ; l'autre garde sa voix.
+    transcript = Transcript.load(tmp_path / "segments.json")
+    transcript.set_text(1, "Deux et trois.")
+    transcript.save(tmp_path / "segments.json")
+    synth.textes.clear()
+    dub_project(tmp_path / "video.mp4", tmp_path, sortie, synth, progress=lambda m: None)
+    assert synth.textes == ["Deux et trois."]
+    assert all(s.status == Status.SYNTHESIZED for s in Transcript.load(tmp_path / "segments.json").segments)

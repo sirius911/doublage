@@ -31,6 +31,10 @@ class Project:
     def transcript_path(self) -> Path:
         return self.folder / "segments.json"
 
+    @property
+    def dubbed_video(self) -> Path:
+        return self.folder / "video_doublee.mp4"
+
 
 class ProjectStore:
     def __init__(self, db_path: Path, data_dir: Path):

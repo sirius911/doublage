@@ -35,7 +35,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Modification du texte sur l'image et dans la liste des phrases, enregistrement automatique
 - [x] Clic sur une phrase → la vidéo se place au timecode
 - [x] Écoute de l'original / de la voix synthétique d'une phrase ; régénération d'une seule phrase
-- [ ] Génération de toutes les phrases + export de la vidéo finale à télécharger
+- [x] Génération de toutes les phrases + export de la vidéo finale à télécharger
 
 ## Phase 3 — Calage et confort d'édition
 - [ ] Indicateur par phrase : la voix synthétique tient-elle dans son créneau ? (vert / orange / rouge)

@@ -1,7 +1,10 @@
 """Chaîne complète : vidéo → transcription → voix de synthèse → vidéo doublée."""
 
 from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
+
+import numpy as np
 
 from . import media
 from .assembly import Placement, assemble
@@ -38,20 +41,25 @@ def synthesize_segment(segment: Segment, workdir: Path, synthesizer: Synthesizer
     return audio
 
 
-def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
-              synthesizer: Synthesizer, progress: Progress = print) -> list[Placement]:
-    clips = []
-    for i, seg in enumerate(transcript.segments, 1):
-        progress(f"Synthèse de la phrase {i}/{len(transcript.segments)}…")
-        audio = synthesize_segment(seg, workdir, synthesizer)
-        seg.status = Status.SYNTHESIZED
-        clips.append((seg.id, seg.start, audio))
-    transcript.save(workdir / "segments.json")
+def mark_synthesized(transcript_path: Path, segment: Segment) -> Segment | None:
+    """Note qu'une voix a été générée pour `segment.text`.
 
+    Le texte a pu être corrigé pendant la synthèse : la voix n'est à jour que s'il est inchangé.
+    """
+    transcript = Transcript.load(transcript_path)
+    current = next((s for s in transcript.segments if s.id == segment.id), None)
+    if current is not None:
+        current.status = Status.SYNTHESIZED if current.text == segment.text else Status.MODIFIED
+        transcript.save(transcript_path)
+    return current
+
+
+def _render(video: Path, clips: list[tuple[int, float, np.ndarray]], duration: float,
+            sample_rate: int, workdir: Path, output: Path, progress: Progress) -> list[Placement]:
     progress("Assemblage de la bande son…")
-    total = max(transcript.duration, media.probe_duration(video))
-    track, placements = assemble(clips, total, synthesizer.sample_rate)
-    voice = media.write_wav(workdir / "doublage.wav", track, synthesizer.sample_rate)
+    total = max(duration, media.probe_duration(video))
+    track, placements = assemble(clips, total, sample_rate)
+    voice = media.write_wav(workdir / "doublage.wav", track, sample_rate)
 
     progress("Création de la vidéo doublée…")
     media.replace_audio(video, voice, output)
@@ -60,4 +68,49 @@ def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
         progress(f"Attention : {len(late)} phrase(s) décalée(s) de plus de 0,5 s "
                  f"(retard max {max(p.delay for p in late):.1f} s).")
     progress(f"Vidéo doublée : {output}")
+    return placements
+
+
+def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
+              synthesizer: Synthesizer, progress: Progress = print) -> list[Placement]:
+    """Doublage d'un seul tenant (ligne de commande) : toutes les phrases sont synthétisées."""
+    clips = []
+    for i, seg in enumerate(transcript.segments, 1):
+        progress(f"Synthèse de la phrase {i}/{len(transcript.segments)}…")
+        audio = synthesize_segment(seg, workdir, synthesizer)
+        seg.status = Status.SYNTHESIZED
+        clips.append((seg.id, seg.start, audio))
+    transcript.save(workdir / "segments.json")
+    return _render(video, clips, transcript.duration, synthesizer.sample_rate, workdir, output, progress)
+
+
+def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesizer,
+                progress: Progress = print,
+                synthesis_lock: AbstractContextManager = nullcontext(),
+                transcript_lock: AbstractContextManager = nullcontext()) -> list[Placement]:
+    """Doublage d'un projet corrigé dans l'éditeur.
+
+    Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
+    écoutée et validée. Les verrous permettent de corriger le texte pendant le traitement.
+    """
+    transcript_path = workdir / "segments.json"
+    with transcript_lock:
+        todo = [s for s in Transcript.load(transcript_path).segments
+                if s.status != Status.SYNTHESIZED or not clip_path(workdir, s.id).exists()]
+    for i, seg in enumerate(todo, 1):
+        progress(f"Synthèse de la phrase {i}/{len(todo)}…")
+        with synthesis_lock:
+            synthesize_segment(seg, workdir, synthesizer)
+        with transcript_lock:
+            mark_synthesized(transcript_path, seg)
+
+    with transcript_lock:
+        transcript = Transcript.load(transcript_path)
+    clips, sample_rate = [], synthesizer.sample_rate
+    for seg in transcript.segments:
+        audio, sample_rate = media.read_wav(clip_path(workdir, seg.id))
+        clips.append((seg.id, seg.start, audio))
+    partial = output.with_name(output.stem + ".partiel" + output.suffix)
+    placements = _render(video, clips, transcript.duration, sample_rate, workdir, partial, progress)
+    partial.replace(output)  # l'ancienne vidéo reste téléchargeable jusqu'au bout
     return placements

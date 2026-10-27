@@ -209,3 +209,26 @@ def test_voix_d_une_phrase(client, tmp_path):
     assert len(client.get(url + "/phrases/0/voix").content) > len(wav.content)  # texte plus long
 
     assert client.post(url + "/phrases/42/voix").status_code == 404
+
+
+def test_video_doublee(client, monkeypatch):
+    from doublage import media
+    monkeypatch.setattr(media, "probe_duration", lambda video: 5.0)
+    monkeypatch.setattr(media, "replace_audio", lambda video, audio, output: output.write_bytes(b"video"))
+    login(client)
+    url = creer_projet(client)
+    projet_id = int(url.rsplit("/", 1)[1])
+    projet = app.dependency_overrides[get_projects]().get(projet_id)
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
+    assert "Générer la vidéo doublée" in client.get(url).text
+    assert client.get(url + "/export").status_code == 404
+
+    r = client.post(url + "/doublage", follow_redirects=False)
+    assert r.status_code == 303
+    app.dependency_overrides[get_jobs]().wait(projet_id, timeout=30)
+    page = client.get(url).text
+    assert "Télécharger la vidéo doublée" in page and "Mettre à jour la vidéo doublée" in page
+    assert 'data-etat="synthetisee" data-voix' in page
+    export = client.get(url + "/export")
+    assert export.status_code == 200 and export.content == b"video"
+    assert "doubl" in export.headers["content-disposition"]

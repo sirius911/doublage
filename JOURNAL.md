@@ -2,6 +2,19 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : génération complète et export (fin de la Phase 2)
+- Section « Vidéo doublée » sous la liste des phrases : génération en tâche de fond avec barre de
+  progression ; seules les phrases sans voix à jour sont synthétisées, les voix déjà écoutées sont reprises.
+  À la fin, seule la section est rafraîchie (la position de la vidéo et les corrections en cours restent).
+- Téléchargement « <nom du projet> (doublée).mp4 ». La nouvelle vidéo est écrite à part puis remplace
+  l'ancienne : la précédente reste téléchargeable pendant la génération.
+- La correction du texte reste possible pendant la génération (verrous partagés avec l'éditeur).
+- Limites connues : l'export est toujours en .mp4 (image copiée sans ré-encodage) — une source .webm ou
+  .avi exotique pourrait échouer ; l'avertissement « phrases décalées » n'est pas affiché dans l'interface
+  (prévu en Phase 3 avec l'indicateur par phrase). Export non testé ici faute de ffmpeg sur le poste :
+  à vérifier sur la VM.
+- Suite : essai de la Phase 2 sur la VM par l'utilisateur, puis Phase 3.
+
 ## 2026-10-27 — Phase 2 : écoute et voix d'une phrase
 - Par phrase : « ▶ Original » rejoue l'extrait de la vidéo (arrêt automatique en fin de phrase),
   « Générer la voix » / « Régénérer » synthétise la phrase avec son texte actuel puis la fait écouter,
