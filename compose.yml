@@ -1,6 +1,7 @@
-# Déploiement avec podman-compose (testé pour la version 1.0.6) :
+# Déploiement avec podman-compose (version 1.0.6), sur le stockage Podman dédié à doublage :
 #   cp .env.exemple .env   # puis adapter
-#   podman-compose up -d --build
+#   deploiement/podman-doublage podman-compose up -d --build
+# (voir README.md, « Déploiement sur la VM »)
 #
 # Tout est préfixé « doublage » (conteneur, réseau, volumes) pour rester isolé
 # des autres applications de la VM.

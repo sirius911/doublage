@@ -44,10 +44,12 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [ ] Export complémentaire : sous-titres (SRT/VTT) et audio seul
 
 ## Phase 4 — Mise en service
-- [ ] Relevé des ressources consommées sur la VM par les applications existantes ; choix du volume de données (ex. `/srv/apps`)
-- [ ] Choix d'un port libre, réseau et volumes dédiés, aucune interférence avec ce-transcripteur-v2 et `scribe`
+- [x] Relevé des ressources consommées sur la VM par les applications existantes ; choix du volume de données (ex. `/srv/apps`)
+- [~] Stockage Podman rootless dédié (`/var/lib/containers/doublage/storage`), code dans `/srv/apps/doublage` — fichiers et procédure prêts (`deploiement/`, README), préparation par l'administrateur à faire
+- [~] Choix d'un port libre (8091), réseau et volumes dédiés, aucune interférence avec ce-transcripteur-v2 et `scribe` — à vérifier au déploiement
 - [ ] Essai réel du serveur Whisper avec l'audio d'une vidéo complète (taille et durée maximales acceptées)
-- [ ] Documentation d'installation sur la VM (Podman, sans droits administrateur si possible)
+- [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
+- [ ] Démarrage automatique avec la VM (service systemd utilisateur, `deploiement/doublage.service`)
 - [ ] Environnement de test (staging) sur la VM, validé par l'utilisateur
 - [ ] Mise en production (uniquement après validation de l'utilisateur)
 

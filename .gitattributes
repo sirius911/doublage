@@ -1,0 +1,5 @@
+# Fichiers exécutés sur la VM Linux : toujours en fins de ligne LF.
+deploiement/** text eol=lf
+Containerfile text eol=lf
+compose.yml text eol=lf
+.env.exemple text eol=lf

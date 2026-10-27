@@ -6,23 +6,17 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 ## Ouvertes
 
 ### Q6 — Premier essai réel
-Quand la VM sera prête, pouvez-vous y lancer (procédure dans README.md) :
+Quand la VM sera prête, pouvez-vous y lancer (procédure dans README.md, étape 4 du déploiement) :
 `doublage traiter une_video_courte.mp4` sur un tutoriel de 1 à 2 minutes, et me dire le résultat
 (messages affichés, qualité de la voix, synchronisation) ?
 
 Réponse :
 
-### Q7 — Place disque pour Podman sur la VM (bloque : construction de l'image)
-Podman sans droits root range images et volumes dans `/home/lorcyr/.local/share/containers`, sur la partition
-`/home` (10 Go, 2,2 Go libres) qu'il partage avec `scribe`. L'image doublage (PyTorch, ffmpeg) et le modèle
-Pocket TTS demandent environ 3 Go, plus autant pendant la construction : ça ne tient pas.
-Il ne faut pas déplacer tout le stockage Podman de l'utilisateur : `scribe` ne retrouverait plus son image.
-Deux solutions, à demander à un administrateur de la VM :
-- **A (recommandée)** : agrandir `/home` de 10 à 20 Go (LVM, si le groupe de volumes `ol` a de la place : `sudo vgs`).
-  Rien ne change pour scribe ni pour les commandes.
-- **B** : créer `/srv/apps/doublage` (sur `/`, 42 Go libres) appartenant à `lorcyr` ; doublage y aurait son propre
-  stockage Podman (option `--root`) et ses données. Plus isolé, mais chaque commande Podman de doublage devra
-  préciser ce stockage.
+### Q8 — Emplacement des données (non bloquant)
+Par défaut, les données (vidéos déposées, projets, comptes) vont dans `/srv/apps/doublage/data`, sur `/`
+(42 Go libres, partagés avec le système). Une alternative est `/var/lib/containers/doublage/data` (197 Go).
+Pour quelques tutoriels de quelques centaines de Mo, `/srv` suffit largement ; je recommande de le garder
+et de revoir si le volume grossit. D'accord ?
 
 Réponse :
 
@@ -45,3 +39,8 @@ Réponse :
 - Q5 — Accès Internet de la VM : oui, via le proxy `http://proxy.chprod.fr:8080` (Docker Hub, PyPI, PyTorch,
   Hugging Face joignables). Podman sans droits root. Le port 8090 est déjà occupé : l'application utilise 8091.
   Le serveur Whisper est appelé sans proxy.
+- Q7 — Stockage Podman : solution C retenue. Le stockage Podman de `lorcyr` (sur `/home`, utilisé par scribe)
+  reste inchangé ; doublage a son propre stockage rootless dans `/var/lib/containers/doublage/storage`
+  (XFS, 197 Go, SELinux Enforcing), le code dans `/srv/apps/doublage`. Pas de modification de la configuration
+  Podman globale, pas d'intervention sur ce-transcripteur-v2. Préparation (droits, SELinux) et procédure dans
+  README.md, « Déploiement sur la VM ». Nettoyage des images inutilisées traité séparément.

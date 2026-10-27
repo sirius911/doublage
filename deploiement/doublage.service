@@ -1,0 +1,22 @@
+# Service systemd utilisateur : redémarre doublage avec la VM.
+# (podman-restart.service ne connaît que le stockage par défaut, il ne verrait pas doublage.)
+# Installation, une fois le conteneur créé par podman-compose :
+#   mkdir -p ~/.config/systemd/user
+#   cp deploiement/doublage.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now doublage
+# Nécessite « loginctl enable-linger lorcyr ».
+[Unit]
+Description=Doublage (Podman, stockage dédié)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=CONTAINERS_STORAGE_CONF=/srv/apps/doublage/deploiement/storage.conf
+Environment=CONTAINERS_CONF_OVERRIDE=/srv/apps/doublage/deploiement/containers.conf
+ExecStart=/usr/bin/podman start --attach doublage
+ExecStop=/usr/bin/podman stop -t 30 doublage
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

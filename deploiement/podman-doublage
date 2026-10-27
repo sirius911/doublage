@@ -1,0 +1,8 @@
+#!/bin/sh
+# Lance une commande Podman avec le stockage dédié à doublage, sans toucher à celui de scribe.
+#   deploiement/podman-doublage podman ps
+#   deploiement/podman-doublage podman-compose up -d --build
+DIR=$(cd "$(dirname "$0")" && pwd)
+export CONTAINERS_STORAGE_CONF="$DIR/storage.conf"
+export CONTAINERS_CONF_OVERRIDE="$DIR/containers.conf"
+exec "$@"
