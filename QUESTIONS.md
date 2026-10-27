@@ -29,5 +29,5 @@ Réponse :
 - Q3 — Accès : connexion simple par mot de passe, sans sécurité poussée.
 - Q4 — Choix techniques : Python validé.
 - Q5 — Accès Internet de la VM : oui, via le proxy `http://proxy.chprod.fr:8080` (Docker Hub, PyPI, PyTorch,
-  Hugging Face joignables). Podman sans droits root. Le port 8090 est déjà occupé : en choisir un autre.
+  Hugging Face joignables). Podman sans droits root. Le port 8090 est déjà occupé : l'application utilise 8091.
   Le serveur Whisper est appelé sans proxy.

@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "${DOUBLAGE_PORT:-8090}:8000"
+      - "${DOUBLAGE_PORT:-8091}:8000"
     volumes:
       # :Z = étiquette SELinux (Oracle Linux)
       - "${DOUBLAGE_DONNEES:-/srv/apps/doublage/data}:/data:Z"

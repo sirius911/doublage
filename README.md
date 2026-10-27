@@ -68,7 +68,7 @@ mkdir -p /srv/apps/doublage/data
 podman-compose up -d --build
 ```
 
-L'application répond alors sur `http://<VM>:8090/`. Le conteneur, son réseau et ses volumes sont tous
+L'application répond alors sur `http://<VM>:8091/`. Le conteneur, son réseau et ses volumes sont tous
 nommés `doublage…`, et limités à 2 processeurs et 4 Go de mémoire, pour ne pas gêner les autres applications.
 
 ## Comptes utilisateurs
