@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : projets
+- Relevé sur la VM après limitation : priorité basse effective (NI 10), mais ~290 % de processeur au lieu de
+  200 % (Pocket TTS utilise d'autres fils que ceux de PyTorch) ; laissé tel quel, la priorité basse protège
+  les autres applications. 36 s pour la vidéo de 90 s (modèle déjà en cache).
+- `HF_HUB_OFFLINE=1` proposé dans `.env.exemple` une fois le modèle téléchargé.
+- Projets : table `projects` dans `doublage.db`, un dossier `data/projets/<id>/` par projet avec la vidéo.
+  Page d'accueil = dépôt + liste ; page projet avec lecteur vidéo (requêtes partielles pour se déplacer).
+  Tous les utilisateurs voient tous les projets (équipe de 2-3 auteurs).
+- Suite : lancement de la transcription avec barre de progression.
+
 ## 2026-10-27 — Premier doublage réel sur la VM
 - Image construite dans le stockage Podman dédié ; scribe intact.
 - Q6 : vidéo de 90 s → 20 phrases, 56 s de traitement, doublage jugé très bon, pas de phrase inventée.
