@@ -2,6 +2,15 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 4 : démarrage avec la VM, script de mise à jour
+- Aperçu et exports validés par l'utilisateur sur la VM.
+- `deploiement/doublage@.service` (modèle, une instance = un nom = un dossier `/srv/apps/<nom>`) remplace
+  `doublage.service` ; il reprend en main un conteneur démarré par podman-compose.
+- `deploiement/mettre-a-jour` : git pull, construction pendant que l'ancienne version tourne, remplacement du
+  conteneur, relance du service, vérification de `/sante` (journal affiché en cas d'échec).
+- `compose.yml` : nom du conteneur et de l'image paramétrés par `DOUBLAGE_NOM` (défaut `doublage`).
+- Questions : Q11 (organisation test / production), Q12 (accès des utilisateurs, HTTPS).
+- Non éprouvé sur la VM : installation du service et premier passage du script.
 ## 2026-10-27 — Phase 3 : exports complémentaires (fin de la Phase 3, hors tâche repoussée)
 - Sous la vidéo doublée : liens « voix seule (WAV) » (bande son de la dernière génération) et sous-titres
   SRT / VTT, générés à la demande à partir du texte corrigé, aux timecodes des phrases d'origine (pas

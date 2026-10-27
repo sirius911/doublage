@@ -162,17 +162,28 @@ set -e
 cd /srv/apps/doublage
 deploiement/podman-doublage podman-compose up -d
 mkdir -p ~/.config/systemd/user
-cp deploiement/doublage.service ~/.config/systemd/user/
+cp deploiement/doublage@.service ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now doublage
-systemctl --user status doublage --no-pager | head -5
+systemctl --user enable --now doublage@doublage
+systemctl --user status doublage@doublage --no-pager | head -5
 curl --noproxy '*' -s http://127.0.0.1:8091/sante
 EOF
 ```
 
-L'application répond sur `http://10.1.147.219:8091/`. Conteneur, réseau et volume sont nommés `doublage…`,
-limités à 2 processeurs et 4 Go de mémoire. Le service systemd est nécessaire parce que
-`podman-restart.service` ne connaît que le stockage par défaut.
+L'application répond sur `http://10.1.147.219:8091/`. Conteneur, réseau et volume sont nommés `doublage…`.
+Le service systemd est nécessaire parce que `podman-restart.service` ne connaît que le stockage par défaut.
+C'est un modèle (`doublage@<nom>`, `<nom>` = `DOUBLAGE_NOM` de `.env`), pour pouvoir faire tourner une
+instance de test à côté de la production.
+
+### Mises à jour
+
+```bash
+/srv/apps/doublage/deploiement/mettre-a-jour
+```
+
+Le script récupère le code (`git pull`), construit la nouvelle image pendant que l'ancienne version tourne,
+remplace le conteneur, relance le service et vérifie que l'application répond (sinon, il affiche le journal).
+Les données et le cache du modèle sont conservés.
 
 ## Comptes utilisateurs
 

@@ -1,0 +1,41 @@
+#!/bin/sh
+# Met à jour l'instance de doublage du dossier où se trouve ce script : code, image, conteneur, service.
+#   /srv/apps/doublage/deploiement/mettre-a-jour
+# Les données (dossier DOUBLAGE_DONNEES) et le cache du modèle (volume) sont conservés.
+set -e
+cd "$(dirname "$0")/.."
+P=deploiement/podman-doublage
+
+# Valeurs lues dans .env (sans l'exécuter) ; mêmes valeurs par défaut que compose.yml.
+valeur() { sed -n "s/^$1=//p" .env | tail -n 1; }
+NOM=$(valeur DOUBLAGE_NOM); NOM=${NOM:-doublage}
+PORT=$(valeur DOUBLAGE_PORT); PORT=${PORT:-8091}
+SERVICE="doublage@$NOM"
+
+echo "== Instance $NOM (port $PORT), branche $(git rev-parse --abbrev-ref HEAD)"
+git pull --ff-only
+git log --oneline -1
+
+echo "== Construction de l'image (l'ancienne version tourne encore)"
+$P podman-compose build
+
+echo "== Remplacement du conteneur"
+if systemctl --user is-enabled --quiet "$SERVICE" 2>/dev/null; then
+  systemctl --user stop "$SERVICE"
+  $P podman-compose down
+  $P podman-compose up -d
+  systemctl --user restart "$SERVICE"
+else
+  $P podman-compose down
+  $P podman-compose up -d
+  echo "(service $SERVICE non installé : pas de redémarrage automatique avec la VM)"
+fi
+
+echo "== Vérification"
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if curl --noproxy '*' -fs "http://127.0.0.1:$PORT/sante"; then echo; exit 0; fi
+  sleep 3
+done
+echo "L'application ne répond pas sur le port $PORT. Journal :"
+$P podman logs --tail 30 "$NOM"
+exit 1

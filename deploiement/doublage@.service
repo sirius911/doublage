@@ -1,0 +1,28 @@
+# Service systemd utilisateur : démarre une instance de doublage avec la VM et la relance si elle s'arrête.
+# %i = nom de l'instance = nom du conteneur (DOUBLAGE_NOM dans .env) = dossier /srv/apps/<nom> :
+# doublage@doublage, doublage@doublage-test…
+# (podman-restart.service ne connaît que le stockage par défaut, il ne verrait pas doublage.)
+# Installation (une fois) :
+#   mkdir -p ~/.config/systemd/user
+#   cp deploiement/doublage@.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now doublage@doublage
+# Nécessite « loginctl enable-linger lorcyr » (déjà actif sur la VM).
+# Les mises à jour passent par deploiement/mettre-a-jour, qui recrée le conteneur puis relance le service.
+[Unit]
+Description=Doublage %i (Podman, stockage dédié)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# Chaque instance est installée dans /srv/apps/<nom> : ses réseaux CNI sont rangés dans sa configuration.
+Environment=XDG_CONFIG_HOME=/srv/apps/%i/deploiement/config
+# Le conteneur a pu être démarré hors systemd (podman-compose up -d) : on l'arrête pour le reprendre
+# en main ; « - » : pas d'erreur s'il est déjà arrêté.
+ExecStartPre=-/usr/bin/podman stop -t 30 %i
+ExecStart=/usr/bin/podman start --attach %i
+ExecStop=/usr/bin/podman stop -t 30 %i
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

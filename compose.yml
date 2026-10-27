@@ -10,8 +10,9 @@ services:
     build:
       context: .
       dockerfile: Containerfile
-    image: localhost/doublage:latest
-    container_name: doublage
+    # Nom de l'instance (DOUBLAGE_NOM dans .env) : permet une instance de test à côté de la production.
+    image: localhost/${DOUBLAGE_NOM:-doublage}:latest
+    container_name: ${DOUBLAGE_NOM:-doublage}
     restart: unless-stopped
     # Podman sans droits root : l'utilisateur du conteneur (1000) = le compte qui lance l'application,
     # pour que les fichiers du dossier de données lui appartiennent.
