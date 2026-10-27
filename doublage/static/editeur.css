@@ -1,6 +1,6 @@
 /* Éditeur : vidéo en fond, phrase en cours affichée sur l'image (comme un sous-titre). */
-.ecran { position: relative; background: #000; }
-.ecran video { display: block; width: 100%; }
+.ecran { position: relative; background: #000; flex: none; }
+.ecran video { display: block; width: 100%; max-height: 60vh; }
 #sur-image {
   position: absolute; left: 6%; right: 6%; bottom: 14%;  /* au-dessus des commandes du lecteur */
   padding: .3em .6em; border-radius: .3em;
@@ -8,39 +8,53 @@
   font-size: clamp(14px, 2.2vw, 26px); line-height: 1.35;
   pointer-events: none;
 }
-#phrases li { padding: .15em .3em; border-radius: .2em; cursor: pointer; }
-#phrases .aller { font: .85em monospace; padding: 0 .3em; cursor: pointer; }
-#phrases li.en-cours { background: #fff3b0; }
 #sur-image.modifiable { pointer-events: auto; cursor: text; outline: 2px dashed rgba(255, 255, 255, .6); }
 #sur-image:focus { outline: 2px solid #ffd54a; }
-#phrases .texte { padding: 0 .2em; }
-#phrases .texte:focus { outline: 1px solid #888; background: #fff; }
 #enregistrement.erreur { color: #b00; }
-#phrases .actions { margin-left: .5em; white-space: nowrap; font-size: .85em; }
-#phrases .actions button { font-size: inherit; margin-right: .2em; }
+
+/* Une phrase : timecode et texte sur la première ligne, actions toujours sur la seconde. */
+#phrases { list-style: none; padding: 0; margin: 0; }
+#phrases li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .5em; row-gap: .15em;
+  padding: .35em .4em; border-bottom: 1px solid #eee; cursor: pointer;
+}
+#phrases li.en-cours { background: #fff3b0; }
+#phrases .aller { font: .8em monospace; padding: 0 .3em; cursor: pointer; align-self: start; }
+#phrases .texte { padding: 0 .2em; line-height: 1.35; }
+#phrases .texte:focus { outline: 1px solid #888; background: #fff; }
+#phrases .actions { grid-column: 2; display: flex; align-items: center; gap: .3em; font-size: .8em; }
+#phrases .actions button { font-size: inherit; padding: 0 .5em; }
 #phrases .etat { color: #666; }
 #phrases li[data-etat="modifiee"] .etat { color: #b65c00; }
 /* Calage de la voix dans son créneau (explication au survol). Grisé si la voix est périmée. */
-#phrases .calage { display: none; margin: 0 .3em; cursor: help; }
+#phrases .calage { display: none; cursor: help; }
 #phrases li[data-voix] .calage { display: inline; }
 #phrases li[data-calage="vert"] .calage { color: #2e7d32; }
 #phrases li[data-calage="orange"] .calage { color: #ef8a00; }
 #phrases li[data-calage="rouge"] .calage { color: #c62828; }
 #phrases li[data-etat="modifiee"] .calage { opacity: .35; }
 
-/* Deux colonnes : la vidéo reste visible, seule la liste des phrases défile. */
-.editeur { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
-.colonne-video { position: sticky; top: 1rem; }
-.colonne-phrases { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
-.colonne-phrases h2 { margin-top: 0; position: sticky; top: 0; background: #fff; }
-#phrases { padding-left: 2em; margin: 0; }
-#phrases li { margin-bottom: .3em; }
-/* Écran étroit : la vidéo reste en haut, la liste défile dessous. */
+/* Deux colonnes à la hauteur de l'écran : la vidéo reste en haut à gauche, l'aide et la vidéo
+   doublée défilent dessous ; la liste des phrases défile à droite sous son titre. */
+.editeur {
+  flex: 1; min-height: 0; display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.25rem;
+}
+.colonne-video, .colonne-phrases { display: flex; flex-direction: column; min-height: 0; }
+.sous-video, #phrases { flex: 1; min-height: 0; overflow-y: auto; }
+.sous-video p:first-child { margin-top: .5rem; }
+.colonne-phrases h2 { margin: 0 0 .3rem; font-size: 1.1rem; flex: none; }
+.colonne-phrases { border: 1px solid #ddd; border-radius: .3rem; padding: .5rem 0 0 .5rem; }
+#doublage h2 { font-size: 1.1rem; }
+
+/* Écran étroit : une seule colonne, la page défile, la vidéo reste en haut. */
 @media (max-width: 900px) {
-  .editeur { grid-template-columns: 1fr; }
-  .colonne-video { position: static; }
+  body.plein { height: auto; }
+  body.plein main { display: block; }
+  .editeur { display: block; }
   .ecran { position: sticky; top: 0; z-index: 1; }
-  .colonne-phrases { position: static; max-height: none; overflow: visible; }
+  .sous-video, #phrases { overflow: visible; }
+  .colonne-phrases { margin-top: 1rem; }
 }
 /* Voix en cours de génération : curseur d'attente sur toute la page. */
 html.travail, html.travail * { cursor: progress !important; }

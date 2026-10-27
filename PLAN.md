@@ -55,6 +55,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
 - [x] Démarrage automatique avec la VM (service systemd modèle `deploiement/doublage@.service`) + script `deploiement/mettre-a-jour` — installés et vérifiés sur la VM (redémarrage de la VM pas encore éprouvé)
 - [x] ~~Environnement de test (staging)~~ : abandonné, une seule instance (Q11)
+- [x] Interface : barre de titre compacte sur toutes les pages, éditeur à la hauteur de l'écran (vidéo toujours visible, phrases qui défilent à droite, actions sur une ligne à part)
+- [ ] Suppression d'un projet depuis la liste (croix à droite, confirmation ; supprime vidéo, transcription, voix et exports ; refusée pendant un traitement en cours)
 - [ ] Mise en production : fusion `dev` → `main` par l'utilisateur, instance sur `main` (uniquement après validation)
 - [ ] HTTPS (Q12)
 

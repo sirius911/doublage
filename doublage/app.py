@@ -101,12 +101,17 @@ def current_user(request: Request, store: Store) -> str:
 User = Annotated[str, Depends(current_user)]
 
 
-def page(title: str, body: str, width: int = 40) -> str:
+def page(title: str, body: str, width: int = 40, bar: str = "", full: bool = False) -> str:
+    """`bar` : barre de titre (pleine largeur) ; `full` : contenu à la hauteur de l'écran (éditeur)."""
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>{title}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="font-family: system-ui, sans-serif; max-width: {width}rem; margin: 3rem auto; padding: 0 1rem">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/commun.css"></head>
+<body{' class="plein"' if full else ""}>
+{bar}
+<main style="max-width: {width}rem">
 {body}
+</main>
 </body></html>"""
 
 
@@ -148,9 +153,11 @@ def logout(request: Request, store: Store) -> RedirectResponse:
     return response
 
 
-def header(user: str) -> str:
-    return f"""<p style="text-align: right">{escape(user)}
-<form method="post" action="/deconnexion" style="display: inline"><button type="submit">Se déconnecter</button></form></p>"""
+def header(user: str, title: str = "") -> str:
+    """Barre de titre : retour aux projets, titre de la page (HTML), utilisateur et déconnexion."""
+    return f"""<header class="barre"><a class="marque" href="/">Doublage</a>{title}
+<span class="espace"></span><span>{escape(user)}</span>
+<form method="post" action="/deconnexion"><button type="submit">Se déconnecter</button></form></header>"""
 
 
 def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
@@ -161,9 +168,7 @@ def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
         for p in projects.list()
     )
     message = f'<p style="color: #b00">{escape(error)}</p>' if error else ""
-    return page("Doublage", f"""{header(user)}
-<h1>Doublage</h1>
-<h2>Nouveau projet</h2>
+    return page("Doublage", f"""<h2>Nouveau projet</h2>
 {message}
 <form id="depot" method="post" action="/projets" enctype="multipart/form-data">
 <p><label>Vidéo du tutoriel<br><input type="file" name="video" accept="video/*,{",".join(sorted(VIDEO_EXTENSIONS))}" required></label></p>
@@ -176,7 +181,7 @@ def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
 </form>
 {UPLOAD_SCRIPT}
 <h2>Projets</h2>
-{f"<ul>{rows}</ul>" if rows else "<p>Aucun projet pour l'instant.</p>"}""")
+{f"<ul>{rows}</ul>" if rows else "<p>Aucun projet pour l'instant.</p>"}""", bar=header(user))
 
 
 # Envoi de la vidéo avec suivi de l'avancement (sans JavaScript, le formulaire classique fonctionne).
@@ -288,6 +293,7 @@ def editor(project: Project, job: Job | None) -> str:
 <video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
 <div id="sur-image" hidden spellcheck="true"></div>
 </div>
+<div class="sous-video">
 <p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
 les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
 « ▶ Original » rejoue la phrase d'origine, « ▶ Voix » fait entendre la voix de synthèse (créée si besoin).
@@ -296,6 +302,7 @@ La pastille indique si la voix tient dans le temps de la phrase d'origine : <spa
 <span style="color: #c62828">●</span> trop longue, à raccourcir (détail au survol).
 <span id="enregistrement"></span></small></p>
 {dubbing_section(project, job)}
+</div>
 </div>
 <div class="colonne-phrases">
 <h2>Phrases <small>({n})</small></h2>
@@ -377,11 +384,11 @@ def project_page(user: User, project: CurrentProject, jobs: Jobs) -> str:
         content = (f'<video src="/projets/{project.id}/video" controls preload="metadata" '
                    f'style="width: 100%"></video>\n'
                    f'{transcription_section(project, jobs.get(project.id))}')
-    return page(f"{escape(project.name)} — Doublage", f"""{header(user)}
-<p><a href="/">← Projets</a></p>
-<h1>{escape(project.name)}</h1>
-<p><small>{escape(project.video_name)}, déposé par {escape(project.owner)}</small></p>
-{content}""", width=96 if project.transcript_path.exists() else 64)
+    title = (f'<span>›</span><span class="titre">{escape(project.name)}</span>'
+             f'<span class="detail">{escape(project.video_name)}, déposé par {escape(project.owner)}</span>')
+    full = project.transcript_path.exists()
+    return page(f"{escape(project.name)} — Doublage", content, width=120 if full else 64,
+                bar=header(user, title), full=full)
 
 
 @app.post("/projets/{project_id}/transcription")

@@ -1,0 +1,18 @@
+/* Mise en page commune : barre de titre d'une ligne, contenu centré. */
+html, body { margin: 0; }
+body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+.barre {
+  display: flex; align-items: center; gap: .8rem; flex: none;
+  padding: .5rem 1rem; background: #f3f4f6; border-bottom: 1px solid #ddd;
+}
+.barre .marque { font-weight: 600; color: inherit; text-decoration: none; }
+.barre .titre { font-weight: 600; }
+.barre .detail { color: #666; font-size: .85em; }
+.barre .espace { flex: 1; }
+.barre form { margin: 0; }
+.barre button { font-size: .85em; }
+main { width: 100%; box-sizing: border-box; margin: 0 auto; padding: 1rem; }
+
+/* Éditeur : toute la hauteur de l'écran, seules les zones intérieures défilent. */
+body.plein { height: 100vh; }
+body.plein main { flex: 1; min-height: 0; display: flex; padding: .75rem 1rem; }
