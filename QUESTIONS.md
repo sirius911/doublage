@@ -5,16 +5,9 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-### Q13 — Idée incomplète : « avoir une coche dans l'exportation pour que les sous-titres »
-La phrase s'arrête là (IDEES.md). Je suppose : une case « incruster les sous-titres dans la vidéo
-doublée » (texte gravé dans l'image, visible partout, mais ré-encodage de l'image : plus long, et
-impossible à désactiver). Autre possibilité : ajouter les sous-titres comme **piste activable** dans le
-MP4 (rapide, sans ré-encodage, mais tous les lecteurs ne l'affichent pas, et pas dans un navigateur
-sans réglage). Laquelle voulez-vous ?
-
-Réponse :
-
 ## Résolues
+- Q13 : sous-titres gravés dans l'image, case décochée par défaut, avec un avertissement sur la durée du
+  ré-encodage.
 - Q12 : HTTP en connaissance de cause (mots de passe et vidéos en clair sur le réseau interne). Un reverse
   proxy viendra plus tard pour donner un nom à l'application, sans HTTPS. Il devra la publier à la racine
   d'un nom (`http://doublage…/`), pas sous un sous-chemin : les liens de l'application sont absolus.

@@ -178,7 +178,10 @@
     p.etat.textContent = "Création de la voix…";
     try {
       const r = await fetch(`/projets/${PROJET}/phrases/${p.id}/voix`, { method: "POST" });
-      if (!r.ok) throw new Error(r.status);
+      if (!r.ok) {
+        const erreur = await r.json().catch(() => ({}));
+        throw new Error(erreur.detail || "Échec de la génération.");
+      }
       const reponse = await r.json();
       p.li.dataset.voix = "";
       p.li.dataset.etat = reponse.etat;
@@ -187,7 +190,7 @@
       majVoix(p);
       ecouterVoix(p);
     } catch (e) {
-      p.etat.textContent = "Échec de la génération.";
+      p.etat.textContent = e.message;
     } finally {
       p.boutonVoix.disabled = false;
       document.documentElement.classList.remove("travail");

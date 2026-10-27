@@ -377,3 +377,17 @@ def test_page_des_voix(client, monkeypatch):
     r = client.post(f"/voix/{voix.id}/suppression", follow_redirects=False)
     assert r.status_code == 303 and app.dependency_overrides[get_catalog]().custom() == []
     assert client.post("/voix/estelle/suppression").status_code == 404
+
+
+def test_echec_de_la_voix_explique(client):
+    class MoteurEnPanne:
+        def voice(self, voice):
+            raise RuntimeError("échantillon illisible")
+
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
+    app.dependency_overrides[get_engine] = MoteurEnPanne
+    r = client.post(url + "/phrases/0/voix")
+    assert r.status_code == 500 and r.json()["detail"] == "Échec de la génération : échantillon illisible"

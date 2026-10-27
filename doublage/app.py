@@ -1,9 +1,10 @@
 """Application web (FastAPI)."""
 
+import logging
 import threading
 import time
 from datetime import datetime
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from html import escape
 from pathlib import Path
 from typing import Annotated
@@ -29,6 +30,7 @@ from .tts import Engine, FakeEngine, Synthesizer
 from .voices import SAMPLE_MAX_SECONDS, SAMPLE_MIN_SECONDS, Voice, VoiceCatalog, VoiceError
 
 SESSION_COOKIE = "doublage_session"
+logger = logging.getLogger("doublage")
 
 app = FastAPI(title="Doublage", version=__version__)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
@@ -341,10 +343,30 @@ def get_project(project_id: int, projects: Projects) -> Project:
 CurrentProject = Annotated[Project, Depends(get_project)]
 
 
+class ProjectVoice:
+    """Voix du projet, préparée par le moteur à la première synthèse seulement : la préparation d'un
+    échantillon est longue et peut échouer, elle doit se faire sous le verrou de synthèse (ou dans le
+    traitement de fond), pas pendant la résolution de la requête."""
+
+    def __init__(self, engine: Engine, ref: str):
+        self.engine, self.ref = engine, ref
+
+    @cached_property
+    def _synthesizer(self) -> Synthesizer:
+        return self.engine.voice(self.ref)
+
+    @property
+    def sample_rate(self) -> int:
+        return self._synthesizer.sample_rate
+
+    def synthesize(self, text: str):
+        return self._synthesizer.synthesize(text)
+
+
 def get_synthesizer(project: CurrentProject, catalog: Catalog,
                     engine: Annotated[Engine, Depends(get_engine)]) -> Synthesizer:
     """Synthétiseur de la voix choisie pour le projet."""
-    return engine.voice(catalog.for_project(project.voice).ref)
+    return ProjectVoice(engine, catalog.for_project(project.voice).ref)
 
 
 @app.post("/projets/{project_id}/suppression", response_model=None)
@@ -620,7 +642,11 @@ def synthesize_one(user: User, project: CurrentProject, segment_id: int,
     if segment is None:
         raise HTTPException(404, "Phrase introuvable")
     with _synthesis_lock:
-        synthesize_segment(segment, project.folder, synthesizer)
+        try:
+            synthesize_segment(segment, project.folder, synthesizer)
+        except Exception as e:
+            logger.exception("Synthèse de la phrase %s du projet %s", segment_id, project.id)
+            raise HTTPException(500, f"Échec de la génération : {e or type(e).__name__}")
     with _transcript_lock:
         current = mark_synthesized(project.transcript_path, segment)
         transcript = Transcript.load(project.transcript_path)
