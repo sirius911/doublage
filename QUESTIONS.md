@@ -5,7 +5,27 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
 
-_(aucune pour l'instant)_
+### Q5 — Accès Internet de la VM (bloque : construction de l'image et premier essai réel)
+Pour construire l'image et lancer Pocket TTS, la VM doit pouvoir télécharger, **une seule fois** :
+- l'image de base `docker.io/library/python:3.12-slim` ;
+- les paquets Python (`pypi.org`) et PyTorch processeur (`download.pytorch.org`) ;
+- les poids du modèle Pocket TTS et de la voix estelle (`huggingface.co`, environ quelques centaines de Mo).
+
+La VM a-t-elle accès à ces sites (directement ou via un proxy) ? Sinon, il faudra copier l'image et les
+modèles depuis un autre poste ; je préparerai la procédure.
+
+Note : l'environnement cloud de Claude bloque aussi `huggingface.co` et `download.pytorch.org`. Pour que les
+sessions automatiques puissent tester la vraie voix, ces deux domaines peuvent être ajoutés dans les
+réglages réseau de l'environnement (sinon, les tests continuent avec une voix simulée).
+
+Réponse :
+
+### Q6 — Premier essai réel
+Quand la VM sera prête, pouvez-vous y lancer (procédure dans README.md) :
+`doublage traiter une_video_courte.mp4` sur un tutoriel de 1 à 2 minutes, et me dire le résultat
+(messages affichés, qualité de la voix, synchronisation) ?
+
+Réponse :
 
 ## Résolues
 - Entrée : la vidéo complète (pas seulement l'audio).

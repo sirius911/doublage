@@ -11,20 +11,20 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - Tests : pytest, avec une petite vidéo d'exemple et des faux services (Whisper simulé) pour tester sans le vrai serveur.
 
 ## Phase 0 — Socle
-- [ ] Structure du projet Python (`pyproject.toml`, dossier `doublage/`, `tests/`)
-- [ ] Application FastAPI minimale + page d'accueil
-- [ ] Configuration par fichier `.env` (adresse du serveur Whisper, dossier de données, modèle TTS, voix)
-- [ ] Intégration continue GitHub Actions (tests à chaque envoi)
-- [ ] `Containerfile` + `compose.yml` compatibles Podman (ffmpeg, Pocket TTS version processeur, limite de CPU/mémoire)
+- [x] Structure du projet Python (`pyproject.toml`, dossier `doublage/`, `tests/`)
+- [x] Application FastAPI minimale + page d'accueil
+- [x] Configuration par fichier `.env` (adresse du serveur Whisper, dossier de données, modèle TTS, voix)
+- [x] Intégration continue GitHub Actions (tests à chaque envoi)
+- [~] `Containerfile` + `compose.yml` compatibles Podman (ffmpeg, Pocket TTS version processeur, limite de CPU/mémoire) — écrits, construction à vérifier sur la VM
 
 ## Phase 1 — Chaîne de traitement complète en ligne de commande
-- [ ] Extraction de l'audio de la vidéo (ffmpeg)
-- [ ] Adaptateur de transcription : interface commune + version « serveur Whisper interne » + version simulée pour les tests
-- [ ] Format des phrases (`segments.json` : id, début, fin, texte original, texte corrigé, état)
-- [ ] Synthèse d'une phrase avec Pocket TTS (voix estelle, modèle chargé une seule fois)
-- [ ] Assemblage de la bande son : chaque phrase placée à son timecode, silence ailleurs
-- [ ] Remplacement de la bande son dans la vidéo (sans ré-encoder l'image)
-- [ ] Commande `doublage traiter video.mp4` qui enchaîne tout → première vidéo doublée de bout en bout
+- [x] Extraction de l'audio de la vidéo (ffmpeg)
+- [x] Adaptateur de transcription : interface commune + version « serveur Whisper interne » + version simulée pour les tests
+- [x] Format des phrases (`segments.json` : id, début, fin, texte original, texte corrigé, état)
+- [~] Synthèse d'une phrase avec Pocket TTS (voix estelle, modèle chargé une seule fois) — code écrit, essai réel à faire (`pytest -m tts`), voir Q5
+- [x] Assemblage de la bande son : chaque phrase placée à son timecode, silence ailleurs
+- [x] Remplacement de la bande son dans la vidéo (sans ré-encoder l'image)
+- [~] Commande `doublage traiter video.mp4` qui enchaîne tout → fonctionne en mode `--simuler` ; essai réel (Whisper + Pocket TTS) à faire depuis la VM
 
 ## Phase 2 — Interface web
 - [ ] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
