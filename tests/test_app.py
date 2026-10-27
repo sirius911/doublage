@@ -132,6 +132,9 @@ def test_transcription_en_tache_de_fond(client, monkeypatch):
     page = client.get(url).text
     assert "1 phrase." in page and "Ouvrez Zimbra." in page and "00:00.0" in page
     assert "Lancer la transcription" not in page
+    # Éditeur : phrase affichable sur l'image au bon timecode
+    assert 'id="sur-image"' in page and 'data-debut="0.0" data-fin="2.5"' in page
+    assert client.get("/static/editeur.js").status_code == 200
 
 
 def test_transcription_en_erreur(client, monkeypatch):

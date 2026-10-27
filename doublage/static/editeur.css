@@ -1,0 +1,12 @@
+/* Éditeur : vidéo en fond, phrase en cours affichée sur l'image (comme un sous-titre). */
+.ecran { position: relative; background: #000; }
+.ecran video { display: block; width: 100%; }
+#sur-image {
+  position: absolute; left: 6%; right: 6%; bottom: 14%;  /* au-dessus des commandes du lecteur */
+  padding: .3em .6em; border-radius: .3em;
+  background: rgba(0, 0, 0, .75); color: #fff; text-align: center;
+  font-size: clamp(14px, 2.2vw, 26px); line-height: 1.35;
+  pointer-events: none;
+}
+#phrases li { padding: .15em .3em; border-radius: .2em; }
+#phrases li.en-cours { background: #fff3b0; }

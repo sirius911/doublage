@@ -3,10 +3,12 @@
 import time
 from datetime import datetime
 from html import escape
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from . import __version__
 from .auth import SESSION_DURATION, UserStore
@@ -20,6 +22,7 @@ from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 SESSION_COOKIE = "doublage_session"
 
 app = FastAPI(title="Doublage", version=__version__)
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 
 def get_store() -> UserStore:
@@ -74,11 +77,11 @@ def current_user(request: Request, store: Store) -> str:
 User = Annotated[str, Depends(current_user)]
 
 
-def page(title: str, body: str) -> str:
+def page(title: str, body: str, wide: bool = False) -> str:
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>{title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="font-family: system-ui, sans-serif; max-width: 40rem; margin: 3rem auto; padding: 0 1rem">
+<body style="font-family: system-ui, sans-serif; max-width: {64 if wide else 40}rem; margin: 3rem auto; padding: 0 1rem">
 {body}
 </body></html>"""
 
@@ -225,14 +228,27 @@ def timecode(seconds: float) -> str:
     return f"{int(seconds // 60):02d}:{seconds % 60:04.1f}"
 
 
+def editor(project: Project) -> str:
+    """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
+    transcript = Transcript.load(project.transcript_path)
+    rows = "".join(
+        f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}">'
+        f'<code>{timecode(s.start)}</code> <span class="texte">{escape(s.text)}</span></li>'
+        for s in transcript.segments
+    )
+    n = len(transcript.segments)
+    return f"""<link rel="stylesheet" href="/static/editeur.css">
+<div class="ecran">
+<video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
+<div id="sur-image" hidden></div>
+</div>
+<h2>Phrases</h2>
+<p>{n} phrase{"s" if n > 1 else ""}.</p>
+<ol id="phrases">{rows}</ol>
+<script src="/static/editeur.js"></script>"""
+
+
 def transcription_section(project: Project, job: Job | None) -> str:
-    if project.transcript_path.exists():
-        transcript = Transcript.load(project.transcript_path)
-        rows = "".join(f"<li><code>{timecode(s.start)}</code> {escape(s.text)}</li>"
-                       for s in transcript.segments)
-        return f"""<h2>Transcription</h2>
-<p>{len(transcript.segments)} phrase{"s" if len(transcript.segments) > 1 else ""}. L'éditeur arrive dans une prochaine étape.</p>
-<ol>{rows}</ol>"""
     if job and job.kind == "transcription" and job.active:
         # Le serveur Whisper ne donne pas d'avancement : barre indéterminée, étape et temps écoulé.
         return f"""<h2>Transcription</h2>
@@ -259,12 +275,17 @@ setInterval(async () => {{
 
 @app.get("/projets/{project_id}", response_class=HTMLResponse)
 def project_page(user: User, project: CurrentProject, jobs: Jobs) -> str:
+    if project.transcript_path.exists():
+        content = editor(project)
+    else:
+        content = (f'<video src="/projets/{project.id}/video" controls preload="metadata" '
+                   f'style="width: 100%"></video>\n'
+                   f'{transcription_section(project, jobs.get(project.id))}')
     return page(f"{escape(project.name)} — Doublage", f"""{header(user)}
 <p><a href="/">← Projets</a></p>
 <h1>{escape(project.name)}</h1>
 <p><small>{escape(project.video_name)}, déposé par {escape(project.owner)}</small></p>
-<video src="/projets/{project.id}/video" controls preload="metadata" style="width: 100%"></video>
-{transcription_section(project, jobs.get(project.id))}""")
+{content}""", wide=True)
 
 
 @app.post("/projets/{project_id}/transcription")

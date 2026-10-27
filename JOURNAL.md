@@ -2,6 +2,12 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-27 — Phase 2 : éditeur (affichage sur l'image)
+- Une fois transcrit, le projet s'ouvre sur l'éditeur : vidéo, phrase en cours affichée sur l'image façon
+  sous-titre (suivi image par image pendant la lecture), phrase en cours surlignée dans la liste.
+- JavaScript et CSS dans `doublage/static/` (servis par FastAPI), page projet plus large.
+- Non vérifié dans un vrai navigateur. Suite : modification du texte sur l'image et dans la liste.
+
 ## 2026-10-27 — Phase 2 : suivi de l'envoi
 - Demande après essai sur la VM : aucun retour pendant l'envoi de la vidéo. Envoi en JavaScript avec barre de
   progression (pourcentage, Mo, temps restant), puis « enregistrement » jusqu'à l'ouverture du projet.
