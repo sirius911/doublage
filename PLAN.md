@@ -27,7 +27,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [~] Commande `doublage traiter video.mp4` qui enchaîne tout → fonctionne en mode `--simuler` ; essai réel (Whisper + Pocket TTS) à faire depuis la VM
 
 ## Phase 2 — Interface web
-- [ ] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
+- [x] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
 - [ ] Liste des projets + dépôt d'une vidéo
 - [ ] Lancement de la transcription avec barre de progression
 - [ ] Éditeur : vidéo en fond, texte de la phrase en cours affiché sur l'image au bon timecode

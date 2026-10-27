@@ -40,3 +40,17 @@ podman-compose up -d --build
 
 L'application répond alors sur `http://<VM>:8090/`. Le conteneur, son réseau et ses volumes sont tous
 nommés `doublage…`, et limités à 2 processeurs et 4 Go de mémoire, pour ne pas gêner les autres applications.
+
+## Comptes utilisateurs
+
+Les comptes de l'application web se gèrent en ligne de commande (mots de passe chiffrés avec scrypt,
+dans `data/doublage.db`) :
+
+```bash
+.venv/bin/doublage utilisateur ajouter alice     # crée le compte ou change son mot de passe
+.venv/bin/doublage utilisateur liste
+.venv/bin/doublage utilisateur supprimer alice
+
+# Dans le conteneur :
+podman exec -it doublage doublage utilisateur ajouter alice
+```

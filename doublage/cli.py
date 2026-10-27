@@ -34,6 +34,27 @@ def cmd_serveur(args: argparse.Namespace) -> None:
     uvicorn.run("doublage.app:app", host=args.hote, port=args.port)
 
 
+def cmd_utilisateur(args: argparse.Namespace) -> None:
+    import getpass
+
+    from .auth import UserStore
+
+    store = UserStore(get_settings().data_dir / "doublage.db")
+    if args.action == "liste":
+        for name in store.list_users():
+            print(name)
+    elif args.action == "supprimer":
+        if not store.delete_user(args.nom):
+            raise SystemExit(f"Compte inconnu : {args.nom}")
+        print(f"Compte supprimé : {args.nom}")
+    else:
+        password = getpass.getpass("Mot de passe : ")
+        if password != getpass.getpass("Confirmation : "):
+            raise SystemExit("Les deux mots de passe ne correspondent pas.")
+        store.set_user(args.nom, password)
+        print(f"Compte enregistré : {args.nom}")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="doublage", description=__doc__)
     sub = parser.add_subparsers(required=True)
@@ -50,6 +71,13 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--hote", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
     p.set_defaults(func=cmd_serveur)
+
+    p = sub.add_parser("utilisateur", help="gérer les comptes de l'application web")
+    actions = p.add_subparsers(dest="action", required=True)
+    actions.add_parser("ajouter", help="créer un compte ou changer son mot de passe").add_argument("nom")
+    actions.add_parser("supprimer", help="supprimer un compte").add_argument("nom")
+    actions.add_parser("liste", help="lister les comptes")
+    p.set_defaults(func=cmd_utilisateur)
 
     args = parser.parse_args(argv)
     args.func(args)
