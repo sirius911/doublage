@@ -2,6 +2,19 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Phase 5 : suivi de l'envoi d'une voix, sous-titres incrustés
+- Page « Voix » : barre de progression pendant l'envoi de l'échantillon (script du dépôt de vidéo
+  factorisé en `upload_progress()`).
+- Vidéo doublée : case « Sous-titres incrustés dans l'image », décochée à chaque génération, avec
+  avertissement sur la durée. Texte corrigé aux timecodes d'origine (comme le SRT téléchargeable),
+  ré-encodage H.264 `veryfast`, CRF 20, limité à `DOUBLAGE_TTS_THREADS` cœurs. Mention « sous-titres
+  incrustés » à côté du lien de téléchargement. Police DejaVu ajoutée à l'image (reconstruction nécessaire).
+- Non éprouvé : le vrai rendu ffmpeg (absent du poste ; test en intégration continue), la taille du
+  texte (style par défaut de libass) et la durée sur la VM.
+- Limite connue : dans l'aperçu « nouvelle voix » d'une vidéo à sous-titres incrustés, le texte de
+  l'éditeur s'affiche en plus des sous-titres gravés.
+- Suite : essais sur la VM (sous-titres, `french_24l`) ; il ne reste plus que des tâches à éprouver sur la VM.
+
 ## 2026-10-28 — Phase 5 : voix
 - Mise en production faite par l'utilisateur (VM sur `main`, `879ceed`).
 - Choix de la voix par projet : catalogue = voix prédéfinies de `DOUBLAGE_TTS_VOICES` + voix ajoutées ;
