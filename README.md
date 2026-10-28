@@ -183,7 +183,8 @@ instance de test à côté de la production.
 
 Le script récupère le code (`git pull`), construit la nouvelle image pendant que l'ancienne version tourne,
 remplace le conteneur, relance le service et vérifie que l'application répond (sinon, il affiche le journal).
-Les données et le cache du modèle sont conservés.
+Les données et le cache du modèle sont conservés. Une fois la nouvelle version vérifiée, les anciennes
+images (sans nom) sont supprimées du stockage de doublage ; en cas d'échec, elles sont gardées.
 
 ### Voix créées à partir d'un échantillon
 

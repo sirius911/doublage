@@ -33,7 +33,14 @@ fi
 
 echo "== Vérification"
 for i in 1 2 3 4 5 6 7 8 9 10; do
-  if curl --noproxy '*' -fs "http://127.0.0.1:$PORT/sante"; then echo; exit 0; fi
+  if curl --noproxy '*' -fs "http://127.0.0.1:$PORT/sante"; then
+    echo
+    # La nouvelle version répond : les anciennes images (sans nom) ne servent plus. En cas d'échec,
+    # on ne nettoie pas, pour pouvoir revenir en arrière.
+    echo "== Suppression des anciennes images (stockage de doublage uniquement)"
+    $P podman image prune -f
+    exit 0
+  fi
   sleep 3
 done
 echo "L'application ne répond pas sur le port $PORT. Journal :"

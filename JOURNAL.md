@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Nettoyage de la VM
+- Relevé : espace largement suffisant (`/srv/apps` 50 Go libres, stockage Podman 189 Go) ; projet de 90 s
+  = 114 Mo. Restes : 14 images `<none>` (une par mise à jour, ~7,5 Go), conteneur `doublage-essai` arrêté,
+  un second volume de modèles. Bloc de nettoyage fourni à l'utilisateur (stockage de doublage seulement).
+- `deploiement/mettre-a-jour` supprime désormais les anciennes images après la vérification de `/sante`
+  (gardées en cas d'échec). Effectif à partir de la mise à jour qui suit celle qui récupère le script.
+- `/home` à 82 % (stockage Podman de scribe, hors doublage) : signalé, à traiter séparément (Q7).
+- Envoi d'une vidéo de ~5 min interrompu à ~77 % (sans doute un `mettre-a-jour` pendant l'envoi) :
+  aucun reste côté serveur, il suffit de relancer.
+
 ## 2026-10-28 — Retour à la transcription d'origine
 - Idée de l'utilisateur : petit ↺ gris sous le timecode, visible seulement si le texte diffère de la
   transcription d'origine ; confirmation (le bouton est petit, un clic par erreur effacerait la correction),
