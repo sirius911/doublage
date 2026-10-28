@@ -84,7 +84,8 @@ première fois).</li>
 <li><span class="repere">5</span><b>Vidéo doublée</b> : voir <a href="#doublee">plus bas</a>.</li>
 </ol>
 <p class="note">Les corrections sont <b>enregistrées automatiquement</b> (« Enregistré. » s'affiche sous la
-vidéo). Survolez une phrase pour voir son texte d'origine.</p>
+vidéo). Survolez une phrase pour voir son texte d'origine ; le petit <b>↺</b> sous l'heure d'une phrase
+corrigée la remet comme à la transcription d'origine (après confirmation).</p>
 </section>
 
 <section id="pastilles">

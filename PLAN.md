@@ -73,6 +73,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       lien de téléchargement, date, autres exports et avertissement « corrections depuis » sous le bouton
 - [x] Menu « Aide » dans la barre de titre et page d'aide claire et illustrée, qui remplace le long texte sous
       la vidéo de l'éditeur (Q14 : illustrations dessinées dans la page, pas de captures d'écran)
+- [x] Petit bouton ↺ sous le timecode d'une phrase corrigée : revenir au texte de la transcription d'origine
+      (confirmation ; la voix devient « à régénérer » comme pour toute correction)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

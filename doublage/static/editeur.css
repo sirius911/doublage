@@ -21,6 +21,13 @@
 #phrases li.en-cours { background: #fff3b0; }
 #phrases .aller { font: .8em monospace; padding: 0 .3em; cursor: pointer; align-self: start; }
 #phrases .texte { padding: 0 .2em; line-height: 1.35; }
+/* ↺ sous le timecode : revenir à la transcription d'origine (discret, visible si le texte a changé). */
+#phrases .retablir {
+  justify-self: center; align-self: center; border: none; background: none; padding: 0 .3em;
+  color: #999; font-size: .85em; line-height: 1; cursor: pointer;
+}
+#phrases .retablir:hover { color: #b65c00; }
+#phrases .retablir[hidden] { display: none; }
 #phrases .texte:focus { outline: 1px solid #888; background: #fff; }
 #phrases .actions { grid-column: 2; display: flex; align-items: center; gap: .3em; font-size: .8em; }
 #phrases .actions button { font-size: inherit; padding: 0 .5em; }

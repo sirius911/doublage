@@ -85,7 +85,23 @@
     }
   }
 
+  // Le petit bouton ↺ n'apparaît que si le texte diffère de la transcription d'origine.
+  function majRetablir(p) {
+    p.retablir.hidden = p.texte.textContent.split(/\s+/).join(" ").trim() === p.texte.dataset.original;
+  }
+
+  function retablir(p) {
+    const original = p.texte.dataset.original;
+    if (!confirm(`Revenir au texte de la transcription d'origine ?
+« ${original} »`)) return;
+    p.texte.textContent = original;
+    if (p === enCours) surImage.textContent = original;
+    majRetablir(p);
+    enregistrer(p);
+  }
+
   function modifie(p) {
+    majRetablir(p);
     clearTimeout(p.minuterie);
     p.minuterie = setTimeout(() => enregistrer(p), 800);
     etatEnregistrement.textContent = "Modifié…";
@@ -206,12 +222,14 @@
     p.boutonVoix = p.li.querySelector(".voix");
     p.etat = p.li.querySelector(".etat");
     p.calage = p.li.querySelector(".calage");
+    p.retablir = p.li.querySelector(".retablir");
     majVoix(p);
+    p.retablir.addEventListener("click", () => retablir(p));
     p.li.querySelector(".original").addEventListener("click", () => ecouterOriginal(p));
     p.boutonVoix.addEventListener("click", () => voix(p));
 
     p.li.addEventListener("click", (e) => {
-      if (e.target.closest(".actions")) return;
+      if (e.target.closest(".actions, .retablir")) return;
       if (e.target.closest(".aller") || p !== enCours) allerA(p);
     });
     p.texte.addEventListener("input", () => {

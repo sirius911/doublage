@@ -4,9 +4,10 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
-- Il faut que l'on puisse discrètement repartir de la trascription initiale. (La bulle de survol nous montre la transcription initiale, il faut un tout petit bouton sous la boxe du time code pour revenir à cette transcription)
+-
 
 ## Intégrées
+- Petit bouton sous le timecode pour revenir à la transcription initiale → PLAN Phase 6
 - Menu « Aide » avec une page dédiée, à la place du long texte sous la vidéo → PLAN Phase 6 (Q14)
 - Case « Sous-titres incrustés » à droite du bouton, texte du bouton « avec sous-titres » → PLAN Phase 6
 - Lien de téléchargement, date et avertissement sous le bouton « Mettre à jour… » → PLAN Phase 6

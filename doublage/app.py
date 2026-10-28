@@ -414,11 +414,15 @@ def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tup
 def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
     calage = voice_fit(project, transcript, s)
     voice = f' data-voix data-calage="{calage[0]}"' if calage else ""
+    original = " ".join(s.original_text.split())  # comme le texte corrigé (Transcript.set_text)
     return (
         f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"{voice}>'
         f'<button type="button" class="aller" title="Aller à ce moment de la vidéo">'
         f'{timecode(s.start)}</button> <span class="texte" contenteditable="plaintext-only" '
-        f'spellcheck="true" title="Original : {escape(s.original_text)}">{escape(s.text)}</span>'
+        f'spellcheck="true" title="Original : {escape(s.original_text)}" data-original="{escape(original)}">'
+        f'{escape(s.text)}</span>'
+        f'<button type="button" class="retablir" title="Revenir au texte de la transcription d’origine"'
+        f'{"" if s.text != original else " hidden"}>↺</button>'
         f'<span class="actions"><button type="button" class="original">▶ Original</button>'
         f'<button type="button" class="voix">▶ Voix</button>'
         f'<span class="calage" title="{escape(calage[1]) if calage else ""}">●</span>'

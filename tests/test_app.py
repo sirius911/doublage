@@ -224,6 +224,11 @@ def test_correction_d_une_phrase(client, store, tmp_path):
     assert enregistre.text == "Ouvrez Zimbra." and enregistre.original_text == "Ouvrez Zim bra."
     page = client.get(url).text
     assert "Ouvrez Zimbra." in page and 'title="Original : Ouvrez Zim bra."' in page
+    # Texte corrigé : le bouton ↺ (retour à la transcription d'origine) est visible.
+    assert 'data-original="Ouvrez Zim bra."' in page and 'class="retablir" title' in page
+    assert 'class="retablir"' in page and "↺</button>" in page and " hidden>↺" not in page
+    client.put(url + "/phrases/0", json={"texte": "Ouvrez  Zim bra. "})  # retour à l'origine
+    assert " hidden>↺</button>" in client.get(url).text
 
     assert client.put(url + "/phrases/42", json={"texte": "x"}).status_code == 404
 

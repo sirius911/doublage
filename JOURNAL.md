@@ -2,6 +2,12 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Retour à la transcription d'origine
+- Idée de l'utilisateur : petit ↺ gris sous le timecode, visible seulement si le texte diffère de la
+  transcription d'origine ; confirmation (le bouton est petit, un clic par erreur effacerait la correction),
+  puis enregistrement comme une correction ordinaire. Mentionné dans l'aide.
+- Vérifié par capture de la liste ; pas encore sur la VM. `main` en attente (avec l'avertissement chiffré).
+
 ## 2026-10-28 — Durée de l'incrustation des sous-titres
 - Mesure sur la VM (dates des fichiers du projet 3) : 23 s de ré-encodage pour 89 s de vidéo, soit environ
   un quart de la durée. L'avertissement (« plusieurs minutes ») exagérait : remplacé par ce chiffre, dans
