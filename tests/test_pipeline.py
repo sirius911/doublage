@@ -1,4 +1,5 @@
 import shutil
+import subprocess
 
 import numpy as np
 import pytest
@@ -89,3 +90,21 @@ def test_changement_de_tempo_sans_changer_la_hauteur():
     assert len(plus_vite) / sr == pytest.approx(1.6, abs=0.05)
     freq = abs(np.fft.rfft(plus_vite)).argmax() * sr / len(plus_vite)
     assert freq == pytest.approx(440, abs=10)  # même hauteur de voix
+
+
+def _image(video, t: float) -> np.ndarray:
+    """Image de la vidéo à l'instant `t`, en niveaux de gris (320x240)."""
+    out = subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", str(video), "-frames:v", "1",
+                          "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
+    return np.frombuffer(out, np.uint8).reshape(240, 320).astype(int)
+
+
+def test_sous_titres_incrustes(sample_video, tmp_path):
+    audio = media.extract_audio(sample_video, tmp_path / "son.wav")
+    srt = tmp_path / "sous-titres.srt"
+    srt.write_text("1\n00:00:01,000 --> 00:00:03,000\nBonjour à tous.\n", encoding="utf-8")
+    simple = media.replace_audio(sample_video, audio, tmp_path / "simple.mp4")
+    grave = media.replace_audio(sample_video, audio, tmp_path / "grave.mp4", srt)
+    ecart = abs(_image(simple, 2) - _image(grave, 2))
+    assert ecart[180:].mean() > 3 * ecart[:120].mean()  # texte en bas de l'image, haut quasi identique
+    assert abs(_image(simple, 5) - _image(grave, 5)).mean() < 5  # plus de sous-titre après 3 s

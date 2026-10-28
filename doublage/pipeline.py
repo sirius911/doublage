@@ -10,6 +10,7 @@ import numpy as np
 from . import media
 from .assembly import Placement, assemble, fit_clips
 from .segments import Segment, Status, Transcript
+from .subtitles import to_srt
 from .transcription import Transcriber
 from .tts import Synthesizer
 
@@ -66,9 +67,14 @@ def reset_voices(workdir: Path) -> None:
         transcript.save(transcript_path)
 
 
+def burned_subtitles_marker(output: Path) -> Path:
+    """Témoin : la vidéo doublée `output` a ses sous-titres gravés dans l'image."""
+    return output.with_name(output.stem + ".sous-titres")
+
+
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
             sample_rate: int, workdir: Path, output: Path, progress: Progress,
-            max_speed: float) -> list[Placement]:
+            max_speed: float, burn_subtitles: bool = False, threads: int = 2) -> list[Placement]:
     clips, accelerated = fit_clips(transcript, clips, sample_rate, max_speed, media.change_tempo)
     if accelerated:
         progress(f"{accelerated} phrase(s) légèrement accélérée(s) pour tenir dans leur créneau.")
@@ -77,8 +83,15 @@ def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, n
     track, placements = assemble(clips, total, sample_rate)
     voice = media.write_wav(workdir / "doublage.wav", track, sample_rate)
 
-    progress("Création de la vidéo doublée…")
-    media.replace_audio(video, voice, output)
+    if burn_subtitles:
+        # Timecodes des phrases d'origine, comme les sous-titres téléchargeables.
+        subtitles = workdir / "sous-titres.srt"
+        subtitles.write_text(to_srt(transcript), encoding="utf-8")
+        progress("Création de la vidéo doublée, sous-titres incrustés (ré-encodage de l'image, plusieurs minutes)…")
+        media.replace_audio(video, voice, output, subtitles, threads)
+    else:
+        progress("Création de la vidéo doublée…")
+        media.replace_audio(video, voice, output)
     late = [p for p in placements if p.delay > 0.5]
     if late:
         progress(f"Attention : {len(late)} phrase(s) décalée(s) de plus de 0,5 s "
@@ -104,11 +117,13 @@ def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
 def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesizer,
                 progress: Progress = print, max_speed: float = 1.0,
                 synthesis_lock: AbstractContextManager = nullcontext(),
-                transcript_lock: AbstractContextManager = nullcontext()) -> list[Placement]:
+                transcript_lock: AbstractContextManager = nullcontext(),
+                burn_subtitles: bool = False, threads: int = 2) -> list[Placement]:
     """Doublage d'un projet corrigé dans l'éditeur.
 
     Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
     écoutée et validée. Les verrous permettent de corriger le texte pendant le traitement.
+    `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs).
     """
     transcript_path = workdir / "segments.json"
     with transcript_lock:
@@ -128,6 +143,12 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         audio, sample_rate = media.read_wav(clip_path(workdir, seg.id))
         clips.append((seg.id, seg.start, audio))
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
-    placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed)
+    placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed,
+                         burn_subtitles, threads)
     partial.replace(output)  # l'ancienne vidéo reste téléchargeable jusqu'au bout
+    marker = burned_subtitles_marker(output)
+    if burn_subtitles:
+        marker.touch()
+    else:
+        marker.unlink(missing_ok=True)
     return placements

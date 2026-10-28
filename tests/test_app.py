@@ -321,6 +321,23 @@ def test_video_doublee(client, monkeypatch):
     assert "attachment" in srt.headers["content-disposition"]
     assert client.get(url + "/sous-titres.vtt").text.startswith("WEBVTT")
     assert client.get(url + "/sous-titres.txt").status_code == 404
+    assert 'name="sous_titres"' in page and "sous-titres incrustés)" not in page
+
+    # Sous-titres incrustés : le texte corrigé est gravé dans l'image (ré-encodage).
+    incrustes = []
+    monkeypatch.setattr(media, "replace_audio", lambda video, audio, output, subtitles=None, threads=2: (
+        incrustes.append(subtitles.read_text(encoding="utf-8") if subtitles else None),
+        output.write_bytes(b"video")))
+    client.post(url + "/doublage", data={"sous_titres": "1"})
+    app.dependency_overrides[get_jobs]().wait(projet_id, timeout=30)
+    assert "00:00:00,000 --> 00:00:02,500\nBonjour." in incrustes[-1]
+    page = client.get(url).text
+    assert "sous-titres incrustés)" in page
+    assert '<input type="checkbox" name="sous_titres" value="1">' in page  # décochée à chaque fois
+    client.post(url + "/doublage")
+    app.dependency_overrides[get_jobs]().wait(projet_id, timeout=30)
+    assert incrustes[-1] is None and "sous-titres incrustés)" not in client.get(url).text
+    page = client.get(url).text
 
     # Aperçu dans l'éditeur : choix du son, vidéo servie sans téléchargement forcé.
     assert 'name="son" value="doublee"' in page and "Des corrections ont été faites" not in page

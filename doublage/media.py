@@ -13,8 +13,8 @@ class MediaError(RuntimeError):
     pass
 
 
-def _run(cmd: list[str]) -> str:
-    result = subprocess.run(cmd, capture_output=True, text=True)
+def _run(cmd: list[str], cwd: Path | None = None) -> str:
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
         raise MediaError(f"Échec de {cmd[0]} : {result.stderr.strip()[-500:]}")
     return result.stdout
@@ -79,11 +79,22 @@ def change_tempo(audio: np.ndarray, sample_rate: int, speed: float) -> np.ndarra
         return read_wav(result)[0]
 
 
-def replace_audio(video: Path, audio: Path, output: Path) -> Path:
-    """Remplace la bande son de la vidéo, sans ré-encoder l'image."""
+def replace_audio(video: Path, audio: Path, output: Path, subtitles: Path | None = None,
+                  threads: int = 2) -> Path:
+    """Remplace la bande son de la vidéo, sans ré-encoder l'image.
+
+    Avec `subtitles` (fichier SRT), les sous-titres sont gravés dans l'image : celle-ci est alors
+    ré-encodée (H.264, `threads` cœurs), ce qui prend bien plus de temps.
+    """
+    if subtitles is None:
+        image = ["-c:v", "copy"]
+    else:
+        # Le filtre est lancé depuis le dossier du SRT : son chemin complet devrait être échappé.
+        image = ["-vf", f"subtitles={subtitles.name}", "-c:v", "libx264", "-preset", "veryfast",
+                 "-crf", "20", "-pix_fmt", "yuv420p", "-threads", str(threads)]
     _run([
-        "ffmpeg", "-y", "-v", "error", "-i", str(video), "-i", str(audio),
-        "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
-        "-shortest", str(output),
-    ])
+        "ffmpeg", "-y", "-v", "error", "-i", str(video.resolve()), "-i", str(audio.resolve()),
+        "-map", "0:v:0", "-map", "1:a:0", *image, "-c:a", "aac", "-b:a", "160k",
+        "-shortest", str(output.resolve()),
+    ], cwd=subtitles.parent if subtitles else None)
     return output

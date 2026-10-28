@@ -21,8 +21,8 @@ from .assembly import Fit, fit
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .pipeline import (clip_path, dub_project, mark_synthesized, reset_voices, synthesize_segment,
-                       transcribe_video)
+from .pipeline import (burned_subtitles_marker, clip_path, dub_project, mark_synthesized, reset_voices,
+                       synthesize_segment, transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
 from .segments import Segment, Transcript
 from .subtitles import to_srt, to_vtt
@@ -501,13 +501,17 @@ def dubbing_section(project: Project, job: Job | None) -> str:
         if project.transcript_path.stat().st_mtime > generated:
             parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
                          "mettez à jour la vidéo doublée pour les entendre.</small></p>")
+        burned = ", sous-titres incrustés" if burned_subtitles_marker(project.dubbed_video).exists() else ""
         parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
-                     f'<small>(générée le {date})</small><br><small>Aussi : '
+                     f'<small>(générée le {date}{burned})</small><br><small>Aussi : '
                      f'<a href="/projets/{project.id}/audio" download>voix seule (WAV)</a>, sous-titres '
                      f'<a href="/projets/{project.id}/sous-titres.srt" download>SRT</a> / '
                      f'<a href="/projets/{project.id}/sous-titres.vtt" download>VTT</a></small></p>')
     label = "Mettre à jour la vidéo doublée" if project.dubbed_video.exists() else "Générer la vidéo doublée"
     parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
+<p><label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés dans l'image</label><br>
+<small>L'image entière est alors ré-encodée : la génération prend nettement plus de temps
+(plusieurs minutes pour une vidéo de quelques minutes).</small></p>
 <button type="submit">{label}</button>
 </form>
 </section>""")
@@ -556,13 +560,15 @@ def start_transcription(user: User, project: CurrentProject, jobs: Jobs,
 
 @app.post("/projets/{project_id}/doublage")
 def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
-                  synthesizer: Annotated[Synthesizer, Depends(get_synthesizer)]) -> RedirectResponse:
+                  synthesizer: Annotated[Synthesizer, Depends(get_synthesizer)],
+                  sous_titres: Annotated[bool, Form()] = False) -> RedirectResponse:
     if not project.transcript_path.exists():
         raise HTTPException(404, "Pas encore de transcription")
     jobs.submit(project.id, "doublage",
                 lambda progress: dub_project(project.video, project.folder, project.dubbed_video, synthesizer,
                                              progress, get_settings().acceleration_max,
-                                             _synthesis_lock, _transcript_lock))
+                                             _synthesis_lock, _transcript_lock,
+                                             sous_titres, get_settings().tts_threads))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
 
 
