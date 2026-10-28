@@ -77,7 +77,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       (confirmation ; la voix devient « à régénérer » comme pour toute correction)
 - [x] Durées des progressions lisibles : secondes, puis minutes au-delà de 60 s, puis heures au-delà de 60 min
       (temps restant de l'envoi, temps écoulé de la transcription et du doublage)
-- [?] Suppression d'une voix refusée alors qu'elle a été retirée de la vidéo (Q15 : bug ou autre cause ?)
+- [x] ~~Suppression d'une voix refusée~~ : pas un bug, la voix servait encore à un autre projet (Q15)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

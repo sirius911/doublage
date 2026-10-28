@@ -4,7 +4,7 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
--
+- mettre après  (générée le ... à ...) le nom de la voix avec laquelle cela a été générée
 
 ## Intégrées
 - Durées des progressions en minutes / heures au-delà de 60 s / 60 min → PLAN Phase 6

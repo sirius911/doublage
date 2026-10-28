@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Durées lisibles, mesure du doublage d'un tutoriel de 5 min
+- Progressions : durées en secondes, puis minutes, puis heures (fonction commune, testée avec Node).
+- Q15 résolue : la voix à supprimer servait encore à un autre projet ; pas de bug.
+- Mesure sur la VM : tutoriel de 5 min 17 s doublé (sans sous-titres, toutes les voix à générer) en
+  1 min 34 s, soit environ 0,3 fois la durée de la vidéo. Avec sous-titres, compter environ un quart de la
+  durée en plus (mesure précédente).
+- `dev` en avance sur `main` : nettoyage des images dans `mettre-a-jour`, durées lisibles.
+
 ## 2026-10-28 — Whisper sur un vrai tutoriel de 5 min
 - Vidéo d'un peu plus de 5 min redéposée : transcription en moins de 10 s (estimation de l'utilisateur).
   Tâche Whisper close. Reste au plan : redémarrage complet de la VM ; Q10 (fusionner / couper) repoussée.

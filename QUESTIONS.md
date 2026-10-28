@@ -4,13 +4,9 @@ Questions qui demandent une réponse de votre part. Répondez directement sous c
 Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
-- Q15 — Suppression d'une voix : l'application ne refuse que si un projet utilise encore la voix (le message
-  donne alors le nom du ou des projets). Après avoir choisi une autre voix dans le projet, la suppression
-  devrait marcher. Quel message s'affiche ? Quelle voix (ajoutée par un échantillon, ou prédéfinie comme
-  Estelle / Marius, qui n'ont pas de croix et se règlent dans `.env`) ? Sortie du bloc de diagnostic ?
-  Réponse :
 
 ## Résolues
+- Q15 : pas un bug, la voix était encore utilisée par un autre projet (indiqué par le message d'erreur).
 - Q14 : page d'aide illustrée par des dessins dans la page (vrais boutons, pastilles et zones reproduits
   en petit, flèches, légendes), pas de captures d'écran ; une ou deux captures plus tard si besoin.
 - Q13 : sous-titres gravés dans l'image, case décochée par défaut, avec un avertissement sur la durée du
