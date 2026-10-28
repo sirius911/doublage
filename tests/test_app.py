@@ -1,3 +1,4 @@
+import json
 import os
 import threading
 import time
@@ -205,8 +206,10 @@ def test_transcription_reelle_simulee(client, sample_video):
 
 def test_suivi_de_l_envoi(client):
     login(client)
-    page = client.get("/").text
-    assert 'id="envoi-barre"' in page and "xhr.upload.onprogress" in page
+    for url, message in [("/", "enregistrement de la vidéo"), ("/voix", "préparation de l'échantillon")]:
+        page = client.get(url).text
+        assert 'id="envoi-barre"' in page and "xhr.upload.onprogress" in page
+        assert json.dumps(f"Envoi terminé, {message}…") in page
 
 
 def test_correction_d_une_phrase(client, store, tmp_path):

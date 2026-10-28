@@ -64,7 +64,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Choix de la voix par projet parmi un catalogue (voix prédéfinies retenues dans `DOUBLAGE_TTS_VOICES` ; changer de voix efface les voix déjà générées) — estelle est la seule voix française de Pocket TTS : les voix étrangères sont à écouter avant de les proposer
 - [x] Ajout d'une voix à partir d'un échantillon audio (export en `.safetensors` pour un chargement rapide) — page « Voix » : échantillon audio ou vidéo (30 premières secondes), accord de la personne enregistrée obligatoire, écoute, suppression (refusée si un projet l'utilise)
 - [~] Choix du modèle `french` / `french_24l` (rapidité / qualité) — réglage global `DOUBLAGE_TTS_LANGUAGE` ; à essayer sur la VM (existence de `french_24l`, durée de synthèse)
-- [ ] Barre de progression pendant l'envoi d'un échantillon de voix (comme pour le dépôt d'une vidéo)
+- [x] Barre de progression pendant l'envoi d'un échantillon de voix (comme pour le dépôt d'une vidéo ; même script, factorisé)
 - [ ] Case « sous-titres incrustés dans l'image » à la génération de la vidéo doublée, décochée par défaut, avec avertissement sur la durée du ré-encodage (Q13)
 
 ## Idées pour plus tard

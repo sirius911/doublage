@@ -1,5 +1,6 @@
 """Application web (FastAPI)."""
 
+import json
 import logging
 import threading
 import time
@@ -191,19 +192,24 @@ def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
 <p><label>Vidéo du tutoriel<br><input type="file" name="video" accept="video/*,{",".join(sorted(VIDEO_EXTENSIONS))}" required></label></p>
 <p><label>Nom du projet (facultatif)<br><input name="nom" size="40"></label></p>
 <p><button type="submit">Déposer la vidéo</button></p>
-<div id="envoi" hidden>
-<p><progress id="envoi-barre" max="100" value="0" style="width: 100%"></progress></p>
-<p id="envoi-texte"></p>
-</div>
+{upload_progress("Envoi terminé, enregistrement de la vidéo…")}
 </form>
-{UPLOAD_SCRIPT}
 <h2>Projets</h2>
 {f'<ul class="projets">{rows}</ul>' if rows else "<p>Aucun projet pour l'instant.</p>"}""", bar=header(user))
 
 
-# Envoi de la vidéo avec suivi de l'avancement (sans JavaScript, le formulaire classique fonctionne).
-UPLOAD_SCRIPT = """<script>
-document.getElementById("depot").addEventListener("submit", (event) => {
+def upload_progress(saving: str) -> str:
+    """Suivi de l'avancement de l'envoi d'un fichier, à placer dans le formulaire (un seul par page).
+
+    `saving` s'affiche une fois le fichier reçu, pendant son traitement par le serveur. Sans JavaScript,
+    le formulaire classique fonctionne.
+    """
+    return """<div id="envoi" hidden>
+<p><progress id="envoi-barre" max="100" value="0" style="width: 100%"></progress></p>
+<p id="envoi-texte"></p>
+</div>
+<script>
+document.currentScript.closest("form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.target;
   const barre = document.getElementById("envoi-barre");
@@ -226,11 +232,11 @@ document.getElementById("depot").addEventListener("submit", (event) => {
   };
   xhr.upload.onload = () => {
     barre.removeAttribute("value");  // barre animée pendant l'enregistrement sur le serveur
-    texte.textContent = "Envoi terminé, enregistrement de la vidéo…";
+    texte.textContent = SAVING;
   };
   xhr.onload = () => {
     if (xhr.status < 400) {
-      location.href = xhr.responseURL;  // page du nouveau projet
+      location.href = xhr.responseURL;  // page vers laquelle le serveur redirige
     } else {
       document.open(); document.write(xhr.responseText); document.close();
     }
@@ -242,7 +248,7 @@ document.getElementById("depot").addEventListener("submit", (event) => {
   xhr.open("POST", form.action);
   xhr.send(new FormData(form));
 });
-</script>"""
+</script>""".replace("SAVING", json.dumps(saving))
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -288,6 +294,7 @@ secondes sont gardées. L'échantillon reste sur le serveur de l'établissement.
 <p><label><input type="checkbox" name="accord" value="1" required> La personne enregistrée a donné son
 accord pour que sa voix soit utilisée dans les tutoriels.</label></p>
 <p><button type="submit">Ajouter la voix</button></p>
+{upload_progress("Envoi terminé, préparation de l'échantillon…")}
 </form>""", bar=header(user, '<span>›</span><span class="titre">Voix</span>'))
 
 
