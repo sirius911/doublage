@@ -218,7 +218,29 @@
     }
   }
 
+  // « Voix d'origine » : la vidéo doublée garde le son d'origine de la phrase.
+  async function garderOriginal(p, case_) {
+    etatEnregistrement.textContent = "Enregistrement…";
+    try {
+      const r = await fetch(`/projets/${PROJET}/phrases/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voix_origine: case_.checked }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      p.li.toggleAttribute("data-origine", (await r.json()).voix_origine);
+      etatEnregistrement.textContent = "Enregistré.";
+      etatEnregistrement.className = "";
+    } catch (e) {
+      case_.checked = !case_.checked;
+      etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
+      etatEnregistrement.className = "erreur";
+    }
+  }
+
   for (const p of phrases) {
+    const case_ = p.li.querySelector(".garder input");
+    case_.addEventListener("change", () => garderOriginal(p, case_));
     p.boutonVoix = p.li.querySelector(".voix");
     p.etat = p.li.querySelector(".etat");
     p.calage = p.li.querySelector(".calage");

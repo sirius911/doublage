@@ -243,6 +243,15 @@ def test_correction_d_une_phrase(client, store, tmp_path):
 
     assert client.put(url + "/phrases/42", json={"texte": "x"}).status_code == 404
 
+    # Case « voix d'origine », décochée par défaut ; le texte n'est pas touché.
+    page = client.get(url).text
+    assert "data-origine" not in page and '<input type="checkbox"> voix d’origine' in page
+    r = client.put(url + "/phrases/0", json={"voix_origine": True})
+    assert r.status_code == 200 and r.json()["voix_origine"] is True and r.json()["texte"] == "Ouvrez Zim bra."
+    assert Transcript.load(projet.transcript_path).segments[0].keep_original
+    page = client.get(url).text
+    assert " data-origine>" in page and '<input type="checkbox" checked> voix d’origine' in page
+
 
 def test_voix_d_une_phrase(client, tmp_path):
     login(client)

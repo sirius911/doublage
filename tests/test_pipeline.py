@@ -81,6 +81,34 @@ def test_doublage_d_un_projet_reprend_les_voix_a_jour(tmp_path, monkeypatch):
     assert all(s.status == Status.SYNTHESIZED for s in Transcript.load(tmp_path / "segments.json").segments)
 
 
+def test_phrase_gardee_avec_le_son_d_origine(tmp_path, monkeypatch):
+    sans_ffmpeg(monkeypatch)
+    extractions = []
+
+    def extraire(video, output, sample_rate):  # son d'origine : 0,5 partout
+        extractions.append(sample_rate)
+        return media.write_wav(output, np.full(5 * sample_rate, 0.5, dtype=np.float32), sample_rate)
+
+    monkeypatch.setattr(media, "extract_audio", extraire)
+    Transcript(5.0, [Segment(0, 0.0, 2.0, "Un.", "Un."),
+                     Segment(1, 2.0, 4.5, "Deux.", "Deux.", keep_original=True),
+                     Segment(2, 4.0, 5.0, "Trois.", "Trois.")]).save(tmp_path / "segments.json")
+    synth = CompteSynthese()
+    sortie = tmp_path / "video_doublee.mp4"
+    placements = dub_project(tmp_path / "video.mp4", tmp_path, sortie, synth, progress=lambda m: None)
+    assert synth.textes == ["Un.", "Trois."]  # pas de voix de synthèse pour la phrase gardée
+    assert extractions == [synth.sample_rate]
+    gardee = next(p for p in placements if p.segment_id == 1)
+    assert gardee.start == 2.0 and gardee.duration == pytest.approx(2.0)  # bornée à la phrase suivante
+    piste, sr = media.read_wav(tmp_path / "doublage.wav")
+    assert piste[int(3.0 * sr)] == pytest.approx(0.5, abs=1e-3)  # son d'origine au milieu
+    assert abs(piste[int(2.0 * sr)]) < 0.01  # fondu au début
+
+    # Son d'origine extrait une seule fois par projet.
+    dub_project(tmp_path / "video.mp4", tmp_path, sortie, synth, progress=lambda m: None)
+    assert extractions == [synth.sample_rate]
+
+
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
 def test_changement_de_tempo_sans_changer_la_hauteur():
     sr = 24000

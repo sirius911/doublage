@@ -66,6 +66,7 @@
 .mini-phrase .tc { font-family: monospace; display: flex; align-items: flex-start; }
 .mini-actions { grid-column: 2; display: flex; align-items: center; gap: .3em; font-size: .9em; }
 .mini-actions small { color: #666; }
+.mini-garder { margin-left: auto; white-space: nowrap; }
 .mini-doublee { display: flex; flex-direction: column; gap: .6rem; font-size: .9em; }
 .mini-generer { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; }
 

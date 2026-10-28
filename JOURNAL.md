@@ -2,6 +2,18 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Nom de la voix sur la vidéo doublée, case « voix d'origine »
+- Deux idées intégrées (Phase 6) et réalisées.
+- Vidéo doublée : « (générée le … avec la voix X) ». Le nom est noté à côté de la vidéo
+  (`video_doublee.voix`) ; les vidéos générées avant n'affichent pas de voix.
+- Case « voix d'origine » par phrase (décochée par défaut) : la phrase n'est pas synthétisée, la vidéo doublée
+  reprend le son d'origine sur [début, fin], borné au début de la phrase suivante, avec des fondus de 10 ms.
+  Son d'origine extrait une fois par projet à 24 kHz (`original-24000.wav`). « ▶ Voix », pastille et état
+  masqués pour ces phrases ; sous-titres inchangés. Aide mise à jour.
+- Limites connues : volume et timbre différents de la synthèse ; une fin de phrase coupée si Whisper a mal
+  placé les timecodes.
+- Suite : essai sur la VM (`dev` en avance sur `main`), puis avancer `main` si validé.
+
 ## 2026-10-28 — Durées lisibles, mesure du doublage d'un tutoriel de 5 min
 - Progressions : durées en secondes, puis minutes, puis heures (fonction commune, testée avec Node).
 - Q15 résolue : la voix à supprimer servait encore à un autre projet ; pas de bug.

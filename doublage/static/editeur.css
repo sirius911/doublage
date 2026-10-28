@@ -40,6 +40,11 @@
 #phrases li[data-calage="orange"] .calage { color: #ef8a00; }
 #phrases li[data-calage="rouge"] .calage { color: #c62828; }
 #phrases li[data-etat="modifiee"] .calage { opacity: .35; }
+/* « Voix d'origine » cochée : pas de voix de synthèse pour cette phrase. */
+#phrases .garder { margin-left: auto; color: #666; white-space: nowrap; cursor: pointer; }
+#phrases .garder input { vertical-align: middle; margin: 0 .2em 0 0; }
+#phrases li[data-origine] .voix, #phrases li[data-origine] .calage, #phrases li[data-origine] .etat { display: none; }
+#phrases li[data-origine] .garder { color: #1d4ed8; }
 
 /* Deux colonnes à la hauteur de l'écran : la vidéo reste en haut à gauche, l'aide et la vidéo
    doublée défilent dessous ; la liste des phrases défile à droite sous son titre. */

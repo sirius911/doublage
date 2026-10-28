@@ -77,6 +77,31 @@ def dubbed_voice_path(output: Path) -> Path:
     return output.with_name(output.stem + ".voix")
 
 
+# Fondus aux bords d'un extrait du son d'origine, pour éviter les claquements.
+FADE_SECONDS = 0.01
+
+
+def original_clip(original: np.ndarray, sample_rate: int, transcript: Transcript,
+                  segment: Segment) -> np.ndarray:
+    """Son d'origine d'une phrase, borné au début de la phrase suivante, avec de courts fondus."""
+    end = min(segment.end, transcript.slot_end(segment))
+    clip = original[int(round(segment.start * sample_rate)):int(round(end * sample_rate))].copy()
+    n = min(int(FADE_SECONDS * sample_rate), len(clip) // 2)
+    if n:
+        ramp = np.linspace(0.0, 1.0, n, dtype=np.float32)
+        clip[:n] *= ramp
+        clip[-n:] *= ramp[::-1]
+    return clip
+
+
+def _original_audio(video: Path, workdir: Path, sample_rate: int) -> np.ndarray:
+    """Son d'origine de la vidéo à la fréquence de la synthèse (extrait une fois par projet)."""
+    path = workdir / f"original-{sample_rate}.wav"
+    if not path.exists():
+        media.extract_audio(video, path, sample_rate)
+    return media.read_wav(path)[0]
+
+
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
             sample_rate: int, workdir: Path, output: Path, progress: Progress,
             max_speed: float, burn_subtitles: bool = False, threads: int = 2) -> list[Placement]:
@@ -127,14 +152,14 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
     """Doublage d'un projet corrigé dans l'éditeur.
 
     Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
-    écoutée et validée. Les verrous permettent de corriger le texte pendant le traitement.
+    écoutée et validée. Les phrases marquées « voix d'origine » gardent le son de la vidéo. Les verrous permettent de corriger le texte pendant le traitement.
     `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs).
     `voice_label` (nom de la voix) est noté à côté de la vidéo, pour l'afficher.
     """
     transcript_path = workdir / "segments.json"
     with transcript_lock:
-        todo = [s for s in Transcript.load(transcript_path).segments
-                if s.status != Status.SYNTHESIZED or not clip_path(workdir, s.id).exists()]
+        todo = [s for s in Transcript.load(transcript_path).segments if not s.keep_original
+                and (s.status != Status.SYNTHESIZED or not clip_path(workdir, s.id).exists())]
     for i, seg in enumerate(todo, 1):
         progress(f"Synthèse de la phrase {i}/{len(todo)}…")
         with synthesis_lock:
@@ -144,10 +169,17 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
 
     with transcript_lock:
         transcript = Transcript.load(transcript_path)
-    clips, sample_rate = [], synthesizer.sample_rate
+    sample_rate = synthesizer.sample_rate
+    clips = []
     for seg in transcript.segments:
-        audio, sample_rate = media.read_wav(clip_path(workdir, seg.id))
-        clips.append((seg.id, seg.start, audio))
+        if not seg.keep_original:
+            audio, sample_rate = media.read_wav(clip_path(workdir, seg.id))
+            clips.append((seg.id, seg.start, audio))
+    if any(s.keep_original for s in transcript.segments):
+        progress("Reprise du son d'origine des phrases à garder…")
+        original = _original_audio(video, workdir, sample_rate)
+        clips += [(s.id, s.start, original_clip(original, sample_rate, transcript, s))
+                  for s in transcript.segments if s.keep_original]
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
     placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed,
                          burn_subtitles, threads)

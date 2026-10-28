@@ -425,6 +425,7 @@ def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tup
 def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
     calage = voice_fit(project, transcript, s)
     voice = f' data-voix data-calage="{calage[0]}"' if calage else ""
+    voice += " data-origine" if s.keep_original else ""
     original = " ".join(s.original_text.split())  # comme le texte corrigé (Transcript.set_text)
     return (
         f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"{voice}>'
@@ -437,7 +438,9 @@ def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
         f'<span class="actions"><button type="button" class="original">▶ Original</button>'
         f'<button type="button" class="voix">▶ Voix</button>'
         f'<span class="calage" title="{escape(calage[1]) if calage else ""}">●</span>'
-        f'<span class="etat"></span></span></li>'
+        f'<span class="etat"></span>'
+        f'<label class="garder" title="La vidéo doublée garde le son d’origine de cette phrase">'
+        f'<input type="checkbox"{" checked" if s.keep_original else ""}> voix d’origine</label></span></li>'
     )
 
 
@@ -654,22 +657,27 @@ def project_state(user: User, project: CurrentProject, jobs: Jobs) -> dict:
     return {"traitement": job.kind, "etat": job.state, "etape": job.step, "erreur": job.error}
 
 
-class TextUpdate(BaseModel):
-    texte: str
+class SegmentUpdate(BaseModel):
+    texte: str | None = None
+    voix_origine: bool | None = None
 
 
 @app.put("/projets/{project_id}/phrases/{segment_id}")
-def update_segment(user: User, project: CurrentProject, segment_id: int, update: TextUpdate) -> dict:
+def update_segment(user: User, project: CurrentProject, segment_id: int, update: SegmentUpdate) -> dict:
     if not project.transcript_path.exists():
         raise HTTPException(404, "Pas encore de transcription")
     with _transcript_lock:
         transcript = Transcript.load(project.transcript_path)
-        try:
-            segment = transcript.set_text(segment_id, update.texte)
-        except KeyError:
-            raise HTTPException(404, "Phrase introuvable") from None
+        segment = next((s for s in transcript.segments if s.id == segment_id), None)
+        if segment is None:
+            raise HTTPException(404, "Phrase introuvable")
+        if update.texte is not None:
+            transcript.set_text(segment_id, update.texte)
+        if update.voix_origine is not None:
+            segment.keep_original = update.voix_origine
         transcript.save(project.transcript_path)
-    return {"id": segment.id, "texte": segment.text, "etat": segment.status}
+    return {"id": segment.id, "texte": segment.text, "etat": segment.status,
+            "voix_origine": segment.keep_original}
 
 
 @app.post("/projets/{project_id}/phrases/{segment_id}/voix")
