@@ -13,7 +13,9 @@ Historique des sessions, la plus récente en haut.
   texte (style par défaut de libass) et la durée sur la VM.
 - Limite connue : dans l'aperçu « nouvelle voix » d'une vidéo à sous-titres incrustés, le texte de
   l'éditeur s'affiche en plus des sous-titres gravés.
-- Suite : essais sur la VM (sous-titres, `french_24l`) ; il ne reste plus que des tâches à éprouver sur la VM.
+- Suite : `main` avancé jusqu'à `1af1b11` (avec l'accord de l'utilisateur), VM mise à jour : envoi d'une
+  voix et sous-titres incrustés validés (« fonctionne très bien »). Reste à mesurer la durée du
+  ré-encodage, puis à essayer `french_24l`.
 
 ## 2026-10-28 — Phase 5 : voix
 - Mise en production faite par l'utilisateur (VM sur `main`, `879ceed`).

@@ -65,7 +65,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Ajout d'une voix à partir d'un échantillon audio (export en `.safetensors` pour un chargement rapide) — page « Voix » : échantillon audio ou vidéo (30 premières secondes), accord de la personne enregistrée obligatoire, écoute, suppression (refusée si un projet l'utilise)
 - [~] Choix du modèle `french` / `french_24l` (rapidité / qualité) — réglage global `DOUBLAGE_TTS_LANGUAGE` ; à essayer sur la VM (existence de `french_24l`, durée de synthèse)
 - [x] Barre de progression pendant l'envoi d'un échantillon de voix (comme pour le dépôt d'une vidéo ; même script, factorisé)
-- [~] Case « sous-titres incrustés dans l'image » à la génération de la vidéo doublée, décochée par défaut, avec avertissement sur la durée du ré-encodage (Q13) — faite (texte corrigé, timecodes d'origine, H.264 sur 2 cœurs) ; à essayer sur la VM : rendu, taille du texte, durée réelle
+- [x] Case « sous-titres incrustés dans l'image » à la génération de la vidéo doublée, décochée par défaut, avec avertissement sur la durée du ré-encodage (Q13) — validée sur la VM ; durée du ré-encodage pas encore mesurée (pour chiffrer l'avertissement)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)
