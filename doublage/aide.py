@@ -122,7 +122,7 @@ pendant ce temps.</li>
 <li><b>Aperçu</b> : « nouvelle voix » fait jouer la vidéo doublée dans l'éditeur, avec le texte et la liste
 toujours synchronisés.</li>
 <li><b>Sous-titres incrustés</b> : le texte corrigé est gravé dans l'image. Toute l'image doit alors être
-recalculée : la génération prend nettement plus de temps.</li>
+recalculée : comptez en plus environ un quart de la durée de la vidéo.</li>
 <li>Après une correction, un message orange le signale : cliquez sur <span class="bouton">Mettre à jour la
 vidéo doublée</span> pour en tenir compte.</li>
 <li>Également disponibles : la <b>voix seule</b> (fichier WAV) et les <b>sous-titres</b> (SRT ou VTT, pour les

@@ -2,6 +2,12 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Durée de l'incrustation des sous-titres
+- Mesure sur la VM (dates des fichiers du projet 3) : 23 s de ré-encodage pour 89 s de vidéo, soit environ
+  un quart de la durée. L'avertissement (« plusieurs minutes ») exagérait : remplacé par ce chiffre, dans
+  l'éditeur et dans l'aide. Une seule mesure : une vidéo plus grande ou plus animée prendra plus.
+- Reste : premier vrai tutoriel de ~5 min (transcription), redémarrage complet de la VM.
+
 ## 2026-10-28 — Phase 6 : section « Vidéo doublée » réorganisée, page d'aide
 - Idées intégrées (Phase 6) ; Q14 : aide illustrée par des dessins, pas de captures d'écran.
 - Section « Vidéo doublée » : bouton puis case « Sous-titres incrustés » à sa droite (le bouton devient

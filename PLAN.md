@@ -65,7 +65,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Ajout d'une voix à partir d'un échantillon audio (export en `.safetensors` pour un chargement rapide) — page « Voix » : échantillon audio ou vidéo (30 premières secondes), accord de la personne enregistrée obligatoire, écoute, suppression (refusée si un projet l'utilise)
 - [x] Choix du modèle `french` / `french_24l` : on reste sur `french` (décision de l'utilisateur, 2026-10-28) — `french_24l` 3,3 fois plus lent (x1,21 du temps réel contre x0,37) pour une différence qui ne le justifie pas ; réglage `DOUBLAGE_TTS_LANGUAGE` conservé
 - [x] Barre de progression pendant l'envoi d'un échantillon de voix (comme pour le dépôt d'une vidéo ; même script, factorisé)
-- [x] Case « sous-titres incrustés dans l'image » à la génération de la vidéo doublée, décochée par défaut, avec avertissement sur la durée du ré-encodage (Q13) — validée sur la VM ; durée du ré-encodage pas encore mesurée (pour chiffrer l'avertissement)
+- [x] Case « sous-titres incrustés dans l'image » à la génération de la vidéo doublée, décochée par défaut, avec avertissement sur la durée du ré-encodage (Q13) — validée sur la VM ; ré-encodage mesuré : 23 s pour une vidéo de 89 s (environ un quart de sa durée), chiffre repris dans l'avertissement
 
 ## Phase 6 — Confort d'utilisation
 - [x] Section « Vidéo doublée » réorganisée : case « Sous-titres incrustés » à droite du bouton, dont le texte

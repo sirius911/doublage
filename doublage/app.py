@@ -505,8 +505,8 @@ def dubbing_section(project: Project, job: Job | None) -> str:
     parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
 <p class="generer"><button type="submit" data-libelle="{label}">{label}</button>
 <label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés</label></p>
-<p id="avertissement-sous-titres" hidden><small>L'image entière est alors ré-encodée : la génération prend
-nettement plus de temps (plusieurs minutes pour une vidéo de quelques minutes).</small></p>
+<p id="avertissement-sous-titres" hidden><small>L'image entière est alors ré-encodée : comptez en plus environ
+un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</small></p>
 </form>""")
     if exists:
         date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")

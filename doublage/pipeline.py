@@ -87,7 +87,7 @@ def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, n
         # Timecodes des phrases d'origine, comme les sous-titres téléchargeables.
         subtitles = workdir / "sous-titres.srt"
         subtitles.write_text(to_srt(transcript), encoding="utf-8")
-        progress("Création de la vidéo doublée, sous-titres incrustés (ré-encodage de l'image, plusieurs minutes)…")
+        progress("Création de la vidéo doublée, sous-titres incrustés (ré-encodage de l'image)…")
         media.replace_audio(video, voice, output, subtitles, threads)
     else:
         progress("Création de la vidéo doublée…")
