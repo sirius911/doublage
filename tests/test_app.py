@@ -1,5 +1,7 @@
 import json
 import os
+import shutil
+import subprocess
 import threading
 import time
 
@@ -210,6 +212,15 @@ def test_suivi_de_l_envoi(client):
         page = client.get(url).text
         assert 'id="envoi-barre"' in page and "xhr.upload.onprogress" in page
         assert json.dumps(f"Envoi terminé, {message}…") in page
+        assert "duree(reste)" in page
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node absent")
+def test_affichage_des_durees():
+    from doublage.app import DURATION_JS
+    code = DURATION_JS + "console.log([7.4, 60, 125, 3600, 4380].map(duree).join(' | '));"
+    sortie = subprocess.run(["node", "-e", code], capture_output=True, text=True, check=True).stdout
+    assert sortie.strip() == "7 s | 1 min | 2 min 5 s | 1 h | 1 h 13 min"
 
 
 def test_correction_d_une_phrase(client, store, tmp_path):

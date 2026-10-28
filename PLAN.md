@@ -75,6 +75,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       la vidéo de l'éditeur (Q14 : illustrations dessinées dans la page, pas de captures d'écran)
 - [x] Petit bouton ↺ sous le timecode d'une phrase corrigée : revenir au texte de la transcription d'origine
       (confirmation ; la voix devient « à régénérer » comme pour toute correction)
+- [x] Durées des progressions lisibles : secondes, puis minutes au-delà de 60 s, puis heures au-delà de 60 min
+      (temps restant de l'envoi, temps écoulé de la transcription et du doublage)
+- [?] Suppression d'une voix refusée alors qu'elle a été retirée de la vidéo (Q15 : bug ou autre cause ?)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

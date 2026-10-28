@@ -4,9 +4,11 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
-- dans les progressions au lieu de mettre que les secondes restantes, si c'est au dela delà de 60s  mets les minutes, si c'est au dela de 60 minutes, mets les heures
+-
 
 ## Intégrées
+- Durées des progressions en minutes / heures au-delà de 60 s / 60 min → PLAN Phase 6
+- Supprimer une voix après l'avoir retirée d'une vidéo → PLAN Phase 6 (Q15)
 - Petit bouton sous le timecode pour revenir à la transcription initiale → PLAN Phase 6
 - Menu « Aide » avec une page dédiée, à la place du long texte sous la vidéo → PLAN Phase 6 (Q14)
 - Case « Sous-titres incrustés » à droite du bouton, texte du bouton « avec sous-titres » → PLAN Phase 6

@@ -199,6 +199,16 @@ def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
 {f'<ul class="projets">{rows}</ul>' if rows else "<p>Aucun projet pour l'instant.</p>"}""", bar=header(user))
 
 
+# Durée lisible en JavaScript : « 45 s », « 2 min 5 s », « 1 h 12 min », « 1 h ».
+DURATION_JS = """const duree = (s) => {
+  s = Math.max(0, Math.round(s));
+  if (s < 60) return `${s} s`;
+  const reste = (n, unite) => n ? ` ${n} ${unite}` : "";
+  if (s < 3600) return `${Math.floor(s / 60)} min` + reste(s % 60, "s");
+  return `${Math.floor(s / 3600)} h` + reste(Math.floor(s % 3600 / 60), "min");
+};"""
+
+
 def upload_progress(saving: str) -> str:
     """Suivi de l'avancement de l'envoi d'un fichier, à placer dans le formulaire (un seul par page).
 
@@ -216,6 +226,7 @@ document.currentScript.closest("form").addEventListener("submit", (event) => {
   const barre = document.getElementById("envoi-barre");
   const texte = document.getElementById("envoi-texte");
   const mo = (octets) => (octets / 1048576).toFixed(1).replace(".", ",") + " Mo";
+  DURATION_JS
   form.querySelector("button").disabled = true;
   document.getElementById("envoi").hidden = false;
   texte.textContent = "Envoi en cours…";
@@ -227,9 +238,9 @@ document.currentScript.closest("form").addEventListener("submit", (event) => {
     barre.value = Math.round(100 * e.loaded / e.total);
     const secondes = (Date.now() - debut) / 1000;
     const debit = e.loaded / Math.max(secondes, 0.1);
-    const reste = Math.round((e.total - e.loaded) / Math.max(debit, 1));
+    const reste = (e.total - e.loaded) / Math.max(debit, 1);
     texte.textContent = `${barre.value} % — ${mo(e.loaded)} sur ${mo(e.total)}`
-      + (e.loaded < e.total ? ` — encore environ ${reste} s` : "");
+      + (e.loaded < e.total ? ` — encore environ ${duree(reste)}` : "");
   };
   xhr.upload.onload = () => {
     barre.removeAttribute("value");  // barre animée pendant l'enregistrement sur le serveur
@@ -249,7 +260,7 @@ document.currentScript.closest("form").addEventListener("submit", (event) => {
   xhr.open("POST", form.action);
   xhr.send(new FormData(form));
 });
-</script>""".replace("SAVING", json.dumps(saving))
+</script>""".replace("SAVING", json.dumps(saving)).replace("DURATION_JS", DURATION_JS)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -478,12 +489,12 @@ def job_progress(project: Project, job: Job, when_done: str = "location.reload()
 <p id="etape">{escape(job.step)}</p>
 <script>
 (() => {{
+  {DURATION_JS}
   const debut = Date.now() / 1000 - {time.time() - job.started:.0f};
   const suivi = setInterval(async () => {{
     const etat = await (await fetch("/projets/{project.id}/etat")).json();
     if (etat.etat === "termine" || etat.etat === "erreur") {{ clearInterval(suivi); {when_done}; return; }}
-    const s = Math.round(Date.now() / 1000 - debut);
-    document.getElementById("etape").textContent = `${{etat.etape}} (${{Math.floor(s / 60)}} min ${{s % 60}} s)`;
+    document.getElementById("etape").textContent = `${{etat.etape}} (${{duree(Date.now() / 1000 - debut)}})`;
   }}, 2000);
 }})();
 </script>"""
