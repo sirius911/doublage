@@ -11,7 +11,8 @@ Historique des sessions, la plus récente en haut.
   couleurs que l'éditeur. Le long texte sous la vidéo devient une ligne avec un lien vers l'aide.
 - Rendu vérifié par capture (Edge sans interface) en large et en étroit ; pas encore vu sur la VM.
 - Les schémas reproduisent l'interface à la main : à retoucher si elle change.
-- Suite : avance de `main` et mise à jour de la VM (à la demande), puis essai de durée maximale Whisper.
+- `main` avancé jusqu'à `884fbfc` (accord de l'utilisateur), VM mise à jour ; aide validée (« très bien »).
+- Suite : essai de durée maximale Whisper, durée de l'incrustation des sous-titres, redémarrage de la VM.
 
 ## 2026-10-28 — Essai de `french_24l` sur la VM
 - Essai à part dans le conteneur (3 phrases, voix estelle, 2 cœurs, `nice`) : `french` 4,2 s de calcul pour
