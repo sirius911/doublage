@@ -47,6 +47,7 @@
 .colonne-phrases h2 { margin: 0 0 .3rem; font-size: 1.1rem; flex: none; }
 .colonne-phrases { border: 1px solid #ddd; border-radius: .3rem; padding: .5rem 0 0 .5rem; }
 #doublage h2 { font-size: 1.1rem; }
+.generer { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; }
 
 /* Écran étroit : une seule colonne, la page défile, la vidéo reste en haut. */
 @media (max-width: 900px) {

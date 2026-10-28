@@ -153,6 +153,11 @@
   // Délégation : la section « Vidéo doublée » est remplacée à la fin de chaque génération.
   document.addEventListener("change", (e) => {
     if (e.target.name === "son") changerSon(e.target.value === "doublee");
+    if (e.target.name === "sous_titres") {
+      const bouton = e.target.form.querySelector("button");
+      bouton.textContent = bouton.dataset.libelle + (e.target.checked ? " avec sous-titres" : "");
+      document.getElementById("avertissement-sous-titres").hidden = !e.target.checked;
+    }
   });
 
   async function ecouterOriginal(p) {

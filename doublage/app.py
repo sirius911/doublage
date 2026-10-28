@@ -491,30 +491,33 @@ def dubbing_section(project: Project, job: Job | None) -> str:
     parts = ['<section id="doublage"><h2>Vidéo doublée</h2>']
     if job and job.kind == "doublage" and job.state == JobState.FAILED:
         parts.append(f'<p style="color: #b00">La génération a échoué : {escape(job.error)}</p>')
-    if project.dubbed_video.exists():
+    exists = project.dubbed_video.exists()
+    if exists:
         generated = project.dubbed_video.stat().st_mtime
-        date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")
         # Aperçu : le lecteur ci-dessus bascule sur la vidéo doublée, avec le texte et la liste synchronisés.
         parts.append(f"""<p id="choix-son" data-version="{generated:.0f}">Son de la vidéo :
 <label><input type="radio" name="son" value="original" checked> original</label>
 <label><input type="radio" name="son" value="doublee"> nouvelle voix (aperçu)</label></p>""")
-        if project.transcript_path.stat().st_mtime > generated:
-            parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
-                         "mettez à jour la vidéo doublée pour les entendre.</small></p>")
+    # Le texte du bouton et l'avertissement suivent la case (editeur.js).
+    label = "Mettre à jour la vidéo doublée" if exists else "Générer la vidéo doublée"
+    parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
+<p class="generer"><button type="submit" data-libelle="{label}">{label}</button>
+<label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés</label></p>
+<p id="avertissement-sous-titres" hidden><small>L'image entière est alors ré-encodée : la génération prend
+nettement plus de temps (plusieurs minutes pour une vidéo de quelques minutes).</small></p>
+</form>""")
+    if exists:
+        date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")
         burned = ", sous-titres incrustés" if burned_subtitles_marker(project.dubbed_video).exists() else ""
         parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
                      f'<small>(générée le {date}{burned})</small><br><small>Aussi : '
                      f'<a href="/projets/{project.id}/audio" download>voix seule (WAV)</a>, sous-titres '
                      f'<a href="/projets/{project.id}/sous-titres.srt" download>SRT</a> / '
                      f'<a href="/projets/{project.id}/sous-titres.vtt" download>VTT</a></small></p>')
-    label = "Mettre à jour la vidéo doublée" if project.dubbed_video.exists() else "Générer la vidéo doublée"
-    parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
-<p><label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés dans l'image</label><br>
-<small>L'image entière est alors ré-encodée : la génération prend nettement plus de temps
-(plusieurs minutes pour une vidéo de quelques minutes).</small></p>
-<button type="submit">{label}</button>
-</form>
-</section>""")
+        if project.transcript_path.stat().st_mtime > generated:
+            parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
+                         "mettez à jour la vidéo doublée pour les entendre.</small></p>")
+    parts.append("</section>")
     return "\n".join(parts)
 
 
