@@ -2,6 +2,12 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Essai de `french_24l` sur la VM
+- Essai à part dans le conteneur (3 phrases, voix estelle, 2 cœurs, `nice`) : `french` 4,2 s de calcul pour
+  11,4 s de voix (x0,37 du temps réel) ; `french_24l` 13,9 s (x1,21), soit 3,3 fois plus lent ; premier
+  chargement 55 s (téléchargement des poids compris).
+- En attente : l'écoute comparée par l'utilisateur (`data/essai-24l/`), puis le choix du modèle.
+
 ## 2026-10-28 — Phase 5 : suivi de l'envoi d'une voix, sous-titres incrustés
 - Page « Voix » : barre de progression pendant l'envoi de l'échantillon (script du dépôt de vidéo
   factorisé en `upload_progress()`).
