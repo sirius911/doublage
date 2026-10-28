@@ -6,6 +6,8 @@ Historique des sessions, la plus récente en haut.
 - Relevé : espace largement suffisant (`/srv/apps` 50 Go libres, stockage Podman 189 Go) ; projet de 90 s
   = 114 Mo. Restes : 14 images `<none>` (une par mise à jour, ~7,5 Go), conteneur `doublage-essai` arrêté,
   un second volume de modèles. Bloc de nettoyage fourni à l'utilisateur (stockage de doublage seulement).
+- Nettoyage fait : conteneur d'essai et volume `doublage-modeles` (inutilisé) supprimés, anciennes images
+  effacées ; stockage Podman passé de 12 Go à 5,5 Go utilisés ; `/sante` OK.
 - `deploiement/mettre-a-jour` supprime désormais les anciennes images après la vérification de `/sante`
   (gardées en cas d'échec). Effectif à partir de la mise à jour qui suit celle qui récupère le script.
 - `/home` à 82 % (stockage Podman de scribe, hors doublage) : signalé, à traiter séparément (Q7).
