@@ -4,6 +4,14 @@ Questions qui demandent une réponse de votre part. Répondez directement sous c
 Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
+- Q14 — Page d'aide : captures d'écran réelles, ou illustrations dessinées dans la page (les vrais boutons,
+  pastilles et zones de l'éditeur reproduits en petit, avec des flèches et des légendes) ?
+  Les captures sont plus parlantes, mais il faut les refaire à chaque changement de l'interface et elles
+  montrent une vraie vidéo (à choisir sans donnée sensible) ; je ne peux pas les faire moi-même depuis le
+  poste (pas de vidéo ni de ffmpeg ici) : ce serait à toi de les prendre sur la VM.
+  Les illustrations restent justes quand l'interface change (mêmes styles) et je peux tout faire seul.
+  Ma recommandation : illustrations, avec éventuellement une ou deux captures plus tard si l'aide ne suffit pas.
+  Réponse :
 
 ## Résolues
 - Q13 : sous-titres gravés dans l'image, case décochée par défaut, avec un avertissement sur la durée du
