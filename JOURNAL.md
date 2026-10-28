@@ -2,6 +2,17 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Phase 6 : section « Vidéo doublée » réorganisée, page d'aide
+- Idées intégrées (Phase 6) ; Q14 : aide illustrée par des dessins, pas de captures d'écran.
+- Section « Vidéo doublée » : bouton puis case « Sous-titres incrustés » à sa droite (le bouton devient
+  « … avec sous-titres », avertissement sur la durée seulement si cochée), téléchargements dessous.
+- Page « Aide » (menu en haut, `/aide`) : les 4 étapes, dépôt, éditeur (schéma numéroté), pastilles,
+  vidéo doublée, voix, astuces. Schémas en HTML/CSS (`doublage/aide.py`, `static/aide.css`), mêmes
+  couleurs que l'éditeur. Le long texte sous la vidéo devient une ligne avec un lien vers l'aide.
+- Rendu vérifié par capture (Edge sans interface) en large et en étroit ; pas encore vu sur la VM.
+- Les schémas reproduisent l'interface à la main : à retoucher si elle change.
+- Suite : avance de `main` et mise à jour de la VM (à la demande), puis essai de durée maximale Whisper.
+
 ## 2026-10-28 — Essai de `french_24l` sur la VM
 - Essai à part dans le conteneur (3 phrases, voix estelle, 2 cœurs, `nice`) : `french` 4,2 s de calcul pour
   11,4 s de voix (x0,37 du temps réel) ; `french_24l` 13,9 s (x1,21), soit 3,3 fois plus lent ; premier

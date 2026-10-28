@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import __version__, media
+from .aide import help_content
 from .assembly import Fit, fit
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
@@ -170,7 +171,7 @@ def logout(request: Request, store: Store) -> RedirectResponse:
 def header(user: str, title: str = "") -> str:
     """Barre de titre : retour aux projets, titre de la page (HTML), utilisateur et déconnexion."""
     return f"""<header class="barre"><a class="marque" href="/">Doublage</a>{title}
-<span class="espace"></span><a href="/voix">Voix</a><span>{escape(user)}</span>
+<span class="espace"></span><a href="/voix">Voix</a><a href="/aide">Aide</a><span>{escape(user)}</span>
 <form method="post" action="/deconnexion"><button type="submit">Se déconnecter</button></form></header>"""
 
 
@@ -315,6 +316,12 @@ def add_voice(user: User, catalog: Catalog, nom: Annotated[str, Form()], echanti
     return RedirectResponse("/voix", status_code=303)
 
 
+@app.get("/aide", response_class=HTMLResponse)
+def help_page(user: User) -> str:
+    return page("Aide — Doublage", help_content(get_settings().acceleration_max), width=52,
+                bar=header(user, '<span>›</span><span class="titre">Aide</span>'))
+
+
 def custom_voice(voice_id: str, catalog: Catalog) -> Voice:
     voice = catalog.get(voice_id)
     if voice is None or voice.added_by is None:
@@ -447,13 +454,8 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 </div>
 <div class="sous-video">
 {voice_choice(project, catalog)}
-<p><small>Mettez la vidéo en pause pour corriger le texte sur l'image, ou corrigez-le dans la liste :
-les modifications sont enregistrées automatiquement. Cliquez sur une phrase pour y placer la vidéo ;
-« ▶ Original » rejoue la phrase d'origine, « ▶ Voix » fait entendre la voix de synthèse (créée si besoin).
-La pastille indique si la voix tient dans le temps de la phrase d'origine : <span style="color: #2e7d32">●</span> oui,
-<span style="color: #ef8a00">●</span> corrigé automatiquement (débord sur le silence qui suit ou légère accélération),
-<span style="color: #c62828">●</span> trop longue, à raccourcir (détail au survol).
-<span id="enregistrement"></span></small></p>
+<p><small>Pause pour corriger le texte sur l'image ; corrections enregistrées automatiquement.
+<a href="/aide#editeur">Aide</a> <span id="enregistrement"></span></small></p>
 {dubbing_section(project, job)}
 </div>
 </div>

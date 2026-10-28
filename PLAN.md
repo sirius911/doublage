@@ -71,7 +71,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Section « Vidéo doublée » réorganisée : case « Sous-titres incrustés » à droite du bouton, dont le texte
       devient « … avec sous-titres » quand elle est cochée (avertissement sur la durée affiché seulement alors) ;
       lien de téléchargement, date, autres exports et avertissement « corrections depuis » sous le bouton
-- [ ] Menu « Aide » dans la barre de titre et page d'aide claire et illustrée, qui remplace le long texte sous
+- [x] Menu « Aide » dans la barre de titre et page d'aide claire et illustrée, qui remplace le long texte sous
       la vidéo de l'éditeur (Q14 : illustrations dessinées dans la page, pas de captures d'écran)
 
 ## Idées pour plus tard

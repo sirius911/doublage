@@ -370,6 +370,16 @@ def test_calage_affiche_dans_l_editeur(client):
     assert page.count("data-calage=") == 2  # pas d'indicateur sans voix
 
 
+def test_page_d_aide(client):
+    assert client.get("/aide", follow_redirects=False).status_code in (303, 307)  # connexion exigée
+    login(client)
+    assert 'href="/aide"' in client.get("/").text
+    page = client.get("/aide").text
+    for ancre in ["etapes", "depot", "editeur", "pastilles", "doublee", "voix", "astuces"]:
+        assert f'<section id="{ancre}">' in page and f'href="#{ancre}"' in page
+    assert "jusqu'à 15 %" in page
+
+
 def test_page_des_voix(client, monkeypatch):
     from doublage import media
     from test_voices import faux_echantillon
