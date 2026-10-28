@@ -111,7 +111,7 @@ voix (« texte modifié : voix à régénérer »). Cliquez sur <span class="bou
   <label><input type="radio" disabled> nouvelle voix (aperçu)</label></div>
   <div class="mini-generer"><span class="bouton">Mettre à jour la vidéo doublée</span>
   <label><input type="checkbox" disabled> Sous-titres incrustés</label></div>
-  <div><span class="lien">Télécharger la vidéo doublée</span> <small>(générée le 28/10/2026 à 10:15)</small><br>
+  <div><span class="lien">Télécharger la vidéo doublée</span> <small>(générée le 28/10/2026 à 10:15 avec la voix Estelle)</small><br>
   <small>Aussi : <span class="lien">voix seule (WAV)</span>, sous-titres <span class="lien">SRT</span> /
   <span class="lien">VTT</span></small></div>
 </div>

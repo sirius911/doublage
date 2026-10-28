@@ -22,7 +22,7 @@ from .assembly import Fit, fit
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .pipeline import (burned_subtitles_marker, clip_path, dub_project, mark_synthesized, reset_voices,
+from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized, reset_voices,
                        synthesize_segment, transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
 from .segments import Segment, Transcript
@@ -525,9 +525,12 @@ un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</s
 </form>""")
     if exists:
         date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")
+        voice_path = dubbed_voice_path(project.dubbed_video)
+        voice = voice_path.read_text(encoding="utf-8") if voice_path.exists() else ""
+        voice = f" avec la voix {escape(voice)}" if voice else ""  # vidéos générées avant ce suivi : rien
         burned = ", sous-titres incrustés" if burned_subtitles_marker(project.dubbed_video).exists() else ""
         parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
-                     f'<small>(générée le {date}{burned})</small><br><small>Aussi : '
+                     f'<small>(générée le {date}{voice}{burned})</small><br><small>Aussi : '
                      f'<a href="/projets/{project.id}/audio" download>voix seule (WAV)</a>, sous-titres '
                      f'<a href="/projets/{project.id}/sous-titres.srt" download>SRT</a> / '
                      f'<a href="/projets/{project.id}/sous-titres.vtt" download>VTT</a></small></p>')
@@ -579,7 +582,7 @@ def start_transcription(user: User, project: CurrentProject, jobs: Jobs,
 
 
 @app.post("/projets/{project_id}/doublage")
-def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
+def start_dubbing(user: User, project: CurrentProject, jobs: Jobs, catalog: Catalog,
                   synthesizer: Annotated[Synthesizer, Depends(get_synthesizer)],
                   sous_titres: Annotated[bool, Form()] = False) -> RedirectResponse:
     if not project.transcript_path.exists():
@@ -588,7 +591,8 @@ def start_dubbing(user: User, project: CurrentProject, jobs: Jobs,
                 lambda progress: dub_project(project.video, project.folder, project.dubbed_video, synthesizer,
                                              progress, get_settings().acceleration_max,
                                              _synthesis_lock, _transcript_lock,
-                                             sous_titres, get_settings().tts_threads))
+                                             sous_titres, get_settings().tts_threads,
+                                             catalog.for_project(project.voice).label))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
 
 

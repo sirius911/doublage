@@ -72,6 +72,11 @@ def burned_subtitles_marker(output: Path) -> Path:
     return output.with_name(output.stem + ".sous-titres")
 
 
+def dubbed_voice_path(output: Path) -> Path:
+    """Nom de la voix avec laquelle la vidéo doublée `output` a été générée."""
+    return output.with_name(output.stem + ".voix")
+
+
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
             sample_rate: int, workdir: Path, output: Path, progress: Progress,
             max_speed: float, burn_subtitles: bool = False, threads: int = 2) -> list[Placement]:
@@ -118,12 +123,13 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
                 progress: Progress = print, max_speed: float = 1.0,
                 synthesis_lock: AbstractContextManager = nullcontext(),
                 transcript_lock: AbstractContextManager = nullcontext(),
-                burn_subtitles: bool = False, threads: int = 2) -> list[Placement]:
+                burn_subtitles: bool = False, threads: int = 2, voice_label: str = "") -> list[Placement]:
     """Doublage d'un projet corrigé dans l'éditeur.
 
     Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
     écoutée et validée. Les verrous permettent de corriger le texte pendant le traitement.
     `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs).
+    `voice_label` (nom de la voix) est noté à côté de la vidéo, pour l'afficher.
     """
     transcript_path = workdir / "segments.json"
     with transcript_lock:
@@ -151,4 +157,5 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         marker.touch()
     else:
         marker.unlink(missing_ok=True)
+    dubbed_voice_path(output).write_text(voice_label, encoding="utf-8")
     return placements

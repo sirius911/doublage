@@ -338,6 +338,7 @@ def test_video_doublee(client, monkeypatch):
     assert client.get(url + "/sous-titres.vtt").text.startswith("WEBVTT")
     assert client.get(url + "/sous-titres.txt").status_code == 404
     assert 'name="sous_titres"' in page and "sous-titres incrustés)" not in page
+    assert "avec la voix Estelle)" in page  # voix utilisée pour la génération
     # Bouton et case d'abord, puis le téléchargement ; avertissement sur la durée affiché à la demande.
     assert page.index('name="sous_titres"') < page.index("Télécharger la vidéo doublée")
     assert '<p id="avertissement-sous-titres" hidden>' in page

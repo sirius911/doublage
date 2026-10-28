@@ -4,9 +4,11 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
-- mettre après  (générée le ... à ...) le nom de la voix avec laquelle cela a été générée
+-
 
 ## Intégrées
+- Nom de la voix après la date de génération de la vidéo doublée → PLAN Phase 6
+- Case par phrase pour garder la voix d'origine → PLAN Phase 6
 - Durées des progressions en minutes / heures au-delà de 60 s / 60 min → PLAN Phase 6
 - Supprimer une voix après l'avoir retirée d'une vidéo → PLAN Phase 6 (Q15)
 - Petit bouton sous le timecode pour revenir à la transcription initiale → PLAN Phase 6

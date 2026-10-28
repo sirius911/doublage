@@ -78,6 +78,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Durées des progressions lisibles : secondes, puis minutes au-delà de 60 s, puis heures au-delà de 60 min
       (temps restant de l'envoi, temps écoulé de la transcription et du doublage)
 - [x] ~~Suppression d'une voix refusée~~ : pas un bug, la voix servait encore à un autre projet (Q15)
+- [x] Nom de la voix utilisée après « (générée le … à …) » de la vidéo doublée
+- [ ] Case par phrase, décochée par défaut, « voix d'origine » : la phrase garde le son d'origine dans la vidéo
+      doublée (pas de voix de synthèse pour elle)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)
