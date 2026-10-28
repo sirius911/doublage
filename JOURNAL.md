@@ -2,6 +2,10 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-28 — Whisper sur un vrai tutoriel de 5 min
+- Vidéo d'un peu plus de 5 min redéposée : transcription en moins de 10 s (estimation de l'utilisateur).
+  Tâche Whisper close. Reste au plan : redémarrage complet de la VM ; Q10 (fusionner / couper) repoussée.
+
 ## 2026-10-28 — Nettoyage de la VM
 - Relevé : espace largement suffisant (`/srv/apps` 50 Go libres, stockage Podman 189 Go) ; projet de 90 s
   = 114 Mo. Restes : 14 images `<none>` (une par mise à jour, ~7,5 Go), conteneur `doublage-essai` arrêté,

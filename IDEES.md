@@ -4,7 +4,7 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
--
+- dans les progressions au lieu de mettre que les secondes restantes, si c'est au dela delà de 60s  mets les minutes, si c'est au dela de 60 minutes, mets les heures
 
 ## Intégrées
 - Petit bouton sous le timecode pour revenir à la transcription initiale → PLAN Phase 6
