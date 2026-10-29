@@ -32,14 +32,23 @@
     return phrases.find((p) => p.debut <= t && t < p.fin) || null;
   }
 
+  // Pendant la lecture, le texte s'affiche comme les sous-titres ([Zimbra|Zimm-bra] → « Zimbra ») ;
+  // en pause, il est modifiable : la notation complète réapparaît.
+  const sousTitre = (texte) => texte.replace(/\[([^\[\]|]*)\|([^\[\]|]*)\]/g, "$1").split(/\s+/).join(" ").trim();
+
+  function majSurImage() {
+    const texte = enCours ? enCours.texte.textContent : "";
+    surImage.textContent = video.paused ? texte : sousTitre(texte);
+    surImage.hidden = !(video.paused ? texte.trim() : sousTitre(texte));  // rien à afficher : phrase effacée
+  }
+
   function afficher() {
     const p = phraseA(video.currentTime);
     if (p === enCours) return;
     if (document.activeElement === surImage) surImage.blur();  // enregistre la phrase quittée
     if (enCours) enCours.li.classList.remove("en-cours");
     enCours = p;
-    surImage.hidden = !p || !p.texte.textContent.trim();  // rien à afficher pour une phrase effacée
-    surImage.textContent = p ? p.texte.textContent : "";
+    majSurImage();
     if (p) p.li.classList.add("en-cours");
     // Pendant la lecture, la liste suit la phrase en cours (sauf si on y corrige un texte).
     if (p && !video.paused && !p.li.parentElement.contains(document.activeElement)) {
@@ -56,6 +65,7 @@
       surImage.contentEditable = edition ? "true" : "false";  // navigateur ancien
     }
     surImage.classList.toggle("modifiable", edition);
+    if (document.activeElement !== surImage) majSurImage();
   }
 
   // timeupdate n'arrive que ~4 fois par seconde : pendant la lecture, on suit chaque image.
@@ -108,7 +118,7 @@
     if (!confirm(`Revenir au texte de la transcription d'origine ?
 « ${original} »`)) return;
     p.texte.textContent = original;
-    if (p === enCours) surImage.textContent = original;
+    if (p === enCours) majSurImage();
     majRetablir(p);
     enregistrer(p);
   }
@@ -326,7 +336,7 @@
       if (e.target.closest(".aller") || p !== enCours) allerA(p);
     });
     p.texte.addEventListener("input", () => {
-      if (p === enCours) surImage.textContent = p.texte.textContent;
+      if (p === enCours) majSurImage();
       modifie(p);
     });
     p.texte.addEventListener("blur", () => { if (p.minuterie) enregistrer(p); });

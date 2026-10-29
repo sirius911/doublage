@@ -4,7 +4,7 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
--
+- dans la page d'aide le haut, contenant Doublage > Aide et à droite Voix etc... doit rester visible meme en scrollant vers le bas
 
 ## Intégrées
 - Mot écrit phonétiquement pour la voix mais correct dans les sous-titres → PLAN Phase 6 (notation [écrit|prononcé])

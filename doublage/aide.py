@@ -173,6 +173,8 @@ juste (tirets, points entre les lettres d'un sigle, accents…). Si un crochet o
 soulignée en rouge avec <span style="color: #c62828">⚠ notation</span> : sinon ils
 apparaîtraient dans les sous-titres. La barre s'obtient avec <b>AltGr + 6</b>, les crochets avec
 <b>AltGr + 5</b> et <b>AltGr + °</b>.</p>
+<p>Sur l'image de l'éditeur, le texte s'affiche comme les sous-titres pendant la lecture (« Zimbra ») ; à la
+pause, la notation complète réapparaît pour pouvoir la corriger.</p>
 </section>
 
 <section id="astuces">
