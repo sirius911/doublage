@@ -486,7 +486,6 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 </div>
 <div class="sous-video">
 {voice_choice(project, catalog)}
-<p><small id="enregistrement"></small></p>
 {dubbing_section(project, job)}
 </div>
 </div>
@@ -495,6 +494,7 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <ol id="phrases">{rows}</ol>
 </div>
 </div>
+<div id="enregistrement" role="status" hidden></div>
 <script>const PROJET = {project.id};</script>
 <script src="/static/editeur.js"></script>"""
 

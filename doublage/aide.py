@@ -87,8 +87,8 @@ première fois).</li>
 <li><span class="repere">4</span><b>Voix du projet</b> : voir <a href="#voix">Les voix</a>.</li>
 <li><span class="repere">5</span><b>Vidéo doublée</b> : voir <a href="#doublee">plus bas</a>.</li>
 </ol>
-<p class="note">Les corrections sont <b>enregistrées automatiquement</b> (« Enregistré. » s'affiche sous la
-vidéo). Survolez une phrase pour voir son texte d'origine ; le petit <b>↺</b> sous l'heure d'une phrase
+<p class="note">Les corrections sont <b>enregistrées automatiquement</b> (« Enregistré. » s'affiche un instant en bas
+à droite de la fenêtre). Survolez une phrase pour voir son texte d'origine ; le petit <b>↺</b> sous l'heure d'une phrase
 corrigée la remet comme à la transcription d'origine (après confirmation).</p>
 <p class="note"><b>Effacer une phrase</b> : videz entièrement son texte. Elle est alors retirée de la vidéo
 doublée (silence à la place, pas de sous-titre) et apparaît grisée dans la liste. Utile quand la transcription

@@ -10,7 +10,13 @@
 }
 #sur-image.modifiable { pointer-events: auto; cursor: text; outline: 2px dashed rgba(255, 255, 255, .6); }
 #sur-image:focus { outline: 2px solid #ffd54a; }
-#enregistrement.erreur { color: #b00; }
+/* État de l'enregistrement automatique, en bas à droite de la fenêtre. */
+#enregistrement {
+  position: fixed; right: .75rem; bottom: .75rem; z-index: 10; padding: .25em .7em; border-radius: .3em;
+  background: rgba(30, 30, 30, .85); color: #fff; font-size: .85em; pointer-events: none;
+}
+#enregistrement[hidden] { display: none; }
+#enregistrement.erreur { background: #b00; }
 
 /* Une phrase : timecode et texte sur la première ligne, actions toujours sur la seconde. */
 #phrases { list-style: none; padding: 0; margin: 0; }

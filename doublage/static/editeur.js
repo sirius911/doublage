@@ -13,6 +13,17 @@
     minuterie: null,
   }));
   let enCours = null;
+  let effacementStatut = null;
+
+  // Étiquette d'état en bas de la fenêtre : visible seulement s'il y a quelque chose à dire.
+  // « Enregistré. » s'efface tout seul ; une erreur reste jusqu'au prochain enregistrement réussi.
+  function statut(texte, erreur = false) {
+    clearTimeout(effacementStatut);
+    etatEnregistrement.textContent = texte;
+    etatEnregistrement.classList.toggle("erreur", erreur);
+    etatEnregistrement.hidden = false;
+    if (texte === "Enregistré.") effacementStatut = setTimeout(() => { etatEnregistrement.hidden = true; }, 2000);
+  }
   let finExtrait = null;  // « ▶ Original » : la vidéo s'arrête à la fin de la phrase
 
   // --- Affichage sur l'image ---
@@ -68,7 +79,7 @@
     p.minuterie = null;
     if (!p.texte.textContent.trim()) p.texte.textContent = "";  // phrase effacée (affiche son indication)
     const texte = p.texte.textContent;
-    etatEnregistrement.textContent = "Enregistrement…";
+    statut("Enregistrement…");
     try {
       const r = await fetch(`/projets/${PROJET}/phrases/${p.id}`, {
         method: "PUT",
@@ -76,13 +87,11 @@
         body: JSON.stringify({ texte }),
       });
       if (!r.ok) throw new Error(r.status);
-      etatEnregistrement.textContent = "Enregistré.";
-      etatEnregistrement.className = "";
+      statut("Enregistré.");
       p.li.dataset.etat = (await r.json()).etat;
       majVoix(p);
     } catch (e) {
-      etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
-      etatEnregistrement.className = "erreur";
+      statut("Échec de l'enregistrement, réessayez (connexion ?).", true);
     }
   }
 
@@ -106,7 +115,7 @@
     majRetablir(p);
     clearTimeout(p.minuterie);
     p.minuterie = setTimeout(() => enregistrer(p), 800);
-    etatEnregistrement.textContent = "Modifié…";
+    statut("Modifié…");
   }
 
   // Entrée valide la phrase au lieu d'insérer un retour à la ligne.
@@ -211,7 +220,7 @@
   }
 
   async function reglerVitesse(p, valeur) {
-    etatEnregistrement.textContent = "Enregistrement…";
+    statut("Enregistrement…");
     try {
       const r = await fetch(`/projets/${PROJET}/phrases/${p.id}`, {
         method: "PUT",
@@ -223,12 +232,10 @@
       if (reponse.vitesse === null) delete p.li.dataset.vitesse;
       else p.li.dataset.vitesse = reponse.vitesse;
       majCalage(p, reponse);
-      etatEnregistrement.textContent = "Enregistré.";
-      etatEnregistrement.className = "";
+      statut("Enregistré.");
     } catch (e) {
       majVitesse(p);
-      etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
-      etatEnregistrement.className = "erreur";
+      statut("Échec de l'enregistrement, réessayez (connexion ?).", true);
     }
   }
 
@@ -272,7 +279,7 @@
 
   // « Voix d'origine » : la vidéo doublée garde le son d'origine de la phrase.
   async function garderOriginal(p, case_) {
-    etatEnregistrement.textContent = "Enregistrement…";
+    statut("Enregistrement…");
     try {
       const r = await fetch(`/projets/${PROJET}/phrases/${p.id}`, {
         method: "PUT",
@@ -281,12 +288,10 @@
       });
       if (!r.ok) throw new Error(r.status);
       p.li.toggleAttribute("data-origine", (await r.json()).voix_origine);
-      etatEnregistrement.textContent = "Enregistré.";
-      etatEnregistrement.className = "";
+      statut("Enregistré.");
     } catch (e) {
       case_.checked = !case_.checked;
-      etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
-      etatEnregistrement.className = "erreur";
+      statut("Échec de l'enregistrement, réessayez (connexion ?).", true);
     }
   }
 
