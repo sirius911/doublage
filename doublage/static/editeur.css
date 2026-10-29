@@ -84,7 +84,12 @@
 .colonne-video, .colonne-phrases { display: flex; flex-direction: column; min-height: 0; }
 .sous-video, #phrases { flex: 1; min-height: 0; overflow-y: auto; }
 .sous-video > :first-child { margin-top: .5rem; }
-#choix-voix { margin-bottom: .3rem; }
+/* Ligne sous la vidéo : voix du projet à gauche, son du lecteur (original / doublé) à droite. */
+.sous-ecran {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem 1rem;
+  margin-bottom: .3rem;
+}
+#choix-voix, #choix-son { margin: 0; }
 .colonne-phrases h2 { margin: 0 0 .3rem; font-size: 1.1rem; flex: none; }
 .colonne-phrases { border: 1px solid #ddd; border-radius: .3rem; padding: .5rem 0 0 .5rem; }
 #doublage h2 { font-size: 1.1rem; }

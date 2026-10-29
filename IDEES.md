@@ -7,6 +7,8 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 -
 
 ## Intégrées
+- Corrections de textes de la page d'aide → PLAN Phase 6
+- « Son de la vidéo » sur la ligne de la voix, à droite sous la vidéo → PLAN Phase 6
 - Haut de la page d'aide toujours visible en défilant → PLAN Phase 6 (barre de titre fixe, toutes les pages)
 - Choix de la police et de la taille des sous-titres, avec aperçu sur la vidéo → PLAN Phase 6 (sous-titres incrustés, par projet)
 - Mot écrit phonétiquement pour la voix mais correct dans les sous-titres → PLAN Phase 6 (notation [écrit|prononcé])

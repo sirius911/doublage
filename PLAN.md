@@ -98,6 +98,11 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       incrustés » (polices installées dans le conteneur ; le SRT/VTT téléchargé reste stylé par le lecteur) ;
       aperçu : une image de la vidéo, à l'instant affiché par le lecteur, avec le sous-titre gravé exactement
       comme il le sera (même moteur ffmpeg), sans générer la vidéo
+- [x] Éditeur : « Son de la vidéo : original / nouvelle voix (aperçu) » déplacé sur la ligne « Voix : … »,
+      à droite sous la vidéo (sous « Vidéo doublée », on le croyait lié au bouton de génération)
+- [ ] Aide : exemples (« Ceci est un tutoriel sur… », prononciation Zimbra / DXCare), « ▶ Voix » (peut prendre
+      plusieurs secondes la première fois), génération décrite simplement, sous-titres incrustés simplifiés,
+      aperçu « nouvelle voix » décrit avec la ligne Voix
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

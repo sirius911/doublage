@@ -490,7 +490,7 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <img id="apercu-sous-titres" hidden alt="Aperçu du sous-titre incrusté" title="Cliquez pour fermer l'aperçu">
 </div>
 <div class="sous-video">
-{voice_choice(project, catalog)}
+<div class="sous-ecran">{voice_choice(project, catalog)}{sound_choice(project)}</div>
 {dubbing_section(project, job)}
 </div>
 </div>
@@ -533,6 +533,18 @@ def subtitle_style_choice(project: Project) -> str:
 <button type="button" id="voir-sous-titres">Aperçu sur l'image</button></p>"""
 
 
+def sound_choice(project: Project) -> str:
+    """Aperçu : le lecteur bascule sur la vidéo doublée, avec le texte et la liste synchronisés.
+
+    Masqué tant qu'il n'y a pas de vidéo doublée ; remplacé à la fin de chaque génération (editeur.js).
+    """
+    exists = project.dubbed_video.exists()
+    version = f"{project.dubbed_video.stat().st_mtime:.0f}" if exists else ""
+    return f"""<p id="choix-son" data-version="{version}"{"" if exists else " hidden"}>Son de la vidéo :
+<label><input type="radio" name="son" value="original" checked> original</label>
+<label><input type="radio" name="son" value="doublee"> nouvelle voix (aperçu)</label></p>"""
+
+
 def dubbing_section(project: Project, job: Job | None) -> str:
     if job and job.kind == "doublage" and job.active:
         # À la fin, seule cette section est rafraîchie : la vidéo et les corrections en cours restent.
@@ -544,10 +556,6 @@ def dubbing_section(project: Project, job: Job | None) -> str:
     exists = project.dubbed_video.exists()
     if exists:
         generated = project.dubbed_video.stat().st_mtime
-        # Aperçu : le lecteur ci-dessus bascule sur la vidéo doublée, avec le texte et la liste synchronisés.
-        parts.append(f"""<p id="choix-son" data-version="{generated:.0f}">Son de la vidéo :
-<label><input type="radio" name="son" value="original" checked> original</label>
-<label><input type="radio" name="son" value="doublee"> nouvelle voix (aperçu)</label></p>""")
     # Le texte du bouton et l'avertissement suivent la case (editeur.js).
     label = "Mettre à jour la vidéo doublée" if exists else "Générer la vidéo doublée"
     parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">

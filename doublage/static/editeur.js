@@ -379,6 +379,7 @@
     const page = new DOMParser().parseFromString(await (await fetch(location.href)).text(), "text/html");
     await changerSon(false);  // l'ancienne vidéo doublée vient d'être remplacée
     document.getElementById("doublage").replaceWith(page.getElementById("doublage"));
+    document.getElementById("choix-son").replaceWith(page.getElementById("choix-son"));  // nouvelle version
     for (const p of phrases) {
       const li = page.querySelector(`#phrases li[data-id="${p.id}"]`);
       if (!li) continue;

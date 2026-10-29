@@ -403,6 +403,8 @@ def test_video_doublee(client, monkeypatch):
 
     # Aperçu dans l'éditeur : choix du son, vidéo servie sans téléchargement forcé.
     assert 'name="son" value="doublee"' in page and "Des corrections ont été faites" not in page
+    # Sur la ligne de la voix, sous la vidéo, pas dans la section « Vidéo doublée ».
+    assert page.index('id="choix-son"') < page.index('id="doublage"')
     apercu = client.get(url + "/export?apercu=1")
     assert apercu.status_code == 200 and "content-disposition" not in apercu.headers
     # Une correction après la génération : l'aperçu est signalé comme périmé.
