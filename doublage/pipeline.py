@@ -11,7 +11,7 @@ from . import media
 from .assembly import Placement, assemble, fit_clips
 from .segments import Segment, Status, Transcript, spoken_text
 from .subtitles import to_srt
-from .transcription import Transcriber, trim_leading_silence
+from .transcription import Transcriber, trim_silences
 from .tts import Synthesizer
 
 Progress = Callable[[str], None]
@@ -23,7 +23,7 @@ def transcribe_video(video: Path, workdir: Path, transcriber: Transcriber,
     progress("Extraction de l'audio…")
     audio = media.extract_audio(video, workdir / "original.wav")
     progress("Transcription…")
-    transcript = trim_leading_silence(transcriber.transcribe(audio), *media.read_wav(audio))
+    transcript = trim_silences(transcriber.transcribe(audio), *media.read_wav(audio))
     transcript.save(workdir / "segments.json")
     progress(f"{len(transcript.segments)} phrases transcrites.")
     return transcript

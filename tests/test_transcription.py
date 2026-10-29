@@ -4,7 +4,7 @@ import pytest
 
 from doublage.transcription import (
     FakeTranscriber, TranscriptionError, WhisperApiTranscriber, is_hallucination, parse_verbose_json, regroup,
-    trim_leading_silence,
+    trim_silences,
 )
 from doublage.segments import Segment, Transcript
 
@@ -129,9 +129,9 @@ def test_debut_recale_sur_la_parole():
         Segment(id=1, start=8.1, end=10.0, original_text="Suite.", text="Suite."),
         Segment(id=2, start=9.0, end=9.0, original_text="Vide.", text="Vide."),
     ])
-    trim_leading_silence(t, audio, sr)
+    trim_silences(t, audio, sr)
     assert t.segments[0].start == pytest.approx(5.9, abs=0.03)
-    assert t.segments[0].end == 8.0
+    assert t.segments[0].end == 8.0  # pas de silence à la fin
     assert t.segments[1].start == pytest.approx(8.4, abs=0.03)
     assert t.segments[2].start == 9.0
 
@@ -139,7 +139,25 @@ def test_debut_recale_sur_la_parole():
 def test_debut_inchange_sans_silence_ou_sans_son():
     sr = 16000
     t = Transcript(duration=2, segments=[Segment(id=0, start=0.0, end=2.0, original_text="A.", text="A.")])
-    trim_leading_silence(t, np.full(2 * sr, 0.2, dtype=np.float32), sr)
+    trim_silences(t, np.full(2 * sr, 0.2, dtype=np.float32), sr)
     assert t.segments[0].start == 0.0
-    trim_leading_silence(t, np.zeros(2 * sr, dtype=np.float32), sr)
+    trim_silences(t, np.zeros(2 * sr, dtype=np.float32), sr)
     assert t.segments[0].start == 0.0
+
+
+def test_fin_recalee_avant_la_pause():
+    # Parole de 1 s à 3 s, puis silence ; Whisper étire la phrase jusqu'au début de la suivante (6 s).
+    sr = 16000
+    audio = np.zeros(8 * sr, dtype=np.float32)
+    audio[1 * sr:3 * sr] = 0.3 * np.sin(np.arange(2 * sr) * 2 * np.pi * 200 / sr)
+    audio[6 * sr:] = 0.3 * np.sin(np.arange(2 * sr) * 2 * np.pi * 200 / sr)
+    t = Transcript(duration=8, segments=[
+        Segment(id=0, start=1.0, end=6.0, original_text="A.", text="A."),
+        Segment(id=1, start=6.0, end=8.0, original_text="B.", text="B."),
+    ])
+    trim_silences(t, audio, sr)
+    assert t.segments[0].start == 1.0
+    assert t.segments[0].end == pytest.approx(3.2, abs=0.03)
+    assert (t.segments[1].start, t.segments[1].end) == (6.0, 8.0)
+    # Le créneau (jusqu'à la phrase suivante) ne change pas : la voix peut toujours déborder sur la pause.
+    assert t.slot_end(t.segments[0]) == 6.0

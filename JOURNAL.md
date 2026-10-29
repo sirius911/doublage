@@ -7,7 +7,12 @@ Historique des sessions, la plus récente en haut.
   avance, décalage rattrapé à la deuxième phrase. Comportement connu de Whisper (horodatage du début peu fiable).
 - Fait : après la transcription, le début de chaque phrase est avancé jusqu'au premier son mesuré dans son
   créneau (RMS par fenêtres de 20 ms, seuil ≈ -40 dB ; silence de 0,3 s minimum ; 0,1 s de marge).
-  La fin n'est pas touchée. Aucun son mesurable dans le créneau → rien n'est changé.
+  Aucun son mesurable dans le créneau → rien n'est changé.
+- Même chose pour la fin (accord de l'utilisateur) : ramenée au dernier son + 0,2 s quand la phrase finit
+  par 0,3 s de silence ou plus. But : la « durée d'origine » ne compte plus la pause qui suit, donc moins de
+  voix ralenties jusqu'au plafond. Le créneau (début de la phrase suivante) est inchangé ; conséquences
+  attendues : plus de pastilles orange (« dépasse la phrase d'origine mais finit avant la suivante », sans
+  effet audible), sous-titres qui disparaissent à la fin de la parole au lieu de rester pendant la pause.
 - Limite : ne vaut que pour les nouvelles transcriptions ; la vidéo d'exemple est à re-déposer pour en profiter.
   Seuil fixe : à revoir si une vidéo a un fond sonore fort (musique) avant la parole.
 - Suite : essai sur la VM avec la vidéo concernée.

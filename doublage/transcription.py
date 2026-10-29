@@ -72,14 +72,15 @@ def regroup(transcript: Transcript, max_duration: float = 15.0, max_gap: float =
     return Transcript(duration=transcript.duration, segments=merged)
 
 
-def trim_leading_silence(transcript: Transcript, audio: np.ndarray, sample_rate: int,
-                         threshold: float = 0.01, min_silence: float = 0.3, margin: float = 0.1) -> Transcript:
-    """Recale le début de chaque phrase sur le premier son réel de son créneau.
+def trim_silences(transcript: Transcript, audio: np.ndarray, sample_rate: int, threshold: float = 0.01,
+                  min_silence: float = 0.3, margin: float = 0.1, end_margin: float = 0.2) -> Transcript:
+    """Recale le début et la fin de chaque phrase sur le son réel de son créneau.
 
     Whisper fait souvent commencer une phrase avant la parole, surtout la première (à 0 s alors qu'on ne
-    parle qu'à 6 s) : la voix de synthèse partirait trop tôt. Un silence de moins de `min_silence` est
-    laissé tel quel ; on garde `margin` avant le premier son. `threshold` : niveau RMS (0..1, ≈ -40 dB)
-    par fenêtres de 20 ms.
+    parle qu'à 6 s), et colle la fin d'une phrase au début de la suivante, pause comprise : la voix de
+    synthèse partirait trop tôt, et serait ralentie pour remplir la pause. Un silence de moins de
+    `min_silence` est laissé tel quel ; on garde `margin` avant le premier son et `end_margin` après le
+    dernier (fin de mot peu sonore). `threshold` : niveau RMS (0..1, ≈ -40 dB) par fenêtres de 20 ms.
     """
     window = max(1, int(sample_rate * 0.02))
     for s in transcript.segments:
@@ -91,9 +92,14 @@ def trim_leading_silence(transcript: Transcript, audio: np.ndarray, sample_rate:
         loud = np.flatnonzero(rms > threshold)
         if len(loud) == 0:
             continue  # aucun son mesurable : on ne devine pas
-        silence = loud[0] * window / sample_rate
-        if silence >= min_silence:
-            s.start = round(s.start + silence - margin, 3)
+        start = s.start
+        leading = loud[0] * window / sample_rate
+        if leading >= min_silence:
+            start = round(s.start + leading - margin, 3)
+        trailing = s.duration - (loud[-1] + 1) * window / sample_rate
+        if trailing >= min_silence:
+            s.end = round(s.end - trailing + end_margin, 3)
+        s.start = start
     return transcript
 
 

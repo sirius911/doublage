@@ -107,6 +107,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       qu'on ne parle qu'après (exemple : 6 s), la voix partait trop tôt ; après la transcription, le début de
       chaque phrase est avancé jusqu'au premier son réel (silence de 0,3 s au moins, 0,1 s de marge) —
       nouvelles transcriptions seulement
+- [x] Fin des phrases recalée sur la parole : la fin donnée par Whisper inclut la pause qui suit, donc
+      beaucoup de voix étaient ralenties jusqu'au plafond ; fin ramenée au dernier son réel (+ 0,2 s).
+      Le créneau (jusqu'à la phrase suivante) ne change pas : la voix peut toujours déborder sur la pause
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)
