@@ -103,6 +103,10 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Aide : exemples (« Ceci est un tutoriel sur… », prononciation Zimbra / DXCare), « ▶ Voix » (peut prendre
       plusieurs secondes la première fois), génération décrite simplement, sous-titres incrustés simplifiés,
       aperçu « nouvelle voix » décrit avec la ligne Voix
+- [x] Début des phrases recalé sur la parole : Whisper fait souvent commencer la première phrase à 0 s alors
+      qu'on ne parle qu'après (exemple : 6 s), la voix partait trop tôt ; après la transcription, le début de
+      chaque phrase est avancé jusqu'au premier son réel (silence de 0,3 s au moins, 0,1 s de marge) —
+      nouvelles transcriptions seulement
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

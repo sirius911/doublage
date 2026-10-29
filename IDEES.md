@@ -7,6 +7,7 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 -
 
 ## Intégrées
+- Première phrase annoncée à 00:00 alors que la parole commence à 6 s → PLAN Phase 6 (début recalé sur le son)
 - Corrections de textes de la page d'aide → PLAN Phase 6
 - « Son de la vidéo » sur la ligne de la voix, à droite sous la vidéo → PLAN Phase 6
 - Haut de la page d'aide toujours visible en défilant → PLAN Phase 6 (barre de titre fixe, toutes les pages)

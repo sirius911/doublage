@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Protocol
 
 import httpx
+import numpy as np
 
 from .segments import Segment, Transcript
 
@@ -69,6 +70,31 @@ def regroup(transcript: Transcript, max_duration: float = 15.0, max_gap: float =
             merged.append(Segment(id=len(merged), start=s.start, end=s.end,
                                   original_text=s.original_text, text=s.text))
     return Transcript(duration=transcript.duration, segments=merged)
+
+
+def trim_leading_silence(transcript: Transcript, audio: np.ndarray, sample_rate: int,
+                         threshold: float = 0.01, min_silence: float = 0.3, margin: float = 0.1) -> Transcript:
+    """Recale le début de chaque phrase sur le premier son réel de son créneau.
+
+    Whisper fait souvent commencer une phrase avant la parole, surtout la première (à 0 s alors qu'on ne
+    parle qu'à 6 s) : la voix de synthèse partirait trop tôt. Un silence de moins de `min_silence` est
+    laissé tel quel ; on garde `margin` avant le premier son. `threshold` : niveau RMS (0..1, ≈ -40 dB)
+    par fenêtres de 20 ms.
+    """
+    window = max(1, int(sample_rate * 0.02))
+    for s in transcript.segments:
+        part = audio[int(s.start * sample_rate):int(s.end * sample_rate)]
+        n = len(part) // window
+        if n == 0:
+            continue
+        rms = np.sqrt(np.mean(part[:n * window].reshape(n, window) ** 2, axis=1))
+        loud = np.flatnonzero(rms > threshold)
+        if len(loud) == 0:
+            continue  # aucun son mesurable : on ne devine pas
+        silence = loud[0] * window / sample_rate
+        if silence >= min_silence:
+            s.start = round(s.start + silence - margin, 3)
+    return transcript
 
 
 class WhisperApiTranscriber:

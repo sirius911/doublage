@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Début des phrases recalé sur la parole
+- Idée/bug : vidéo où l'on ne parle qu'à 6 s, première phrase transcrite à 00:00 → voix de synthèse en
+  avance, décalage rattrapé à la deuxième phrase. Comportement connu de Whisper (horodatage du début peu fiable).
+- Fait : après la transcription, le début de chaque phrase est avancé jusqu'au premier son mesuré dans son
+  créneau (RMS par fenêtres de 20 ms, seuil ≈ -40 dB ; silence de 0,3 s minimum ; 0,1 s de marge).
+  La fin n'est pas touchée. Aucun son mesurable dans le créneau → rien n'est changé.
+- Limite : ne vaut que pour les nouvelles transcriptions ; la vidéo d'exemple est à re-déposer pour en profiter.
+  Seuil fixe : à revoir si une vidéo a un fond sonore fort (musique) avant la parole.
+- Suite : essai sur la VM avec la vidéo concernée.
+
 ## 2026-10-29 — Petites corrections de l'éditeur et de l'aide
 - Éditeur : « Son de la vidéo : original / nouvelle voix (aperçu) » sur la ligne de la voix, à droite sous la
   vidéo (sous « Vidéo doublée », on le croyait lié au bouton de génération) ; remplacé à chaque génération.

@@ -1,8 +1,10 @@
 import httpx
+import numpy as np
 import pytest
 
 from doublage.transcription import (
     FakeTranscriber, TranscriptionError, WhisperApiTranscriber, is_hallucination, parse_verbose_json, regroup,
+    trim_leading_silence,
 )
 from doublage.segments import Segment, Transcript
 
@@ -114,3 +116,30 @@ def test_hallucinations_ecartees():
           for i in range(10)),  # boucle répartie sur plusieurs tronçons
     ]})
     assert [(s.id, s.text) for s in t.segments] == [(0, "Bonjour.")]
+
+
+def test_debut_recale_sur_la_parole():
+    # 6 s de silence puis de la parole jusqu'à 10 s ; Whisper annonce la première phrase à 0 s.
+    sr = 16000
+    audio = np.zeros(10 * sr, dtype=np.float32)
+    audio[6 * sr:] = 0.3 * np.sin(np.arange(4 * sr) * 2 * np.pi * 200 / sr)
+    audio[int(8.1 * sr):int(8.5 * sr)] = 0  # pause courte au début de la deuxième phrase
+    t = Transcript(duration=10, segments=[
+        Segment(id=0, start=0.0, end=8.0, original_text="Bonjour.", text="Bonjour."),
+        Segment(id=1, start=8.1, end=10.0, original_text="Suite.", text="Suite."),
+        Segment(id=2, start=9.0, end=9.0, original_text="Vide.", text="Vide."),
+    ])
+    trim_leading_silence(t, audio, sr)
+    assert t.segments[0].start == pytest.approx(5.9, abs=0.03)
+    assert t.segments[0].end == 8.0
+    assert t.segments[1].start == pytest.approx(8.4, abs=0.03)
+    assert t.segments[2].start == 9.0
+
+
+def test_debut_inchange_sans_silence_ou_sans_son():
+    sr = 16000
+    t = Transcript(duration=2, segments=[Segment(id=0, start=0.0, end=2.0, original_text="A.", text="A.")])
+    trim_leading_silence(t, np.full(2 * sr, 0.2, dtype=np.float32), sr)
+    assert t.segments[0].start == 0.0
+    trim_leading_silence(t, np.zeros(2 * sr, dtype=np.float32), sr)
+    assert t.segments[0].start == 0.0
