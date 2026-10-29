@@ -1,5 +1,6 @@
 """Transcription de l'audio en phrases horodatées."""
 
+import zlib
 from pathlib import Path
 from typing import Protocol
 
@@ -18,7 +19,8 @@ class Transcriber(Protocol):
 
 def parse_verbose_json(data: dict) -> Transcript:
     """Convertit une réponse `verbose_json` (format OpenAI) en Transcript."""
-    raw_segments = [r for r in data.get("segments") or [] if (r.get("text") or "").strip()]
+    raw_segments = [r for r in data.get("segments") or []
+                    if (r.get("text") or "").strip() and not is_hallucination(r["text"])]
     if not raw_segments and (data.get("text") or "").strip():
         raise TranscriptionError("La réponse du serveur ne contient pas de segments horodatés.")
     duration = float(data.get("duration") or (raw_segments[-1]["end"] if raw_segments else 0.0))
@@ -29,7 +31,22 @@ def parse_verbose_json(data: dict) -> Transcript:
         end = round(min(float(raw["end"]), duration), 3)
         text = raw["text"].strip()
         segments.append(Segment(id=len(segments), start=start, end=end, original_text=text, text=text))
-    return regroup(Transcript(duration=duration, segments=segments))
+    transcript = regroup(Transcript(duration=duration, segments=segments))
+    # Une boucle répartie sur plusieurs tronçons n'apparaît qu'une fois ceux-ci réunis.
+    kept = [s for s in transcript.segments if not is_hallucination(s.text)]
+    for i, s in enumerate(kept):
+        s.id = i
+    return Transcript(duration=duration, segments=kept)
+
+
+# Seuil de Whisper lui-même : au-delà, le texte est trop répétitif pour être de la parole réelle.
+MAX_COMPRESSION_RATIO = 2.4
+
+
+def is_hallucination(text: str) -> bool:
+    """Phrase répétée en boucle (Whisper sur un silence) : le texte se compresse énormément."""
+    data = text.strip().encode("utf-8")
+    return len(data) > 0 and len(data) / len(zlib.compress(data)) > MAX_COMPRESSION_RATIO
 
 
 SENTENCE_END = (".", "?", "!", "…")

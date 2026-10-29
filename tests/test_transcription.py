@@ -2,7 +2,7 @@ import httpx
 import pytest
 
 from doublage.transcription import (
-    FakeTranscriber, TranscriptionError, WhisperApiTranscriber, parse_verbose_json, regroup,
+    FakeTranscriber, TranscriptionError, WhisperApiTranscriber, is_hallucination, parse_verbose_json, regroup,
 )
 from doublage.segments import Segment, Transcript
 
@@ -100,3 +100,17 @@ def test_regroupement_des_troncons_d_une_phrase():
         (3, 8.0, 15.0, "Une phrase"), (4, 15.0, 24.0, "trop longue"),
     ]
     assert t.segments[0].original_text == "Ouvrez le menu." and t.duration == 30.0
+
+
+def test_hallucinations_ecartees():
+    boucle = " ".join(["je peux avoir des noms propres et"] * 15)
+    assert is_hallucination(boucle)
+    assert not is_hallucination("Ouvrez le menu, puis cliquez sur « Nouveau message » en haut à gauche de "
+                                "l'écran : une fenêtre s'ouvre, dans laquelle vous saisissez l'adresse.")
+    t = parse_verbose_json({"duration": 30.0, "segments": [
+        {"start": 0.0, "end": 2.0, "text": "Bonjour."},
+        {"start": 2.0, "end": 12.0, "text": boucle},  # boucle dans un seul tronçon
+        *({"start": 12.0 + i, "end": 13.0 + i, "text": "je peux avoir des noms propres et"}
+          for i in range(10)),  # boucle répartie sur plusieurs tronçons
+    ]})
+    assert [(s.id, s.text) for s in t.segments] == [(0, "Bonjour.")]
