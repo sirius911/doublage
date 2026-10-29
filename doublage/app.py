@@ -426,6 +426,7 @@ def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
     calage = voice_fit(project, transcript, s)
     voice = f' data-voix data-calage="{calage[0]}"' if calage else ""
     voice += " data-origine" if s.keep_original else ""
+    voice += " data-vide" if not s.text else ""  # phrase effacée : ni voix ni sous-titre
     original = " ".join(s.original_text.split())  # comme le texte corrigé (Transcript.set_text)
     return (
         f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"{voice}>'
@@ -689,6 +690,8 @@ def synthesize_one(user: User, project: CurrentProject, segment_id: int,
     segment = next((s for s in Transcript.load(project.transcript_path).segments if s.id == segment_id), None)
     if segment is None:
         raise HTTPException(404, "Phrase introuvable")
+    if not segment.text:
+        raise HTTPException(400, "Phrase effacée : pas de voix à générer")
     with _synthesis_lock:
         try:
             synthesize_segment(segment, project.folder, synthesizer)

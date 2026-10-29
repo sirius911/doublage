@@ -109,6 +109,16 @@ def test_phrase_gardee_avec_le_son_d_origine(tmp_path, monkeypatch):
     assert extractions == [synth.sample_rate]
 
 
+def test_phrase_effacee_silencieuse(tmp_path, monkeypatch):
+    sans_ffmpeg(monkeypatch)
+    Transcript(5.0, [Segment(0, 0.0, 2.0, "Un.", "Un."),
+                     Segment(1, 2.0, 5.0, "boucle inventée", "", keep_original=True)]).save(tmp_path / "segments.json")
+    synth = CompteSynthese()
+    placements = dub_project(tmp_path / "video.mp4", tmp_path, tmp_path / "video_doublee.mp4", synth,
+                             progress=lambda m: None)
+    assert synth.textes == ["Un."] and [p.segment_id for p in placements] == [0]
+
+
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
 def test_changement_de_tempo_sans_changer_la_hauteur():
     sr = 24000

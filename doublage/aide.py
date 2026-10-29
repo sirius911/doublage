@@ -87,6 +87,9 @@ première fois).</li>
 <p class="note">Les corrections sont <b>enregistrées automatiquement</b> (« Enregistré. » s'affiche sous la
 vidéo). Survolez une phrase pour voir son texte d'origine ; le petit <b>↺</b> sous l'heure d'une phrase
 corrigée la remet comme à la transcription d'origine (après confirmation).</p>
+<p class="note"><b>Effacer une phrase</b> : videz entièrement son texte. Elle est alors retirée de la vidéo
+doublée (silence à la place, pas de sous-titre) et apparaît grisée dans la liste. Utile quand la transcription
+a inventé une phrase sur un silence ; <b>↺</b> la rétablit.</p>
 <p class="note">Case <b>☐ voix d'origine</b>, au bout de chaque phrase (décochée par défaut) : cochée, la vidéo
 doublée garde pour cette phrase le <b>son d'origine</b>, sans voix de synthèse. Utile pour une citation, un
 nom difficile à faire prononcer, ou un passage où la personne qui parle doit être entendue. Le volume et le

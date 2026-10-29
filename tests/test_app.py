@@ -252,6 +252,12 @@ def test_correction_d_une_phrase(client, store, tmp_path):
     page = client.get(url).text
     assert " data-origine>" in page and '<input type="checkbox" checked> voix d’origine' in page
 
+    # Phrase effacée (texte vidé) : grisée, pas de voix possible ; ↺ reste disponible.
+    assert client.put(url + "/phrases/0", json={"texte": "  "}).json()["texte"] == ""
+    page = client.get(url).text
+    assert " data-vide>" in page and " hidden>↺" not in page
+    assert client.post(url + "/phrases/0/voix").status_code == 400
+
 
 def test_voix_d_une_phrase(client, tmp_path):
     login(client)

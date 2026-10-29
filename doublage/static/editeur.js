@@ -27,7 +27,7 @@
     if (document.activeElement === surImage) surImage.blur();  // enregistre la phrase quittée
     if (enCours) enCours.li.classList.remove("en-cours");
     enCours = p;
-    surImage.hidden = !p;
+    surImage.hidden = !p || !p.texte.textContent.trim();  // rien à afficher pour une phrase effacée
     surImage.textContent = p ? p.texte.textContent : "";
     if (p) p.li.classList.add("en-cours");
     // Pendant la lecture, la liste suit la phrase en cours (sauf si on y corrige un texte).
@@ -66,6 +66,7 @@
   async function enregistrer(p) {
     clearTimeout(p.minuterie);
     p.minuterie = null;
+    if (!p.texte.textContent.trim()) p.texte.textContent = "";  // phrase effacée (affiche son indication)
     const texte = p.texte.textContent;
     etatEnregistrement.textContent = "Enregistrement…";
     try {
@@ -87,6 +88,7 @@
 
   // Le petit bouton ↺ n'apparaît que si le texte diffère de la transcription d'origine.
   function majRetablir(p) {
+    p.li.toggleAttribute("data-vide", !p.texte.textContent.trim());
     p.retablir.hidden = p.texte.textContent.split(/\s+/).join(" ").trim() === p.texte.dataset.original;
   }
 

@@ -85,7 +85,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Case par phrase, décochée par défaut, « voix d’origine » : la phrase garde le son d'origine dans la vidéo
       doublée (pas de voix de synthèse pour elle)
 - [x] Hallucinations de Whisper (une phrase répétée en boucle sur un silence) écartées à la transcription
-- [ ] Phrase effacée : texte vidé dans l'éditeur → ni voix ni sous-titre, phrase grisée, ↺ pour la rétablir
+- [x] Phrase effacée : texte vidé dans l'éditeur → ni voix ni sous-titre, phrase grisée, ↺ pour la rétablir
 - [ ] Ralentissement automatique (10 % au plus, réglable) d'une voix qui finit nettement avant la phrase
       d'origine, symétrique de l'accélération
 

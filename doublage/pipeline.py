@@ -136,6 +136,8 @@ def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
     """Doublage d'un seul tenant (ligne de commande) : toutes les phrases sont synthétisées."""
     clips = []
     for i, seg in enumerate(transcript.segments, 1):
+        if not seg.text:
+            continue
         progress(f"Synthèse de la phrase {i}/{len(transcript.segments)}…")
         audio = synthesize_segment(seg, workdir, synthesizer)
         seg.status = Status.SYNTHESIZED
@@ -152,13 +154,14 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
     """Doublage d'un projet corrigé dans l'éditeur.
 
     Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
-    écoutée et validée. Les phrases marquées « voix d'origine » gardent le son de la vidéo. Les verrous permettent de corriger le texte pendant le traitement.
+    écoutée et validée. Les phrases marquées « voix d'origine » gardent le son de la vidéo ; les phrases
+    effacées (texte vide) restent silencieuses. Les verrous permettent de corriger le texte pendant le traitement.
     `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs).
     `voice_label` (nom de la voix) est noté à côté de la vidéo, pour l'afficher.
     """
     transcript_path = workdir / "segments.json"
     with transcript_lock:
-        todo = [s for s in Transcript.load(transcript_path).segments if not s.keep_original
+        todo = [s for s in Transcript.load(transcript_path).segments if s.text and not s.keep_original
                 and (s.status != Status.SYNTHESIZED or not clip_path(workdir, s.id).exists())]
     for i, seg in enumerate(todo, 1):
         progress(f"Synthèse de la phrase {i}/{len(todo)}…")
@@ -171,15 +174,15 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         transcript = Transcript.load(transcript_path)
     sample_rate = synthesizer.sample_rate
     clips = []
+    kept = [s for s in transcript.segments if s.text and s.keep_original]
     for seg in transcript.segments:
-        if not seg.keep_original:
+        if seg.text and not seg.keep_original:
             audio, sample_rate = media.read_wav(clip_path(workdir, seg.id))
             clips.append((seg.id, seg.start, audio))
-    if any(s.keep_original for s in transcript.segments):
+    if kept:
         progress("Reprise du son d'origine des phrases à garder…")
         original = _original_audio(video, workdir, sample_rate)
-        clips += [(s.id, s.start, original_clip(original, sample_rate, transcript, s))
-                  for s in transcript.segments if s.keep_original]
+        clips += [(s.id, s.start, original_clip(original, sample_rate, transcript, s)) for s in kept]
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
     placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed,
                          burn_subtitles, threads)

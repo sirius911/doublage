@@ -45,6 +45,10 @@
 #phrases .garder input { vertical-align: middle; margin: 0 .2em 0 0; }
 #phrases li[data-origine] .voix, #phrases li[data-origine] .calage, #phrases li[data-origine] .etat { display: none; }
 #phrases li[data-origine] .garder { color: #1d4ed8; }
+/* Phrase effacée (texte vide) : ni voix ni sous-titre ; ↺ la rétablit. */
+#phrases li[data-vide] .voix, #phrases li[data-vide] .calage, #phrases li[data-vide] .etat,
+#phrases li[data-vide] .garder { display: none; }
+#phrases li[data-vide] .texte:empty::before { content: "(phrase effacée : ni voix ni sous-titre)"; color: #999; font-style: italic; }
 
 /* Deux colonnes à la hauteur de l'écran : la vidéo reste en haut à gauche, l'aide et la vidéo
    doublée défilent dessous ; la liste des phrases défile à droite sous son titre. */
