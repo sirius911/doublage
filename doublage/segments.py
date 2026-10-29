@@ -1,9 +1,30 @@
 """Phrases d'une transcription, avec leurs timecodes, et leur enregistrement en JSON."""
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
+
+
+# Notation dans le texte d'une phrase : [Zimbra|Zimm-bra] s'affiche « Zimbra » (sous-titres) et se
+# prononce « Zimm-bra » (voix de synthèse).
+NOTATION = re.compile(r"\[([^\[\]|]*)\|([^\[\]|]*)\]")
+
+
+def display_text(text: str) -> str:
+    """Texte des sous-titres : la partie « écrit » des notations."""
+    return " ".join(NOTATION.sub(r"\1", text).split())
+
+
+def spoken_text(text: str) -> str:
+    """Texte envoyé à la synthèse : la partie « prononcé » des notations."""
+    return " ".join(NOTATION.sub(r"\2", text).split())
+
+
+def notation_error(text: str) -> bool:
+    """Crochet ou barre en dehors d'une notation complète : ils apparaîtraient dans les sous-titres."""
+    return any(c in NOTATION.sub("", text) for c in "[]|")
 
 
 class Status(StrEnum):

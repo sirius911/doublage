@@ -1,6 +1,6 @@
 """Sous-titres (SRT, WebVTT) à partir du texte corrigé des phrases."""
 
-from .segments import Transcript
+from .segments import Transcript, display_text
 
 
 def _timestamp(seconds: float, separator: str) -> str:
@@ -11,17 +11,22 @@ def _timestamp(seconds: float, separator: str) -> str:
     return f"{h:02d}:{m:02d}:{s:02d}{separator}{ms:03d}"
 
 
+def _shown(transcript: Transcript) -> list[tuple[float, float, str]]:
+    """Phrases à afficher (début, fin, texte écrit) ; les phrases effacées sont omises."""
+    return [(s.start, s.end, display_text(s.text)) for s in transcript.segments if display_text(s.text)]
+
+
 def to_srt(transcript: Transcript) -> str:
     blocks = [
-        f"{i}\n{_timestamp(s.start, ',')} --> {_timestamp(s.end, ',')}\n{s.text}\n"
-        for i, s in enumerate((s for s in transcript.segments if s.text), 1)
+        f"{i}\n{_timestamp(start, ',')} --> {_timestamp(end, ',')}\n{text}\n"
+        for i, (start, end, text) in enumerate(_shown(transcript), 1)
     ]
     return "\n".join(blocks)
 
 
 def to_vtt(transcript: Transcript) -> str:
     blocks = [
-        f"{_timestamp(s.start, '.')} --> {_timestamp(s.end, '.')}\n{s.text}\n"
-        for s in transcript.segments if s.text
+        f"{_timestamp(start, '.')} --> {_timestamp(end, '.')}\n{text}\n"
+        for start, end, text in _shown(transcript)
     ]
     return "WEBVTT\n\n" + "\n".join(blocks)

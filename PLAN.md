@@ -90,6 +90,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       d'origine, symétrique de l'accélération
 - [x] Vitesse réglable par phrase (clic sur la pastille : curseur 0,8 à 1,25, bouton « auto ») ; « ▶ Voix »
       joue à la vitesse choisie, pastille recalculée ; sans réglage, la vitesse automatique s'applique
+- [x] Prononciation sans abîmer les sous-titres : notation `[écrit|prononcé]` dans le texte d'une phrase
+      (sous-titres : « écrit », voix : « prononcé ») ; notation mal formée signalée dans la liste ; aide
+      (choix de l'utilisateur parmi deux textes par phrase, glossaire commun, notation : la notation)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

@@ -25,7 +25,7 @@ from .jobs import Job, JobManager, JobState
 from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized, reset_voices,
                        synthesize_segment, transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
-from .segments import Segment, Transcript
+from .segments import Segment, Transcript, notation_error
 from .subtitles import to_srt, to_vtt
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 from .tts import Engine, FakeEngine, Synthesizer
@@ -435,6 +435,7 @@ def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
     speed = s.speed if s.speed is not None else calage[2] if calage else 1.0
     voice += " data-origine" if s.keep_original else ""
     voice += " data-vide" if not s.text else ""  # phrase effacée : ni voix ni sous-titre
+    voice += " data-notation-invalide" if notation_error(s.text) else ""
     original = " ".join(s.original_text.split())  # comme le texte corrigé (Transcript.set_text)
     return (
         f'<li data-id="{s.id}" data-debut="{s.start}" data-fin="{s.end}" data-etat="{s.status}"{voice}>'
@@ -449,6 +450,8 @@ def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
         f'<span class="calage" title="{escape(calage[1]) if calage else ""}">●</span>'
         f'<span class="vitesse-reglee">{speed_label(speed)}</span>'
         f'<span class="etat"></span>'
+        f'<span class="notation" title="Crochet ou barre en trop : ils apparaîtraient dans les sous-titres. '
+        f'Notation attendue : [écrit|prononcé], par ex. [Zimbra|Zimm-bra]">⚠ notation</span>'
         f'<label class="garder" title="La vidéo doublée garde le son d’origine de cette phrase">'
         f'<input type="checkbox"{" checked" if s.keep_original else ""}> voix d’origine</label></span>'
         # Réglage de la vitesse, ouvert par un clic sur la pastille (editeur.js).
@@ -695,6 +698,7 @@ def update_segment(user: User, project: CurrentProject, segment_id: int, update:
         transcript.save(project.transcript_path)
     return {"id": segment.id, "texte": segment.text, "etat": segment.status,
             "voix_origine": segment.keep_original, "vitesse": segment.speed,
+            "notation_invalide": notation_error(segment.text),
             **voice_fit_fields(project, transcript, segment)}
 
 

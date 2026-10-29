@@ -24,3 +24,13 @@ def test_correction_du_texte():
     assert t.set_text(1, "Zimbra").status == Status.MODIFIED
     with pytest.raises(KeyError):
         t.set_text(99, "x")
+
+
+def test_notation_ecrit_prononce():
+    from doublage.segments import display_text, notation_error, spoken_text
+    texte = "Ouvrez [Zimbra|Zimm-bra] puis le [CHP|C. H. P.]."
+    assert display_text(texte) == "Ouvrez Zimbra puis le CHP."
+    assert spoken_text(texte) == "Ouvrez Zimm-bra puis le C. H. P.."
+    assert not notation_error(texte) and not notation_error("Sans notation.")
+    assert notation_error("Ouvrez [Zimbra|Zimm-bra puis") and notation_error("Ouvrez Zimbra|Zimm-bra")
+    assert display_text("Un [|euh] mot.") == "Un mot."  # rien à afficher, mais prononcé

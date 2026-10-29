@@ -36,7 +36,7 @@
 #phrases .retablir[hidden] { display: none; }
 #phrases .texte:focus { outline: 1px solid #888; background: #fff; }
 #phrases .actions { grid-column: 2; display: flex; align-items: center; gap: .3em; font-size: .8em; }
-#phrases .actions button { font-size: inherit; padding: 0 .5em; }
+#phrases .actions button { font-size: inherit; padding: 0 .5em; white-space: nowrap; }
 #phrases .etat { color: #666; }
 #phrases li[data-etat="modifiee"] .etat { color: #b65c00; }
 /* Calage de la voix dans son créneau (explication au survol). Grisé si la voix est périmée. */
@@ -55,6 +55,10 @@
 #phrases .reglage output { min-width: 3.2em; font-variant-numeric: tabular-nums; }
 #phrases .reglage button { font-size: inherit; padding: 0 .5em; }
 #phrases li:not([data-vitesse]) .reglage .auto { visibility: hidden; }
+/* Notation [écrit|prononcé] mal formée : les crochets apparaîtraient dans les sous-titres. */
+#phrases .notation { display: none; color: #c62828; cursor: help; }
+#phrases li[data-notation-invalide] .notation { display: inline; }
+#phrases li[data-notation-invalide] .texte { text-decoration: underline wavy #c62828; }
 /* « Voix d'origine » cochée : pas de voix de synthèse pour cette phrase. */
 #phrases .garder { margin-left: auto; color: #666; white-space: nowrap; cursor: pointer; }
 #phrases .garder input { vertical-align: middle; margin: 0 .2em 0 0; }

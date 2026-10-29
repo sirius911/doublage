@@ -2,6 +2,17 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Notation [écrit|prononcé], état de l'enregistrement en bas de la fenêtre
+- Éditeur : phrase d'explication sous la vidéo retirée ; « Enregistré. » / erreurs dans une étiquette fixe en
+  bas à droite de la fenêtre (la barre d'état du navigateur n'est plus accessible aux pages).
+- Idée « mot phonétique pour la voix, correct dans les sous-titres » : trois formes proposées (deux textes par
+  phrase, glossaire commun, notation dans le texte) ; l'utilisateur a choisi la notation.
+  `[Zimbra|Zimm-bra]` : sous-titres (SRT, VTT, incrustés) « Zimbra », voix « Zimm-bra ». Notation mal formée
+  soulignée en rouge avec « ⚠ notation » (sinon crochets visibles dans les sous-titres). Aide : section
+  Prononciation. Le glossaire reste dans les idées pour plus tard.
+- Les phrases déjà écrites phonétiquement (vidéo 4) sont à reprendre à la main (↺ puis notation).
+- Suite : essai sur la VM.
+
 ## 2026-10-29 — Vitesse réglable par phrase
 - Demande de l'utilisateur : le ralentissement automatique rend parfois la voix monotone ; régler la vitesse
   phrase par phrase donne plus de naturel.

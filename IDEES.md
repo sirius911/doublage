@@ -4,9 +4,10 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
-- Quand je modifie une phrase pour que la voix la dise correctement , en écrivant un mot phonétiquement, j'aimerai que la phrase de sous-titrage, elle reste avec le mot correctement écrit.
+-
 
 ## Intégrées
+- Mot écrit phonétiquement pour la voix mais correct dans les sous-titres → PLAN Phase 6 (notation [écrit|prononcé])
 - Nom de la voix après la date de génération de la vidéo doublée → PLAN Phase 6
 - Case par phrase pour garder la voix d'origine → PLAN Phase 6
 - Durées des progressions en minutes / heures au-delà de 60 s / 60 min → PLAN Phase 6

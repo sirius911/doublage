@@ -120,6 +120,14 @@ def test_phrase_effacee_silencieuse(tmp_path, monkeypatch):
     assert synth.textes == ["Un."] and [p.segment_id for p in placements] == [0]
 
 
+def test_la_voix_dit_la_partie_prononcee(tmp_path, monkeypatch):
+    sans_ffmpeg(monkeypatch)
+    Transcript(5.0, [Segment(0, 0.0, 2.0, "x", "Ouvrez [Zimbra|Zimm-bra].")]).save(tmp_path / "segments.json")
+    synth = CompteSynthese()
+    dub_project(tmp_path / "video.mp4", tmp_path, tmp_path / "video_doublee.mp4", synth, progress=lambda m: None)
+    assert synth.textes == ["Ouvrez Zimm-bra."]
+
+
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
 def test_changement_de_tempo_sans_changer_la_hauteur():
     sr = 24000

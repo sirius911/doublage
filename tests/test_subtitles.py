@@ -14,3 +14,9 @@ def test_srt():
 def test_vtt():
     assert to_vtt(T) == ("WEBVTT\n\n00:00:01.500 --> 00:00:03.250\nOuvrez Zimbra.\n\n"
                          "01:01:01.000 --> 01:01:02.004\nFin.\n")
+
+
+def test_sous_titres_avec_notation():
+    t = Transcript(4.0, [Segment(0, 0.0, 2.0, "x", "Ouvrez [Zimbra|Zimm-bra]."), Segment(1, 2.0, 4.0, "y", "[|euh]")])
+    assert "Ouvrez Zimbra." in to_srt(t) and "Zimm" not in to_srt(t) and to_srt(t).count("-->") == 1
+    assert "Ouvrez Zimbra." in to_vtt(t) and "euh" not in to_vtt(t)

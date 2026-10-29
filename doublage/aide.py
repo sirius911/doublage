@@ -19,7 +19,7 @@ du texte que vous relisez. La voix reste calée sur l'image. Tout se passe sur l
 
 <nav class="sommaire">
 <a href="#etapes">Les 4 étapes</a><a href="#depot">Déposer une vidéo</a><a href="#editeur">Corriger le texte</a>
-<a href="#pastilles">Les pastilles</a><a href="#doublee">Vidéo doublée</a><a href="#voix">Les voix</a>
+<a href="#pastilles">Les pastilles</a><a href="#prononciation">Prononciation</a><a href="#doublee">Vidéo doublée</a><a href="#voix">Les voix</a>
 <a href="#astuces">Astuces</a>
 </nav>
 
@@ -159,11 +159,26 @@ voix produite.</p>
 projet ne peut pas être supprimée.</p>
 </section>
 
+<section id="prononciation">
+<h2>Prononciation : la voix dit une chose, les sous-titres en affichent une autre</h2>
+<p>Pour qu'un mot soit bien prononcé sans abîmer les sous-titres, écrivez entre crochets le mot
+<b>tel qu'il doit s'afficher</b>, une barre <b>|</b>, puis le mot <b>tel qu'il doit être dit</b> :</p>
+<div class="schema">
+<p><code>Ouvrez [Zimbra|Zimm-bra] puis le [CHP|C. H. P.].</code></p>
+<p>Sous-titres : « Ouvrez Zimbra puis le CHP. »<br>
+Voix : « Ouvrez Zimm-bra puis le C. H. P. »</p>
+</div>
+<p>Réécoutez avec <span class="bouton">▶ Voix</span> et ajustez la partie prononcée jusqu'à ce que ce soit
+juste (tirets, points entre les lettres d'un sigle, accents…). Si un crochet ou la barre manque, la phrase est
+soulignée en rouge avec <span style="color: #c62828">⚠ notation</span> : sinon ils
+apparaîtraient dans les sous-titres. La barre s'obtient avec <b>AltGr + 6</b>, les crochets avec
+<b>AltGr + 5</b> et <b>AltGr + °</b>.</p>
+</section>
+
 <section id="astuces">
 <h2>Astuces</h2>
 <ul>
-<li><b>Un mot, un sigle ou un nom mal prononcé</b> : essayez de l'écrire comme il se prononce, puis
-réécoutez avec <span class="bouton">▶ Voix</span>.</li>
+<li><b>Un mot, un sigle ou un nom mal prononcé</b> : voir <a href="#prononciation">Prononciation</a>.</li>
 <li><b>Ponctuation</b> : une virgule ou un point donne en général une petite pause dans la voix.</li>
 <li><b>Phrase rouge</b> : supprimez les mots inutiles (« alors », « donc », « voilà »…) ; à l'écrit, le
 commentaire peut être plus court qu'à l'oral.</li>

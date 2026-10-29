@@ -243,6 +243,13 @@ def test_correction_d_une_phrase(client, store, tmp_path):
 
     assert client.put(url + "/phrases/42", json={"texte": "x"}).status_code == 404
 
+    # Notation [écrit|prononcé] : signalée si elle est incomplète.
+    assert client.put(url + "/phrases/0", json={"texte": "Ouvrez [Zimbra|Zimm-bra"}).json()["notation_invalide"]
+    assert " data-notation-invalide" in client.get(url).text
+    assert not client.put(url + "/phrases/0", json={"texte": "Ouvrez [Zimbra|Zimm-bra]"}).json()["notation_invalide"]
+    assert " data-notation-invalide" not in client.get(url).text
+    client.put(url + "/phrases/0", json={"texte": "Ouvrez Zim bra."})
+
     # Case « voix d'origine », décochée par défaut ; le texte n'est pas touché.
     page = client.get(url).text
     assert "data-origine" not in page and '<input type="checkbox"> voix d’origine' in page

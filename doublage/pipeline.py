@@ -9,7 +9,7 @@ import numpy as np
 
 from . import media
 from .assembly import Placement, assemble, fit_clips
-from .segments import Segment, Status, Transcript
+from .segments import Segment, Status, Transcript, spoken_text
 from .subtitles import to_srt
 from .transcription import Transcriber
 from .tts import Synthesizer
@@ -36,7 +36,7 @@ def clip_path(workdir: Path, segment_id: int) -> Path:
 
 def synthesize_segment(segment: Segment, workdir: Path, synthesizer: Synthesizer):
     """Génère la voix d'une phrase et l'enregistre ; renvoie le signal."""
-    audio = synthesizer.synthesize(segment.text)
+    audio = synthesizer.synthesize(spoken_text(segment.text))
     path = clip_path(workdir, segment.id)
     path.parent.mkdir(parents=True, exist_ok=True)
     media.write_wav(path, audio, synthesizer.sample_rate)

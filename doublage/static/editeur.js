@@ -88,7 +88,9 @@
       });
       if (!r.ok) throw new Error(r.status);
       statut("Enregistré.");
-      p.li.dataset.etat = (await r.json()).etat;
+      const reponse = await r.json();
+      p.li.dataset.etat = reponse.etat;
+      p.li.toggleAttribute("data-notation-invalide", reponse.notation_invalide);
       majVoix(p);
     } catch (e) {
       statut("Échec de l'enregistrement, réessayez (connexion ?).", true);
