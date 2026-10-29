@@ -117,6 +117,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Enregistrer une voix : texte à lire en grand (« prompteur », environ 10 s, ton d'un tutoriel) et
       consignes (parler tout de suite, ton naturel, aller au bout, au calme avec le micro des tutoriels),
       sur la page Voix et dans l'aide (section « Les voix »)
+- [x] Aide, Astuces : pause manquante après une virgule → `[,|.]` ou `[,|...]` (essayés par l'utilisateur :
+      les sous-titres gardent la virgule, la voix marque la pause)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

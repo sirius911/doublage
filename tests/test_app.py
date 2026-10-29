@@ -440,6 +440,7 @@ def test_page_d_aide(client):
         assert f'<section id="{ancre}">' in page and f'href="#{ancre}"' in page
     assert "jusqu'à 15 %" in page
     assert 'class="prompteur">Bonjour. Dans ce tutoriel' in page
+    assert "<code>[,|.]</code>" in page
 
 
 def test_page_des_voix(client, monkeypatch):

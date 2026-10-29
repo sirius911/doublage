@@ -2,6 +2,11 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Astuce : pause après une virgule
+- Question de l'utilisateur : pas de pause à une virgule, pause à la suivante. Normal : pour Pocket TTS une
+  virgule est un indice, pas une pause obligatoire. Solution essayée et validée par l'utilisateur : la
+  notation `[,|.]` ou `[,|...]` (sous-titres : virgule ; voix : pause). Ajoutée aux Astuces de l'aide.
+
 ## 2026-10-29 — Prompteur pour enregistrer une voix
 - Demande de l'utilisateur : une phrase type à faire lire aux personnes qui enregistrent leur voix.
   Rappel : l'échantillon ne sert pas à couvrir les phonèmes (le modèle connaît le français) mais au timbre,

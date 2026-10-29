@@ -203,7 +203,12 @@ pause, la notation complète réapparaît pour pouvoir la corriger.</p>
 <h2>Astuces</h2>
 <ul>
 <li><b>Un mot, un sigle ou un nom mal prononcé</b> : voir <a href="#prononciation">Prononciation</a>.</li>
-<li><b>Ponctuation</b> : une virgule ou un point donne en général une petite pause dans la voix.</li>
+<li><b>Ponctuation</b> : un point donne presque toujours une pause dans la voix ; une virgule, pas toujours
+(la voix décide selon la phrase).</li>
+<li><b>Une pause manque après une virgule</b> : écrivez <code>[,|.]</code> ou <code>[,|...]</code> à la place
+de la virgule. Les sous-titres gardent la virgule, la voix marque la pause. Exemple :
+<code>Pour programmer une intervention planifiée[,|.] commencez par sélectionner votre patient.</code>
+Avec un point, la voix baisse un peu le ton, comme en fin de phrase.</li>
 <li><b>Phrase rouge</b> : supprimez les mots inutiles (« alors », « donc », « voilà »…) ; à l'écrit, le
 commentaire peut être plus court qu'à l'oral.</li>
 <li>La transcription n'est jamais relancée sur un projet : vos corrections ne risquent rien.</li>
