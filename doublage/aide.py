@@ -3,6 +3,27 @@
 
 from .voices import SAMPLE_MAX_SECONDS, SAMPLE_MIN_SECONDS
 
+# Texte à lire pour enregistrer une voix : environ 10 s à débit normal, sur le ton d'un tutoriel. Le modèle
+# connaît déjà le français : l'échantillon sert au timbre, au débit et au ton, pas à couvrir les phonèmes.
+RECORDING_TEXT = ("Bonjour. Dans ce tutoriel, je vais vous montrer comment ouvrir le dossier d'un patient. "
+                  "Cliquez d'abord sur le menu en haut à gauche, puis choisissez l'onglet Recherche.")
+
+
+def recording_guide() -> str:
+    """Prompteur et consignes d'enregistrement d'une voix (page Voix et aide)."""
+    return f"""<div class="enregistrer">
+<p><b>Texte à lire</b> (environ {SAMPLE_MAX_SECONDS} secondes) :</p>
+<blockquote class="prompteur">{RECORDING_TEXT}</blockquote>
+<ul>
+<li><b>Commencez à parler tout de suite</b> : seules les {SAMPLE_MAX_SECONDS} premières secondes sont gardées.</li>
+<li><b>Parlez comme si vous expliquiez à un collègue</b>, sans lire de façon appliquée : ce ton se retrouvera
+dans tous les tutoriels.</li>
+<li><b>Allez au bout de la phrase</b>, au même rythme, sans « euh » ni hésitation.</li>
+<li><b>Au calme, avec le micro des tutoriels</b> (ou un micro-casque) : l'écho et le souffle se retrouvent dans
+la voix produite.</li>
+</ul>
+</div>"""
+
 
 def help_content(max_speed: float, min_speed: float = 1.0) -> str:
     speed = round((max_speed - 1) * 100)
@@ -152,9 +173,10 @@ lecteurs vidéo et les plateformes de diffusion).</li>
 <p><b>Choisir la voix d'un projet</b> : liste « Voix » sous la vidéo de l'éditeur. Changer de voix efface les
 voix déjà générées pour ce projet (le texte corrigé est conservé) ; une confirmation est demandée.</p>
 <p><b>Ajouter une voix</b> : menu « Voix » en haut de la page. Il faut un enregistrement de
-{SAMPLE_MIN_SECONDS} à {SAMPLE_MAX_SECONDS} secondes d'une seule personne qui parle naturellement, sans musique
-ni bruit de fond (fichier audio ou vidéo). La qualité de l'enregistrement (écho, souffle) se retrouve dans la
-voix produite.</p>
+{SAMPLE_MIN_SECONDS} à {SAMPLE_MAX_SECONDS} secondes d'une seule personne, sans musique ni bruit de fond
+(fichier audio ou vidéo). Le texte n'a pas besoin de contenir tous les sons du français : la voix de synthèse
+en garde le timbre, le débit et le ton. La personne peut lire ce texte :</p>
+{recording_guide()}
 <p class="note attention">L'<b>accord de la personne enregistrée</b> est obligatoire. Une voix utilisée par un
 projet ne peut pas être supprimée.</p>
 </section>

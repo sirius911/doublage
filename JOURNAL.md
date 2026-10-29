@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Prompteur pour enregistrer une voix
+- Demande de l'utilisateur : une phrase type à faire lire aux personnes qui enregistrent leur voix.
+  Rappel : l'échantillon ne sert pas à couvrir les phonèmes (le modèle connaît le français) mais au timbre,
+  au débit et au ton ; d'où un texte sur le ton d'un tutoriel plutôt qu'une phrase phonétiquement équilibrée.
+- Fait : texte d'environ 10 s affiché en grand (`RECORDING_TEXT`, `recording_guide()` dans `aide.py`) avec
+  quatre consignes, sur la page Voix (au-dessus du formulaire) et dans l'aide (« Les voix »).
+- Suite : vérifier sur la VM que la lecture tient en 10 s environ à débit naturel.
+
 ## 2026-10-29 — Voix créées coupées en plein mot
 - Constat de l'utilisateur après la mise en production : avec sa voix (cyrille, échantillon de 30 s) et charlie
   (15 s), des phrases sont coupées ; jamais avec estelle. Pas d'avertissement « without EOS » dans les journaux.

@@ -114,6 +114,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       générée est coupée quand l'échantillon est long (30 s → coupée vers 5 s, 20 s → dernier mot tronqué,
       10 et 15 s → complète) ; seules les 10 premières secondes de l'échantillon servent désormais (voix
       existantes comprises, sans les redéposer), et un nouvel échantillon est limité à 10 s
+- [x] Enregistrer une voix : texte à lire en grand (« prompteur », environ 10 s, ton d'un tutoriel) et
+      consignes (parler tout de suite, ton naturel, aller au bout, au calme avec le micro des tutoriels),
+      sur la page Voix et dans l'aide (section « Les voix »)
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

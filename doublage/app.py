@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import __version__, media
-from .aide import help_content
+from .aide import help_content, recording_guide
 from .assembly import MANUAL_SPEED_MAX, MANUAL_SPEED_MIN, Fit, fit, speed_factor
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
@@ -297,10 +297,10 @@ def voices_page(user: str, catalog: VoiceCatalog, error: str = "") -> str:
 <ul class="projets">{"".join(rows)}</ul>
 <h2>Ajouter une voix à partir d'un échantillon</h2>
 {message}
-<p><small>Un enregistrement de {SAMPLE_MIN_SECONDS} à {SAMPLE_MAX_SECONDS} secondes d'une seule personne
-qui parle naturellement, sans musique ni bruit de fond : la qualité de l'échantillon (écho, souffle)
-se retrouve dans la voix produite. Fichier audio ou vidéo ; seules les {SAMPLE_MAX_SECONDS} premières
-secondes sont gardées. L'échantillon reste sur le serveur de l'établissement.</small></p>
+<p><small>Un enregistrement de {SAMPLE_MIN_SECONDS} à {SAMPLE_MAX_SECONDS} secondes d'une seule personne,
+sans musique ni bruit de fond. Fichier audio ou vidéo ; seules les {SAMPLE_MAX_SECONDS} premières secondes
+sont gardées. L'échantillon reste sur le serveur de l'établissement.</small></p>
+{recording_guide()}
 <form method="post" action="/voix" enctype="multipart/form-data">
 <p><label>Nom de la voix<br><input name="nom" size="30" required></label></p>
 <p><label>Échantillon<br><input type="file" name="echantillon" accept="audio/*,video/*" required></label></p>

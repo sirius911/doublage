@@ -28,3 +28,11 @@ main { width: 100%; box-sizing: border-box; margin: 0 auto; padding: 1rem; }
 body.plein { height: 100vh; }
 body.plein .barre { position: static; }  /* la vidéo de l'éditeur reste en haut de l'écran */
 body.plein main { flex: 1; min-height: 0; display: flex; padding: .75rem 1rem; }
+
+/* Enregistrement d'une voix : texte à lire en grand, comme un prompteur (page Voix et aide). */
+.enregistrer ul { padding-left: 1.2em; font-size: .9em; }
+.enregistrer li { margin: .2rem 0; }
+.prompteur {
+  margin: .5rem 0; padding: 1rem 1.2rem; background: #f3f4f6; border-left: 4px solid #2563eb;
+  border-radius: .2rem; font-size: 1.5rem; line-height: 1.6;
+}

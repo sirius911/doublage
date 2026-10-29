@@ -439,6 +439,7 @@ def test_page_d_aide(client):
     for ancre in ["etapes", "depot", "editeur", "pastilles", "doublee", "voix", "astuces"]:
         assert f'<section id="{ancre}">' in page and f'href="#{ancre}"' in page
     assert "jusqu'à 15 %" in page
+    assert 'class="prompteur">Bonjour. Dans ce tutoriel' in page
 
 
 def test_page_des_voix(client, monkeypatch):
@@ -449,6 +450,7 @@ def test_page_des_voix(client, monkeypatch):
     login(client)
     page = client.get("/voix").text
     assert "Estelle" in page and "Alba" in page and 'name="accord"' in page and 'href="/voix"' in page
+    assert 'class="prompteur">Bonjour. Dans ce tutoriel' in page and "10 premières secondes" in page
 
     fichier = {"echantillon": ("moi.m4a", b"son", "audio/mp4")}
     r = client.post("/voix", data={"nom": "Cyrille"}, files=fichier)
