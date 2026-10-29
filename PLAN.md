@@ -51,6 +51,9 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [~] Stockage Podman rootless dédié (`/var/lib/containers/doublage/storage`), code dans `/srv/apps/doublage` — en place et vérifié (stockage, état d'exécution et verrous séparés de scribe)
 - [~] Choix d'un port libre (8091), réseau et volumes dédiés, aucune interférence avec ce-transcripteur-v2 et `scribe` — à vérifier au déploiement
 - [x] Essai réel du serveur Whisper avec l'audio d'une vidéo complète — OK sur 90 s, puis sur un vrai tutoriel d'un peu plus de 5 min (moins de 10 s de transcription) ; tutoriels de 5 min au plus : pas de recherche de la limite (délai d'attente de l'application : 15 min)
+- [x] Découpage en vraies phrases : sans consigne, Whisper renvoyait des tronçons de 2 s sans aucune ponctuation
+      (doublage haché) ; texte d'exemple ponctué (`prompt`, réglable) → phrases ponctuées, et regroupement des
+      tronçons restants d'une même phrase (15 s au plus, pas par-dessus un silence de plus de 1 s)
 - [~] Ressources : synthèse limitée à 2 cœurs et en priorité basse (cgroups v1 : `--cpus`/`--memory` ignorés, voir Q9)
 - [~] Documentation d'installation sur la VM (Podman sans droits root ; une préparation initiale par l'administrateur) — écrite, à éprouver
 - [x] Démarrage automatique avec la VM (service systemd modèle `deploiement/doublage@.service`) + script `deploiement/mettre-a-jour` — installés et vérifiés sur la VM (redémarrage de la VM pas encore éprouvé)

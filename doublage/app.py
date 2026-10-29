@@ -67,7 +67,7 @@ def get_transcriber() -> Transcriber:
     if settings.simuler:
         return FakeTranscriber()
     return WhisperApiTranscriber(settings.whisper_url, settings.whisper_language,
-                                 settings.whisper_model, settings.whisper_timeout)
+                                 settings.whisper_model, settings.whisper_timeout, settings.whisper_prompt)
 
 
 @lru_cache

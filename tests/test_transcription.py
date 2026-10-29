@@ -2,8 +2,9 @@ import httpx
 import pytest
 
 from doublage.transcription import (
-    FakeTranscriber, TranscriptionError, WhisperApiTranscriber, parse_verbose_json,
+    FakeTranscriber, TranscriptionError, WhisperApiTranscriber, parse_verbose_json, regroup,
 )
+from doublage.segments import Segment, Transcript
 
 REPONSE = {
     "text": "Bonjour. Ouvrez le menu.",
@@ -47,7 +48,10 @@ def test_appel_api(tmp_path):
     corps = recu["corps"]
     assert b'name="file"; filename="a.wav"' in corps
     assert b"verbose_json" in corps and b'name="language"' in corps
-    assert b'name="model"' not in corps
+    assert b'name="model"' not in corps and b'name="prompt"' not in corps
+
+    WhisperApiTranscriber("http://whisper/", prompt="Bonjour, voici un exemple.", client=client).transcribe(audio)
+    assert 'name="prompt"\r\n\r\nBonjour, voici un exemple.'.encode() in recu["corps"]
 
 
 def test_erreur_serveur(tmp_path):
@@ -80,3 +84,19 @@ def test_timecodes_arrondis_a_la_milliseconde():
     t = parse_verbose_json({"duration": 20.0, "segments": [
         {"start": 6.1000000000000005, "end": 14.780000000000001, "text": "Ensuite."}]})
     assert (t.segments[0].start, t.segments[0].end) == (6.1, 14.78)
+
+
+def test_regroupement_des_troncons_d_une_phrase():
+    t = regroup(Transcript(30.0, [
+        Segment(0, 0.0, 2.0, "Ouvrez", "Ouvrez"),
+        Segment(1, 2.0, 3.5, "le menu.", "le menu."),  # fin de phrase
+        Segment(2, 3.5, 5.0, "Puis cliquez", "Puis cliquez"),
+        Segment(3, 6.5, 8.0, "sur Valider.", "sur Valider."),  # silence de 1,5 s : pas réunis
+        Segment(4, 8.0, 15.0, "Une phrase", "Une phrase"),
+        Segment(5, 15.0, 24.0, "trop longue", "trop longue"),  # dépasserait 15 s : pas réunis
+    ]))
+    assert [(s.id, s.start, s.end, s.text) for s in t.segments] == [
+        (0, 0.0, 3.5, "Ouvrez le menu."), (1, 3.5, 5.0, "Puis cliquez"), (2, 6.5, 8.0, "sur Valider."),
+        (3, 8.0, 15.0, "Une phrase"), (4, 15.0, 24.0, "trop longue"),
+    ]
+    assert t.segments[0].original_text == "Ouvrez le menu." and t.duration == 30.0

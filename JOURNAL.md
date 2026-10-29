@@ -2,6 +2,17 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Whisper : ponctuation et vraies phrases
+- Constat sur le tutoriel de 5 min (vidéo 4) : 134 tronçons de 2 s en médiane, collés les uns aux autres,
+  aucune ponctuation → synthèse hachée (chaque morceau prononcé comme une phrase), voix d'origine coupée
+  en pleine phrase. Diagnostic par chiffres seuls, sans faire sortir le texte de l'établissement.
+- Essai sur la VM : avec un texte d'exemple ponctué (`prompt`), 56 phrases dont 52 ponctuées, médiane 3,9 s.
+- Fait : `prompt` envoyé à Whisper (`DOUBLAGE_WHISPER_PROMPT`, texte neutre par défaut) ; regroupement des
+  tronçons d'une même phrase (15 s au plus, pas par-dessus un silence de plus de 1 s). Q10 en partie traitée.
+- Projets existants : pas de regroupement après coup ; l'utilisateur relance la transcription de la vidéo 4.
+- À vérifier : le texte par défaut diffère un peu de celui de l'essai (sans « messagerie »), refaire les
+  statistiques après la relance ; surveiller que des mots du prompt n'apparaissent pas sur des silences.
+
 ## 2026-10-28 — Nom de la voix sur la vidéo doublée, case « voix d'origine »
 - Deux idées intégrées (Phase 6) et réalisées.
 - Vidéo doublée : « (générée le … avec la voix X) ». Le nom est noté à côté de la vidéo

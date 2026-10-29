@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Nom du modèle à transmettre au serveur, si celui-ci l'exige (champ `model`).
     whisper_model: str | None = None
     whisper_timeout: float = 900.0
+    # Texte d'exemple ponctué : sans lui, le serveur renvoie des tronçons de 2 s sans aucune ponctuation ;
+    # avec lui, de vraies phrases ponctuées (essai sur un tutoriel de 5 min : 134 tronçons → 56 phrases).
+    whisper_prompt: str = ("Bonjour, et bienvenue dans ce tutoriel. Aujourd'hui, nous allons voir comment "
+                           "faire, étape par étape. Cliquez sur le bouton « Valider », en bas à droite.")
 
     # Synthèse vocale Pocket TTS.
     tts_language: str = "french"

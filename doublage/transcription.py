@@ -29,17 +29,40 @@ def parse_verbose_json(data: dict) -> Transcript:
         end = round(min(float(raw["end"]), duration), 3)
         text = raw["text"].strip()
         segments.append(Segment(id=len(segments), start=start, end=end, original_text=text, text=text))
-    return Transcript(duration=duration, segments=segments)
+    return regroup(Transcript(duration=duration, segments=segments))
+
+
+SENTENCE_END = (".", "?", "!", "…")
+
+
+def regroup(transcript: Transcript, max_duration: float = 15.0, max_gap: float = 1.0) -> Transcript:
+    """Réunit les tronçons consécutifs d'une même phrase (Whisper coupe parfois en pleine phrase).
+
+    On ajoute le tronçon suivant tant que le texte ne finit pas par une ponctuation de fin, sans dépasser
+    `max_duration` ni enjamber un silence de plus de `max_gap` (la voix resterait calée sur l'image).
+    """
+    merged: list[Segment] = []
+    for s in transcript.segments:
+        last = merged[-1] if merged else None
+        if (last and not last.text.endswith(SENTENCE_END) and s.start - last.end <= max_gap
+                and s.end - last.start <= max_duration):
+            last.end = s.end
+            last.text = last.original_text = f"{last.text} {s.text}"
+        else:
+            merged.append(Segment(id=len(merged), start=s.start, end=s.end,
+                                  original_text=s.original_text, text=s.text))
+    return Transcript(duration=transcript.duration, segments=merged)
 
 
 class WhisperApiTranscriber:
     """Serveur Whisper interne, API compatible OpenAI (`/v1/audio/transcriptions`)."""
 
     def __init__(self, url: str, language: str = "fr", model: str | None = None,
-                 timeout: float = 900.0, client: httpx.Client | None = None):
+                 timeout: float = 900.0, prompt: str | None = None, client: httpx.Client | None = None):
         self.url = url
         self.language = language
         self.model = model
+        self.prompt = prompt
         # Serveur interne : on ignore les variables http_proxy de la VM, sinon la requête
         # partirait vers le proxy de l'établissement.
         self.client = client or httpx.Client(timeout=timeout, trust_env=False)
@@ -48,6 +71,8 @@ class WhisperApiTranscriber:
         fields = {"language": self.language, "response_format": "verbose_json"}
         if self.model:
             fields["model"] = self.model
+        if self.prompt:
+            fields["prompt"] = self.prompt
         try:
             with audio.open("rb") as f:
                 response = self.client.post(
