@@ -4,8 +4,11 @@
 from .voices import SAMPLE_MAX_SECONDS, SAMPLE_MIN_SECONDS
 
 
-def help_content(max_speed: float) -> str:
+def help_content(max_speed: float, min_speed: float = 1.0) -> str:
     speed = round((max_speed - 1) * 100)
+    slower = round((1 - min_speed) * 100)
+    slowed = (f" Une voix nettement plus courte que l'original est légèrement ralentie (jusqu'à {slower} %) "
+              f"pour mieux le suivre." if slower > 0 else "")
     acceleration = (f"légèrement accélérée (jusqu'à {speed} %, sans changer la hauteur de la voix)"
                     if speed > 0 else "décalée")
     return f"""<link rel="stylesheet" href="/static/aide.css">
@@ -101,7 +104,7 @@ timbre changent alors pour cette phrase ; elle est coupée au début de la phras
 <p>Dès qu'une phrase a sa voix de synthèse, une pastille indique si cette voix tient dans le temps de la
 phrase d'origine, pour rester calée sur l'image. Survolez-la pour le détail.</p>
 <table class="pastilles">
-<tr><td><span class="pastille vert">●</span></td><td><b>Ça tient.</b> Rien à faire.</td></tr>
+<tr><td><span class="pastille vert">●</span></td><td><b>Ça tient.</b> Rien à faire.{slowed}</td></tr>
 <tr><td><span class="pastille orange">●</span></td><td><b>Corrigé automatiquement.</b> La voix déborde un peu sur
 le silence qui suit, ou elle est {acceleration}. En général, rien à faire.</td></tr>
 <tr><td><span class="pastille rouge">●</span></td><td><b>Trop longue.</b> Même corrigée, elle empiète sur la

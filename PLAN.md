@@ -86,7 +86,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       doublée (pas de voix de synthèse pour elle)
 - [x] Hallucinations de Whisper (une phrase répétée en boucle sur un silence) écartées à la transcription
 - [x] Phrase effacée : texte vidé dans l'éditeur → ni voix ni sous-titre, phrase grisée, ↺ pour la rétablir
-- [ ] Ralentissement automatique (10 % au plus, réglable) d'une voix qui finit nettement avant la phrase
+- [x] Ralentissement automatique (10 % au plus, réglable) d'une voix qui finit nettement avant la phrase
       d'origine, symétrique de l'accélération
 
 ## Idées pour plus tard

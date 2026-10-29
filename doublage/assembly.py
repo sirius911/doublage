@@ -22,11 +22,15 @@ def _s(seconds: float) -> str:
     return f"{seconds:.1f}".replace(".", ",") + " s"
 
 
-def speed_factor(segment: Segment, slot_end: float, voice_duration: float, max_speed: float) -> float:
+def speed_factor(segment: Segment, slot_end: float, voice_duration: float, max_speed: float,
+                 min_speed: float = 1.0) -> float:
     """Accélération nécessaire pour que la voix finisse avant la phrase suivante, plafonnée à `max_speed`.
 
-    1.0 si la voix tient déjà (au besoin en débordant sur le silence qui suit).
+    Une voix nettement plus courte que la phrase d'origine est ralentie pour s'en rapprocher, jusqu'à
+    `min_speed` (0.9 = 10 % plus lente). 1.0 si la voix tient déjà (au besoin en débordant sur le silence).
     """
+    if 0 < voice_duration < segment.duration - FIT_TOLERANCE:
+        return max(voice_duration / segment.duration, min_speed)
     available = slot_end - segment.start
     if available <= 0 or voice_duration <= available + FIT_TOLERANCE:
         return 1.0
@@ -34,14 +38,16 @@ def speed_factor(segment: Segment, slot_end: float, voice_duration: float, max_s
 
 
 def fit(segment: Segment, slot_end: float, voice_duration: float,
-        max_speed: float = 1.0) -> tuple[Fit, str]:
+        max_speed: float = 1.0, min_speed: float = 1.0) -> tuple[Fit, str]:
     """La voix synthétique tient-elle dans son créneau ? Renvoie le niveau et une explication.
 
     `slot_end` : début de la phrase suivante (ou fin de la vidéo pour la dernière).
     """
     voice, original = _s(voice_duration), _s(segment.duration)
     if voice_duration <= segment.duration + FIT_TOLERANCE:
-        return Fit.OK, f"La voix ({voice}) tient dans la phrase d'origine ({original})."
+        slower = round((1 - speed_factor(segment, slot_end, voice_duration, max_speed, min_speed)) * 100)
+        slowed = f" Elle sera ralentie de {slower} % pour mieux suivre l'original." if slower > 0 else ""
+        return Fit.OK, f"La voix ({voice}) tient dans la phrase d'origine ({original}).{slowed}"
     if segment.start + voice_duration - slot_end <= FIT_TOLERANCE:
         return Fit.OVERFLOW, (f"La voix ({voice}) dépasse la phrase d'origine ({original}) "
                               f"mais finit avant la phrase suivante.")
@@ -57,20 +63,29 @@ def fit(segment: Segment, slot_end: float, voice_duration: float,
 
 
 def fit_clips(transcript: Transcript, clips: list[tuple[int, float, np.ndarray]], sample_rate: int,
-              max_speed: float, change_tempo) -> tuple[list[tuple[int, float, np.ndarray]], int]:
-    """Accélère légèrement les voix qui empiètent sur la phrase suivante. Renvoie (clips, nombre accélérés)."""
+              max_speed: float, change_tempo, min_speed: float = 1.0
+              ) -> tuple[list[tuple[int, float, np.ndarray]], int, int]:
+    """Accélère légèrement les voix qui empiètent sur la phrase suivante, ralentit celles qui finissent
+    nettement avant la phrase d'origine. Renvoie (clips, nombre accélérés, nombre ralentis).
+
+    Le son d'origine (phrases « voix d'origine ») n'est jamais modifié.
+    """
     segments = {s.id: s for s in transcript.segments}
-    fitted, accelerated = [], 0
+    fitted, accelerated, slowed = [], 0, 0
     for segment_id, start, audio in clips:
         segment = segments.get(segment_id)
         speed = 1.0
-        if segment is not None:
-            speed = speed_factor(segment, transcript.slot_end(segment), len(audio) / sample_rate, max_speed)
-        if speed > 1.005:
+        if segment is not None and not segment.keep_original:
+            speed = speed_factor(segment, transcript.slot_end(segment), len(audio) / sample_rate,
+                                 max_speed, min_speed)
+        if abs(speed - 1) > 0.005:
             audio = change_tempo(audio, sample_rate, speed)
-            accelerated += 1
+            if speed > 1:
+                accelerated += 1
+            else:
+                slowed += 1
         fitted.append((segment_id, start, audio))
-    return fitted, accelerated
+    return fitted, accelerated, slowed
 
 
 @dataclass

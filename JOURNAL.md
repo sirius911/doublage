@@ -2,6 +2,21 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Hallucinations, phrase effacée, ralentissement
+- Après relance de la vidéo 4 avec le prompt : 43 phrases (médiane 7 s, max 21 s, 36 ponctuées, aucune
+  d'un ou deux mots). Décalage acceptable à l'écoute sur les phrases longues : découpe (Q10) toujours repoussée.
+- Hallucination vue en fin de vidéo (une phrase répétée en boucle sur un silence) → filtre à la transcription :
+  taux de compression du texte > 2,4 (seuil de Whisper), sur les tronçons puis sur les phrases regroupées.
+  Marge mesurée : parole répétitive réelle ~1,6 ; la boucle observée ~10.
+- Phrase effacée : texte vidé → ni voix ni sous-titre, grisée avec une indication, ↺ la rétablit.
+- Ralentissement automatique d'une voix nettement plus courte que la phrase d'origine, jusqu'à 10 %
+  (`DOUBLAGE_VITESSE_MIN`, 0.9 par défaut) ; jamais sur le son d'origine ; indiqué au survol de la pastille.
+  Attention : les timecodes de Whisper étant collés, la « durée d'origine » inclut la pause qui suit ;
+  beaucoup de phrases seront ralenties jusqu'au plafond. À juger à l'écoute.
+- « ▶ Voix » joue la voix brute (sans ralentissement ni accélération) ; l'aperçu de la vidéo doublée, si.
+- Suite : essai sur la VM ; le filtre ne vaut que pour les nouvelles transcriptions (vidéo 4 : effacer la
+  phrase inventée à la main).
+
 ## 2026-10-29 — Whisper : ponctuation et vraies phrases
 - Constat sur le tutoriel de 5 min (vidéo 4) : 134 tronçons de 2 s en médiane, collés les uns aux autres,
   aucune ponctuation → synthèse hachée (chaque morceau prononcé comme une phrase), voix d'origine coupée

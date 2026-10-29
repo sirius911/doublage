@@ -104,10 +104,14 @@ def _original_audio(video: Path, workdir: Path, sample_rate: int) -> np.ndarray:
 
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
             sample_rate: int, workdir: Path, output: Path, progress: Progress,
-            max_speed: float, burn_subtitles: bool = False, threads: int = 2) -> list[Placement]:
-    clips, accelerated = fit_clips(transcript, clips, sample_rate, max_speed, media.change_tempo)
+            max_speed: float, burn_subtitles: bool = False, threads: int = 2,
+            min_speed: float = 1.0) -> list[Placement]:
+    clips, accelerated, slowed = fit_clips(transcript, clips, sample_rate, max_speed, media.change_tempo,
+                                           min_speed)
     if accelerated:
         progress(f"{accelerated} phrase(s) légèrement accélérée(s) pour tenir dans leur créneau.")
+    if slowed:
+        progress(f"{slowed} phrase(s) légèrement ralentie(s) pour mieux suivre l'original.")
     progress("Assemblage de la bande son…")
     total = max(transcript.duration, media.probe_duration(video))
     track, placements = assemble(clips, total, sample_rate)
@@ -132,7 +136,7 @@ def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, n
 
 def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
               synthesizer: Synthesizer, progress: Progress = print,
-              max_speed: float = 1.0) -> list[Placement]:
+              max_speed: float = 1.0, min_speed: float = 1.0) -> list[Placement]:
     """Doublage d'un seul tenant (ligne de commande) : toutes les phrases sont synthétisées."""
     clips = []
     for i, seg in enumerate(transcript.segments, 1):
@@ -143,14 +147,16 @@ def dub_video(video: Path, transcript: Transcript, workdir: Path, output: Path,
         seg.status = Status.SYNTHESIZED
         clips.append((seg.id, seg.start, audio))
     transcript.save(workdir / "segments.json")
-    return _render(video, transcript, clips, synthesizer.sample_rate, workdir, output, progress, max_speed)
+    return _render(video, transcript, clips, synthesizer.sample_rate, workdir, output, progress, max_speed,
+                   min_speed=min_speed)
 
 
 def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesizer,
                 progress: Progress = print, max_speed: float = 1.0,
                 synthesis_lock: AbstractContextManager = nullcontext(),
                 transcript_lock: AbstractContextManager = nullcontext(),
-                burn_subtitles: bool = False, threads: int = 2, voice_label: str = "") -> list[Placement]:
+                burn_subtitles: bool = False, threads: int = 2, voice_label: str = "",
+                min_speed: float = 1.0) -> list[Placement]:
     """Doublage d'un projet corrigé dans l'éditeur.
 
     Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
@@ -185,7 +191,7 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         clips += [(s.id, s.start, original_clip(original, sample_rate, transcript, s)) for s in kept]
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
     placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed,
-                         burn_subtitles, threads)
+                         burn_subtitles, threads, min_speed)
     partial.replace(output)  # l'ancienne vidéo reste téléchargeable jusqu'au bout
     marker = burned_subtitles_marker(output)
     if burn_subtitles:

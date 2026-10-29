@@ -59,6 +59,7 @@ def sans_ffmpeg(monkeypatch):
     """Remplace les appels à ffmpeg : la « vidéo doublée » est la bande son elle-même."""
     monkeypatch.setattr(media, "probe_duration", lambda video: 5.0)
     monkeypatch.setattr(media, "replace_audio", lambda video, audio, output: output.write_bytes(audio.read_bytes()))
+    monkeypatch.setattr(media, "change_tempo", lambda audio, sr, vitesse: audio)
 
 
 def test_doublage_d_un_projet_reprend_les_voix_a_jour(tmp_path, monkeypatch):

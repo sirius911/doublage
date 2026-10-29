@@ -25,7 +25,8 @@ def cmd_traiter(args: argparse.Namespace) -> None:
         synthesizer = PocketEngine(settings.tts_language, settings.tts_threads).voice(settings.tts_voice)
 
     transcript = transcribe_video(video, workdir, transcriber)
-    dub_video(video, transcript, workdir, output, synthesizer, max_speed=settings.acceleration_max)
+    dub_video(video, transcript, workdir, output, synthesizer, max_speed=settings.acceleration_max,
+              min_speed=settings.vitesse_min)
 
 
 def cmd_serveur(args: argparse.Namespace) -> None:

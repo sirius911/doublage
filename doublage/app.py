@@ -329,7 +329,7 @@ def add_voice(user: User, catalog: Catalog, nom: Annotated[str, Form()], echanti
 
 @app.get("/aide", response_class=HTMLResponse)
 def help_page(user: User) -> str:
-    return page("Aide — Doublage", help_content(get_settings().acceleration_max), width=52,
+    return page("Aide — Doublage", help_content(get_settings().acceleration_max, get_settings().vitesse_min), width=52,
                 bar=header(user, '<span>›</span><span class="titre">Aide</span>'))
 
 
@@ -419,7 +419,7 @@ def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tup
     if not path.exists():
         return None
     return fit(segment, transcript.slot_end(segment), media.wav_duration(path),
-               get_settings().acceleration_max)
+               get_settings().acceleration_max, get_settings().vitesse_min)
 
 
 def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
@@ -596,7 +596,8 @@ def start_dubbing(user: User, project: CurrentProject, jobs: Jobs, catalog: Cata
                                              progress, get_settings().acceleration_max,
                                              _synthesis_lock, _transcript_lock,
                                              sous_titres, get_settings().tts_threads,
-                                             catalog.for_project(project.voice).label))
+                                             catalog.for_project(project.voice).label,
+                                             get_settings().vitesse_min))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
 
 
