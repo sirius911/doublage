@@ -5,6 +5,11 @@ from typing import Protocol
 
 import numpy as np
 
+# Durée de l'échantillon d'une voix donnée au modèle. Au-delà, la phrase générée est coupée en plein mot
+# (mesuré sur la VM : 30 s d'échantillon → coupée vers 5 s ; 20 s → dernier mot tronqué ; 10 et 15 s → complète).
+# L'échantillon et la phrase semblent se partager une longueur maximale : on garde de la marge.
+VOICE_PROMPT_SECONDS = 10
+
 
 class Synthesizer(Protocol):
     sample_rate: int
@@ -53,16 +58,26 @@ class PocketEngine:
 
     def _state(self, voice: str):
         """État de la voix. Celui d'un échantillon (WAV) est long à calculer : il est exporté une fois
-        en .safetensors à côté du WAV, pour chaque modèle (french, french_24l…), puis relu."""
+        en .safetensors à côté du WAV, pour chaque modèle (french, french_24l…), puis relu.
+
+        Seules les `VOICE_PROMPT_SECONDS` premières secondes de l'échantillon sont utilisées (les voix
+        ajoutées avant cette limite gardent un échantillon plus long)."""
         sample = Path(voice)
         if sample.suffix != ".wav":
             return self.model.get_state_for_audio_prompt(voice)
-        cache = sample.with_name(f"{sample.stem}.{self.language}.safetensors")
+        cache = sample.with_name(f"{sample.stem}.{self.language}.{VOICE_PROMPT_SECONDS}s.safetensors")
         if not cache.exists():
+            import torch
             from pocket_tts import export_model_state
 
-            partial = cache.with_name(f"{sample.stem}.{self.language}.partiel.safetensors")
-            export_model_state(self.model.get_state_for_audio_prompt(str(sample)), str(partial))
+            from .media import read_wav
+
+            audio, sample_rate = read_wav(sample)
+            if sample_rate != self.model.sample_rate:
+                raise ValueError(f"Échantillon à {sample_rate} Hz, {self.model.sample_rate} Hz attendus : {sample}")
+            prompt = torch.from_numpy(audio[:VOICE_PROMPT_SECONDS * sample_rate].copy())[None]
+            partial = cache.with_name(f"{cache.stem}.partiel.safetensors")
+            export_model_state(self.model.get_state_for_audio_prompt(prompt), str(partial))
             partial.replace(cache)
         return self.model.get_state_for_audio_prompt(str(cache))
 

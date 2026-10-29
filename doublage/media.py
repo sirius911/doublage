@@ -35,7 +35,7 @@ def extract_audio(video: Path, output: Path, sample_rate: int = 16000) -> Path:
     return output
 
 
-def prepare_voice_sample(source: Path, output: Path, max_seconds: float = 30,
+def prepare_voice_sample(source: Path, output: Path, max_seconds: float,
                          sample_rate: int = 24000) -> Path:
     """Échantillon de voix (fichier audio ou vidéo) en WAV mono, limité à ses `max_seconds` premières secondes."""
     _run([

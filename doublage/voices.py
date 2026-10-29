@@ -11,8 +11,9 @@ from pathlib import Path
 from typing import BinaryIO
 
 from . import media
+from .tts import VOICE_PROMPT_SECONDS
 
-SAMPLE_MAX_SECONDS = 30
+SAMPLE_MAX_SECONDS = VOICE_PROMPT_SECONDS  # au-delà, les phrases générées sont coupées
 SAMPLE_MIN_SECONDS = 3
 
 
@@ -84,7 +85,7 @@ class VoiceCatalog:
             with source.open("wb") as out:
                 shutil.copyfileobj(sample, out, length=1024 * 1024)
             try:
-                (prepare or media.prepare_voice_sample)(source, wav)
+                (prepare or media.prepare_voice_sample)(source, wav, SAMPLE_MAX_SECONDS)
             except media.MediaError:
                 raise VoiceError("Fichier illisible : déposez un enregistrement audio (ou une vidéo).")
             if media.wav_duration(wav) < SAMPLE_MIN_SECONDS:

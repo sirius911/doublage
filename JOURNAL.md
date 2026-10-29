@@ -2,6 +2,20 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Voix créées coupées en plein mot
+- Constat de l'utilisateur après la mise en production : avec sa voix (cyrille, échantillon de 30 s) et charlie
+  (15 s), des phrases sont coupées ; jamais avec estelle. Pas d'avertissement « without EOS » dans les journaux.
+- Essais sur la VM (même phrase, 2 essais par réglage) : seuil de fin (eos_threshold -4 → -2) et découpage
+  (max_tokens 50 → 20) sans effet ; écrire « Déixkaire » au lieu de « DXCARE » non plus. Ce qui compte, c'est la
+  longueur de l'échantillon : 30 s → coupée en plein mot vers 5 s ; 20 s → dernier mot tronqué ; 10 et 15 s →
+  phrase complète. L'échantillon et la phrase semblent se partager une longueur maximale.
+- Fait : seules les 10 premières secondes de l'échantillon sont données au modèle (`VOICE_PROMPT_SECONDS`),
+  état mis en cache sous un nouveau nom (`….french.10s.safetensors`) : les voix existantes en profitent sans
+  être redéposées. Nouvel échantillon limité à 10 s (texte de la page Voix et de l'aide suivent).
+- À faire par l'utilisateur : les phrases déjà générées avec ces voix restent coupées, à régénérer. Fichiers
+  d'essai dans `/srv/apps/doublage/data/essai-voix/` à supprimer ; anciens `*.french.safetensors` inutiles.
+- Suite : vérifier sur la VM des phrases longues (10–15 s) avec la voix cyrille.
+
 ## 2026-10-29 — Début des phrases recalé sur la parole
 - Idée/bug : vidéo où l'on ne parle qu'à 6 s, première phrase transcrite à 00:00 → voix de synthèse en
   avance, décalage rattrapé à la deuxième phrase. Comportement connu de Whisper (horodatage du début peu fiable).

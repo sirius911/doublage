@@ -22,7 +22,8 @@ def faux_echantillon(secondes):
 
     from doublage import media
 
-    def prepare(source, wav):
+    def prepare(source, wav, max_seconds):
+        assert max_seconds == 10  # au-delà, Pocket TTS coupe les phrases générées
         if source.read_bytes() == b"illisible":
             raise media.MediaError("format inconnu")
         return media.write_wav(wav, np.zeros(int(secondes * 24000), dtype=np.float32), 24000)

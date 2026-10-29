@@ -110,6 +110,10 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Fin des phrases recalée sur la parole : la fin donnée par Whisper inclut la pause qui suit, donc
       beaucoup de voix étaient ralenties jusqu'au plafond ; fin ramenée au dernier son réel (+ 0,2 s).
       Le créneau (jusqu'à la phrase suivante) ne change pas : la voix peut toujours déborder sur la pause
+- [x] Voix créées coupées en plein mot (cyrille, charlie ; estelle jamais) : mesuré sur la VM, la phrase
+      générée est coupée quand l'échantillon est long (30 s → coupée vers 5 s, 20 s → dernier mot tronqué,
+      10 et 15 s → complète) ; seules les 10 premières secondes de l'échantillon servent désormais (voix
+      existantes comprises, sans les redéposer), et un nouvel échantillon est limité à 10 s
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)
