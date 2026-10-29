@@ -171,6 +171,21 @@ EOF
 ```
 
 L'application répond sur `http://10.1.147.219:8091/`. Conteneur, réseau et volume sont nommés `doublage…`.
+
+Le pare-feu de la VM (firewalld) bloque le port tant qu'il n'est pas ouvert. Sans cette étape, le port ne
+répond qu'en local ou par un tunnel SSH. L'ouverture demande les droits `sudo` (administrateur) :
+
+```bash
+bash <<'EOF'
+IFACE=$(ip -o -4 addr show | awk '/10\.1\.147\.219/ {print $2}')
+ZONE=$(sudo firewall-cmd --get-zone-of-interface="$IFACE")
+sudo firewall-cmd --permanent --zone="$ZONE" --add-port=8091/tcp
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone="$ZONE" --list-ports
+EOF
+```
+
+Pour vérifier depuis un poste Windows : `Test-NetConnection 10.1.147.219 -Port 8091` (`TcpTestSucceeded : True`).
 Le service systemd est nécessaire parce que `podman-restart.service` ne connaît que le stockage par défaut.
 C'est un modèle (`doublage@<nom>`, `<nom>` = `DOUBLAGE_NOM` de `.env`), pour pouvoir faire tourner une
 instance de test à côté de la production.
