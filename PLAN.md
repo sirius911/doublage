@@ -93,6 +93,11 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Prononciation sans abîmer les sous-titres : notation `[écrit|prononcé]` dans le texte d'une phrase
       (sous-titres : « écrit », voix : « prononcé ») ; notation mal formée signalée dans la liste ; aide
       (choix de l'utilisateur parmi deux textes par phrase, glossaire commun, notation : la notation)
+- [x] Barre de titre (Doublage › …, Voix, Aide) toujours visible quand on fait défiler la page (aide, voix…)
+- [ ] Police et taille des sous-titres incrustés, réglées par projet à côté de la case « Sous-titres
+      incrustés » (polices installées dans le conteneur ; le SRT/VTT téléchargé reste stylé par le lecteur) ;
+      aperçu : une image de la vidéo, à l'instant affiché par le lecteur, avec le sous-titre gravé exactement
+      comme il le sera (même moteur ffmpeg), sans générer la vidéo
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

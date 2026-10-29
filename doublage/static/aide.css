@@ -3,7 +3,7 @@
 .aide { line-height: 1.55; color: #222; }
 .aide h1 { margin: .5rem 0 .3rem; }
 .aide h2 { margin: 2.2rem 0 .6rem; padding-bottom: .25rem; border-bottom: 2px solid #e5e7eb; font-size: 1.3rem; }
-.aide section { scroll-margin-top: 1rem; }
+.aide section { scroll-margin-top: 3.5rem; }  /* sous la barre de titre fixe */
 .chapeau { font-size: 1.1em; color: #444; }
 .note { background: #f3f4f6; border-left: 4px solid #9ca3af; padding: .5rem .8rem; border-radius: .2rem; }
 .note.attention { border-left-color: #ef8a00; background: #fff7e6; }

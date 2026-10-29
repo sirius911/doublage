@@ -4,9 +4,11 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
-- dans la page d'aide le haut, contenant Doublage > Aide et à droite Voix etc... doit rester visible meme en scrollant vers le bas
+-
 
 ## Intégrées
+- Haut de la page d'aide toujours visible en défilant → PLAN Phase 6 (barre de titre fixe, toutes les pages)
+- Choix de la police et de la taille des sous-titres, avec aperçu sur la vidéo → PLAN Phase 6 (sous-titres incrustés, par projet)
 - Mot écrit phonétiquement pour la voix mais correct dans les sous-titres → PLAN Phase 6 (notation [écrit|prononcé])
 - Nom de la voix après la date de génération de la vidéo doublée → PLAN Phase 6
 - Case par phrase pour garder la voix d'origine → PLAN Phase 6

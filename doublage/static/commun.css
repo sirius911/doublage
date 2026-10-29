@@ -4,6 +4,7 @@ body { font-family: system-ui, sans-serif; display: flex; flex-direction: column
 .barre {
   display: flex; align-items: center; gap: .8rem; flex: none;
   padding: .5rem 1rem; background: #f3f4f6; border-bottom: 1px solid #ddd;
+  position: sticky; top: 0; z-index: 10;  /* reste visible quand la page défile */
 }
 .barre .marque { font-weight: 600; color: inherit; text-decoration: none; }
 .barre .titre { font-weight: 600; }
