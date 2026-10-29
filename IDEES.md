@@ -4,7 +4,7 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
--
+- Quand je modifie une phrase pour que la voix la dise correctement , en écrivant un mot phonétiquement, j'aimerai que la phrase de sous-titrage, elle reste avec le mot correctement écrit.
 
 ## Intégrées
 - Nom de la voix après la date de génération de la vidéo doublée → PLAN Phase 6

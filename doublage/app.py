@@ -486,8 +486,7 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 </div>
 <div class="sous-video">
 {voice_choice(project, catalog)}
-<p><small>Pause pour corriger le texte sur l'image ; corrections enregistrées automatiquement.
-<a href="/aide#editeur">Aide</a> <span id="enregistrement"></span></small></p>
+<p><small id="enregistrement"></small></p>
 {dubbing_section(project, job)}
 </div>
 </div>
