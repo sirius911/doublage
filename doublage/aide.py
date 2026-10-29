@@ -53,9 +53,10 @@ droite.</p>
   <div class="mini-gauche">
     <div class="mini-ecran">
       <span class="repere r1">1</span>
-      <div class="mini-texte">Cliquez sur le bouton Enregistrer.</div>
+      <div class="mini-texte">Ceci est un tutoriel sur…</div>
     </div>
-    <div class="mini-ligne"><span class="repere r4">4</span>Voix : <span class="mini-select">Estelle ▾</span></div>
+    <div class="mini-ligne"><span class="repere r4">4</span>Voix : <span class="mini-select">Estelle ▾</span>
+      <span class="mini-son"><span class="repere r6">6</span>Son : ◉ original ○ nouvelle voix</span></div>
     <div class="mini-ligne"><span class="repere r5">5</span><b>Vidéo doublée</b></div>
   </div>
   <div class="mini-phrases">
@@ -64,7 +65,7 @@ droite.</p>
       <span class="mini-actions"><span class="bouton">▶ Original</span><span class="bouton">▶ Voix</span>
       <span class="pastille vert">●</span> <small>voix à jour</small></span></div>
     <div class="mini-phrase en-cours"><span class="tc"><span class="repere r2">2</span>00:04</span>
-      <span>Cliquez sur le bouton Enregistrer.</span>
+      <span>Ceci est un tutoriel sur…</span>
       <span class="mini-actions"><span class="repere r3">3</span><span class="bouton">▶ Original</span>
       <span class="bouton">▶ Voix</span></span></div>
     <div class="mini-phrase"><span class="tc">00:09</span><span>La fenêtre se ferme.</span>
@@ -82,10 +83,13 @@ corriger.</li>
 liste. Cliquer sur une phrase place la vidéo à ce moment ; la phrase en cours est surlignée en jaune et la
 liste la suit pendant la lecture.</li>
 <li><span class="repere">3</span><b>Écouter.</b> <span class="bouton">▶ Original</span> rejoue la phrase
-d'origine ; <span class="bouton">▶ Voix</span> fait entendre la voix de synthèse (créée en quelques secondes la
-première fois).</li>
+d'origine ; <span class="bouton">▶ Voix</span> fait entendre la voix de synthèse (cela peut prendre
+plusieurs secondes la première fois).</li>
 <li><span class="repere">4</span><b>Voix du projet</b> : voir <a href="#voix">Les voix</a>.</li>
 <li><span class="repere">5</span><b>Vidéo doublée</b> : voir <a href="#doublee">plus bas</a>.</li>
+<li><span class="repere">6</span><b>Son de la vidéo</b> (une fois la vidéo doublée générée) : « nouvelle voix »
+fait jouer la vidéo doublée dans l'éditeur, avec le texte et la liste toujours synchronisés ; « original »
+revient au son d'origine.</li>
 </ol>
 <p class="note">Les corrections sont <b>enregistrées automatiquement</b> (« Enregistré. » s'affiche un instant en bas
 à droite de la fenêtre). Survolez une phrase pour voir son texte d'origine ; le petit <b>↺</b> sous l'heure d'une phrase
@@ -123,8 +127,6 @@ l'autre rend la voix plus naturelle. La vitesse choisie s'affiche après la past
 <h2>Générer et télécharger la vidéo doublée</h2>
 <figure class="schema">
 <div class="mini-doublee">
-  <div>Son de la vidéo : <label><input type="radio" disabled checked> original</label>
-  <label><input type="radio" disabled> nouvelle voix (aperçu)</label></div>
   <div class="mini-generer"><span class="bouton">Mettre à jour la vidéo doublée</span>
   <label><input type="checkbox" disabled> Sous-titres incrustés</label></div>
   <div><span class="lien">Télécharger la vidéo doublée</span> <small>(générée le 28/10/2026 à 10:15 avec la voix Estelle)</small><br>
@@ -133,16 +135,11 @@ l'autre rend la voix plus naturelle. La vitesse choisie s'affiche après la past
 </div>
 </figure>
 <ul>
-<li><span class="bouton">Générer la vidéo doublée</span> crée la voix des phrases qui n'en ont pas encore
-(les voix déjà écoutées sont reprises telles quelles), puis assemble la vidéo. Vous pouvez continuer à corriger
-pendant ce temps.</li>
-<li><b>Aperçu</b> : « nouvelle voix » fait jouer la vidéo doublée dans l'éditeur, avec le texte et la liste
-toujours synchronisés.</li>
-<li><b>Sous-titres incrustés</b> : le texte corrigé est gravé dans l'image. Toute l'image doit alors être
-recalculée : comptez en plus environ un quart de la durée de la vidéo. La case cochée, choisissez la
-<b>police</b> et la <b>taille</b>, puis <span class="bouton">Aperçu sur l'image</span> : la vidéo affiche, à
-l'instant où elle est arrêtée, la phrase telle qu'elle sera gravée (cliquez sur l'image pour revenir).
-Le choix est retenu pour le projet.</li>
+<li><span class="bouton">Générer la vidéo doublée</span> génère le fichier vidéo avec la voix sélectionnée.
+Les voix déjà générées ne sont pas refaites : seules les phrases nouvelles ou corrigées le sont.</li>
+<li><b>Sous-titres incrustés</b> : le texte est gravé dans l'image (comptez en plus environ un quart de la durée
+de la vidéo). Choisissez la <b>police</b> et la <b>taille</b> ; <span class="bouton">Aperçu sur l'image</span>
+montre le résultat à l'endroit où la vidéo est arrêtée.</li>
 <li>Après une correction, un message orange le signale : cliquez sur <span class="bouton">Mettre à jour la
 vidéo doublée</span> pour en tenir compte.</li>
 <li>Également disponibles : la <b>voix seule</b> (fichier WAV) et les <b>sous-titres</b> (SRT ou VTT, pour les
@@ -167,9 +164,9 @@ projet ne peut pas être supprimée.</p>
 <p>Pour qu'un mot soit bien prononcé sans abîmer les sous-titres, écrivez entre crochets le mot
 <b>tel qu'il doit s'afficher</b>, une barre <b>|</b>, puis le mot <b>tel qu'il doit être dit</b> :</p>
 <div class="schema">
-<p><code>Ouvrez [Zimbra|Zimm-bra] puis le [CHP|C. H. P.].</code></p>
-<p>Sous-titres : « Ouvrez Zimbra puis le CHP. »<br>
-Voix : « Ouvrez Zimm-bra puis le C. H. P. »</p>
+<p><code>Ouvrez [Zimbra|Ziimbra] puis [DXCare|Déixkaire].</code></p>
+<p>Sous-titres : « Ouvrez Zimbra puis DXCare. »<br>
+Voix : « Ouvrez Ziimbra puis Déixkaire. »</p>
 </div>
 <p>Réécoutez avec <span class="bouton">▶ Voix</span> et ajustez la partie prononcée jusqu'à ce que ce soit
 juste (tirets, points entre les lettres d'un sigle, accents…). Si un crochet ou la barre manque, la phrase est

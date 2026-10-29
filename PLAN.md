@@ -100,7 +100,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       comme il le sera (même moteur ffmpeg), sans générer la vidéo
 - [x] Éditeur : « Son de la vidéo : original / nouvelle voix (aperçu) » déplacé sur la ligne « Voix : … »,
       à droite sous la vidéo (sous « Vidéo doublée », on le croyait lié au bouton de génération)
-- [ ] Aide : exemples (« Ceci est un tutoriel sur… », prononciation Zimbra / DXCare), « ▶ Voix » (peut prendre
+- [x] Aide : exemples (« Ceci est un tutoriel sur… », prononciation Zimbra / DXCare), « ▶ Voix » (peut prendre
       plusieurs secondes la première fois), génération décrite simplement, sous-titres incrustés simplifiés,
       aperçu « nouvelle voix » décrit avec la ligne Voix
 

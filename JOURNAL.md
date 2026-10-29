@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Petites corrections de l'éditeur et de l'aide
+- Éditeur : « Son de la vidéo : original / nouvelle voix (aperçu) » sur la ligne de la voix, à droite sous la
+  vidéo (sous « Vidéo doublée », on le croyait lié au bouton de génération) ; remplacé à chaque génération.
+- Aide : exemples (« Ceci est un tutoriel sur… », [Zimbra|Ziimbra] / [DXCare|Déixkaire]), génération et
+  sous-titres incrustés décrits plus simplement, repère 6 « Son de la vidéo » dans le schéma de l'éditeur.
+- Masquage (flou) de zones de la vidéo évoqué : faisable (rectangle fixe entre deux timecodes), reporté
+  tant qu'il n'y a pas de demande ; pour des données patients, tourner sur les serveurs de test.
+
 ## 2026-10-29 — Accès direct au port 8091, barre fixe, police des sous-titres avec aperçu
 - Accès sans tunnel SSH impossible depuis le réseau interne : le pare-feu de la VM (firewalld) n'ouvrait que
   22, 8000 et 9090. Port 8091 ouvert par l'administrateur ; étape ajoutée au README (installation, étape 5).

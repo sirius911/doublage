@@ -56,6 +56,7 @@
   outline: 2px dashed rgba(255, 255, 255, .6);
 }
 .mini-ligne { display: flex; align-items: center; }
+.mini-son { margin-left: auto; display: flex; align-items: center; white-space: nowrap; }
 .mini-select { margin-left: .3em; padding: 0 .4em; border: 1px solid #9ca3af; border-radius: .2em; background: #fff; }
 .mini-phrases { border: 1px solid #ddd; border-radius: .3rem; padding: .4rem; background: #fff; }
 .mini-phrase {
