@@ -8,6 +8,11 @@
   font-size: clamp(14px, 2.2vw, 26px); line-height: 1.35;
   pointer-events: none;
 }
+/* Aperçu des sous-titres incrustés : image rendue par ffmpeg, posée sur le lecteur. */
+#apercu-sous-titres {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  background: #000; cursor: zoom-out; z-index: 2;
+}
 #sur-image.modifiable { pointer-events: auto; cursor: text; outline: 2px dashed rgba(255, 255, 255, .6); }
 #sur-image:focus { outline: 2px solid #ffd54a; }
 /* État de l'enregistrement automatique, en bas à droite de la fenêtre. */

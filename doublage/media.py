@@ -79,22 +79,40 @@ def change_tempo(audio: np.ndarray, sample_rate: int, speed: float) -> np.ndarra
         return read_wav(result)[0]
 
 
+def _subtitles_filter(subtitles: Path, style: str | None) -> str:
+    # Le filtre est lancé depuis le dossier du SRT : son chemin complet devrait être échappé.
+    return f"subtitles={subtitles.name}" + (f":force_style='{style}'" if style else "")
+
+
 def replace_audio(video: Path, audio: Path, output: Path, subtitles: Path | None = None,
-                  threads: int = 2) -> Path:
+                  threads: int = 2, style: str | None = None) -> Path:
     """Remplace la bande son de la vidéo, sans ré-encoder l'image.
 
     Avec `subtitles` (fichier SRT), les sous-titres sont gravés dans l'image : celle-ci est alors
-    ré-encodée (H.264, `threads` cœurs), ce qui prend bien plus de temps.
+    ré-encodée (H.264, `threads` cœurs), ce qui prend bien plus de temps. `style` : police et taille
+    (force_style de ffmpeg).
     """
     if subtitles is None:
         image = ["-c:v", "copy"]
     else:
-        # Le filtre est lancé depuis le dossier du SRT : son chemin complet devrait être échappé.
-        image = ["-vf", f"subtitles={subtitles.name}", "-c:v", "libx264", "-preset", "veryfast",
+        image = ["-vf", _subtitles_filter(subtitles, style), "-c:v", "libx264", "-preset", "veryfast",
                  "-crf", "20", "-pix_fmt", "yuv420p", "-threads", str(threads)]
     _run([
         "ffmpeg", "-y", "-v", "error", "-i", str(video.resolve()), "-i", str(audio.resolve()),
         "-map", "0:v:0", "-map", "1:a:0", *image, "-c:a", "aac", "-b:a", "160k",
         "-shortest", str(output.resolve()),
     ], cwd=subtitles.parent if subtitles else None)
+    return output
+
+
+def subtitle_frame(video: Path, at: float, subtitles: Path, output: Path, style: str | None = None) -> Path:
+    """Image (JPEG) de la vidéo à `at` secondes, sous-titres gravés comme par `replace_audio`.
+
+    La vidéo est lue à partir de `at` : le SRT doit couvrir le tout début (00:00:00).
+    """
+    _run(["ffmpeg", "-y", "-v", "error", "-ss", f"{at:.3f}", "-i", str(video.resolve()),
+          "-vf", _subtitles_filter(subtitles, style), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
+         cwd=subtitles.parent)
+    if not output.exists():
+        raise MediaError("Aucune image à cet instant de la vidéo")
     return output

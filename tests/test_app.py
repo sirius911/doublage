@@ -378,13 +378,21 @@ def test_video_doublee(client, monkeypatch):
     assert '<p id="avertissement-sous-titres" hidden>' in page
 
     # Sous-titres incrustés : le texte corrigé est gravé dans l'image (ré-encodage).
-    incrustes = []
-    monkeypatch.setattr(media, "replace_audio", lambda video, audio, output, subtitles=None, threads=2: (
-        incrustes.append(subtitles.read_text(encoding="utf-8") if subtitles else None),
+    incrustes, styles = [], []
+    monkeypatch.setattr(media, "replace_audio", lambda video, audio, output, subtitles=None, threads=2,
+                        style=None: (
+        incrustes.append(subtitles.read_text(encoding="utf-8") if subtitles else None), styles.append(style),
         output.write_bytes(b"video")))
-    client.post(url + "/doublage", data={"sous_titres": "1"})
+    assert '<p id="style-sous-titres" class="generer" hidden>' in page
+    assert "<option selected>DejaVu Sans</option>" in page and '<option value="16" selected>normale' in page
+    client.post(url + "/doublage", data={"sous_titres": "1", "police": "Liberation Serif", "taille": "20"})
     app.dependency_overrides[get_jobs]().wait(projet_id, timeout=30)
     assert "00:00:00,000 --> 00:00:02,500\nBonjour." in incrustes[-1]
+    assert styles[-1] == "FontName=Liberation Serif,FontSize=20"
+    # Le choix est retenu pour le projet.
+    page = client.get(url).text
+    assert "<option selected>Liberation Serif</option>" in page and '<option value="20" selected>' in page
+    assert client.post(url + "/doublage", data={"police": "Comic Sans"}).status_code == 400
     page = client.get(url).text
     assert "sous-titres incrustés)" in page
     assert '<input type="checkbox" name="sous_titres" value="1">' in page  # décochée à chaque fois
@@ -482,3 +490,32 @@ def test_echec_de_la_voix_explique(client):
     app.dependency_overrides[get_engine] = MoteurEnPanne
     r = client.post(url + "/phrases/0/voix")
     assert r.status_code == 500 and r.json()["detail"] == "Échec de la génération : échantillon illisible"
+
+
+def test_apercu_des_sous_titres(client, monkeypatch):
+    """Image de la vidéo avec la phrase en cours gravée dans la police et la taille choisies."""
+    from doublage import media
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour."),
+                     Segment(1, 3.0, 4.0, "x", "")]).save(projet.transcript_path)
+    appels = []
+
+    def fausse_image(video, at, subtitles, output, style=None):
+        appels.append((at, subtitles.read_text(encoding="utf-8"), style))
+        output.write_bytes(b"jpeg")
+        return output
+
+    monkeypatch.setattr(media, "subtitle_frame", fausse_image)
+    r = client.get(url + "/sous-titres/apercu", params={"t": 1.0, "police": "Liberation Sans", "taille": 24})
+    assert r.status_code == 200 and r.headers["content-type"] == "image/jpeg" and r.content == b"jpeg"
+    at, srt, style = appels[-1]
+    assert at == 1.0 and "00:00:00,000 --> 99:00:00,000\nBonjour." in srt
+    assert style == "FontName=Liberation Sans,FontSize=24"
+    # Phrase effacée ou après la dernière : la première phrase affichée sert d'exemple.
+    client.get(url + "/sous-titres/apercu", params={"t": 3.5})
+    assert appels[-1][0] == 3.5 and "Bonjour." in appels[-1][1]
+    client.get(url + "/sous-titres/apercu", params={"t": 999})
+    assert appels[-1][0] == 4.5  # instant ramené dans la vidéo
+    assert client.get(url + "/sous-titres/apercu", params={"taille": 13}).status_code == 400

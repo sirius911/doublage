@@ -26,4 +26,5 @@ main { width: 100%; box-sizing: border-box; margin: 0 auto; padding: 1rem; }
 
 /* Éditeur : toute la hauteur de l'écran, seules les zones intérieures défilent. */
 body.plein { height: 100vh; }
+body.plein .barre { position: static; }  /* la vidéo de l'éditeur reste en haut de l'écran */
 body.plein main { flex: 1; min-height: 0; display: flex; padding: .75rem 1rem; }

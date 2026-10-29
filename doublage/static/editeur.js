@@ -196,7 +196,37 @@
       const bouton = e.target.form.querySelector("button");
       bouton.textContent = bouton.dataset.libelle + (e.target.checked ? " avec sous-titres" : "");
       document.getElementById("avertissement-sous-titres").hidden = !e.target.checked;
+      document.getElementById("style-sous-titres").hidden = !e.target.checked;
+      if (!e.target.checked) fermerApercu();
     }
+    if ((e.target.name === "police" || e.target.name === "taille") && !apercu.hidden) montrerApercu(e.target.form);
+  });
+
+  // --- Aperçu des sous-titres incrustés : image de la vidéo rendue par le serveur (ffmpeg), avec la
+  // phrase en cours dans la police et la taille choisies, posée sur le lecteur ---
+  const apercu = document.getElementById("apercu-sous-titres");
+  function fermerApercu() { apercu.hidden = true; }
+  apercu.addEventListener("click", fermerApercu);
+  video.addEventListener("play", fermerApercu);
+  video.addEventListener("seeking", fermerApercu);
+
+  async function montrerApercu(form) {
+    video.pause();
+    statut("Préparation de l'aperçu…");
+    const params = new URLSearchParams({
+      t: video.currentTime.toFixed(2), police: form.police.value, taille: form.taille.value,
+    });
+    const r = await fetch(`/projets/${PROJET}/sous-titres/apercu?${params}`);
+    if (!r.ok) { statut("Aperçu impossible.", true); return; }
+    if (apercu.src) URL.revokeObjectURL(apercu.src);
+    apercu.src = URL.createObjectURL(await r.blob());
+    apercu.hidden = false;
+    statut("Aperçu : cliquez sur l'image pour revenir à la vidéo.");
+    effacementStatut = setTimeout(() => { etatEnregistrement.hidden = true; }, 4000);
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.id === "voir-sous-titres") montrerApercu(e.target.form);
   });
 
   async function ecouterOriginal(p) {

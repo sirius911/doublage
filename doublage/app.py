@@ -2,6 +2,7 @@
 
 import json
 import logging
+import tempfile
 import threading
 import time
 from datetime import datetime
@@ -25,8 +26,8 @@ from .jobs import Job, JobManager, JobState
 from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized, reset_voices,
                        synthesize_segment, transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
-from .segments import Segment, Transcript, notation_error
-from .subtitles import to_srt, to_vtt
+from .segments import Segment, Transcript, display_text, notation_error
+from .subtitles import DEFAULT_FONT, DEFAULT_SIZE, FONTS, SIZES, burn_style, to_srt, to_vtt
 from .transcription import FakeTranscriber, Transcriber, WhisperApiTranscriber
 from .tts import Engine, FakeEngine, Synthesizer
 from .voices import SAMPLE_MAX_SECONDS, SAMPLE_MIN_SECONDS, Voice, VoiceCatalog, VoiceError
@@ -486,6 +487,7 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <div class="ecran">
 <video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
 <div id="sur-image" hidden spellcheck="true"></div>
+<img id="apercu-sous-titres" hidden alt="Aperçu du sous-titre incrusté" title="Cliquez pour fermer l'aperçu">
 </div>
 <div class="sous-video">
 {voice_choice(project, catalog)}
@@ -519,6 +521,18 @@ def job_progress(project: Project, job: Job, when_done: str = "location.reload()
 </script>"""
 
 
+def subtitle_style_choice(project: Project) -> str:
+    """Police et taille des sous-titres incrustés, avec un aperçu sur l'image (affichés si la case est cochée)."""
+    font, size = project.subtitle_style
+    fonts = "".join(f'<option{" selected" if f == font else ""}>{f}</option>' for f in FONTS)
+    sizes = "".join(f'<option value="{s}"{" selected" if s == size else ""}>{label}</option>'
+                    for s, label in SIZES.items())
+    return f"""<p id="style-sous-titres" class="generer" hidden>
+<label>Police <select name="police">{fonts}</select></label>
+<label>Taille <select name="taille">{sizes}</select></label>
+<button type="button" id="voir-sous-titres">Aperçu sur l'image</button></p>"""
+
+
 def dubbing_section(project: Project, job: Job | None) -> str:
     if job and job.kind == "doublage" and job.active:
         # À la fin, seule cette section est rafraîchie : la vidéo et les corrections en cours restent.
@@ -539,6 +553,7 @@ def dubbing_section(project: Project, job: Job | None) -> str:
     parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
 <p class="generer"><button type="submit" data-libelle="{label}">{label}</button>
 <label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés</label></p>
+{subtitle_style_choice(project)}
 <p id="avertissement-sous-titres" hidden><small>L'image entière est alors ré-encodée : comptez en plus environ
 un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</small></p>
 </form>""")
@@ -601,19 +616,55 @@ def start_transcription(user: User, project: CurrentProject, jobs: Jobs,
 
 
 @app.post("/projets/{project_id}/doublage")
-def start_dubbing(user: User, project: CurrentProject, jobs: Jobs, catalog: Catalog,
+def start_dubbing(user: User, project: CurrentProject, jobs: Jobs, catalog: Catalog, projects: Projects,
                   synthesizer: Annotated[Synthesizer, Depends(get_synthesizer)],
-                  sous_titres: Annotated[bool, Form()] = False) -> RedirectResponse:
+                  sous_titres: Annotated[bool, Form()] = False,
+                  police: Annotated[str, Form()] = DEFAULT_FONT,
+                  taille: Annotated[int, Form()] = DEFAULT_SIZE) -> RedirectResponse:
     if not project.transcript_path.exists():
         raise HTTPException(404, "Pas encore de transcription")
+    check_subtitle_style(police, taille)
+    projects.set_subtitle_style(project.id, police, taille)
     jobs.submit(project.id, "doublage",
                 lambda progress: dub_project(project.video, project.folder, project.dubbed_video, synthesizer,
                                              progress, get_settings().acceleration_max,
                                              _synthesis_lock, _transcript_lock,
                                              sous_titres, get_settings().tts_threads,
                                              catalog.for_project(project.voice).label,
-                                             get_settings().vitesse_min))
+                                             get_settings().vitesse_min, burn_style(police, taille)))
     return RedirectResponse(f"/projets/{project.id}#doublage", status_code=303)
+
+
+def check_subtitle_style(font: str, size: int) -> None:
+    if font not in FONTS or size not in SIZES:
+        raise HTTPException(400, "Police ou taille de sous-titres inconnue")
+
+
+@app.get("/projets/{project_id}/sous-titres/apercu")
+def subtitle_preview(user: User, project: CurrentProject, t: float = 0.0, police: str = DEFAULT_FONT,
+                     taille: int = DEFAULT_SIZE) -> Response:
+    """Image de la vidéo à l'instant `t`, la phrase affichée gravée dans la police et la taille choisies,
+    exactement comme dans la vidéo doublée (même filtre ffmpeg), sans générer la vidéo."""
+    check_subtitle_style(police, taille)
+    if not project.transcript_path.exists():
+        raise HTTPException(404, "Pas encore de transcription")
+    with _transcript_lock:
+        transcript = Transcript.load(project.transcript_path)
+    shown = [s for s in transcript.segments if display_text(s.text)]
+    # Phrase en cours, sinon la suivante (on est entre deux phrases), sinon la première.
+    segment = (next((s for s in shown if s.start <= t < s.end), None)
+               or next((s for s in shown if s.start >= t), None) or next(iter(shown), None))
+    text = display_text(segment.text) if segment else "Exemple de sous-titre"
+    at = max(0.0, min(t, transcript.duration - 0.5))  # au-delà de la fin : aucune image
+    with tempfile.TemporaryDirectory() as tmp:
+        srt = Path(tmp) / "apercu.srt"
+        srt.write_text(f"1\n00:00:00,000 --> 99:00:00,000\n{text}\n", encoding="utf-8")
+        try:
+            image = media.subtitle_frame(project.video, at, srt, Path(tmp) / "apercu.jpg",
+                                         burn_style(police, taille)).read_bytes()
+        except media.MediaError as e:
+            raise HTTPException(500, f"Aperçu impossible : {e}") from e
+    return Response(image, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 @app.post("/projets/{project_id}/voix")

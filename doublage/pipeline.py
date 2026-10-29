@@ -105,7 +105,7 @@ def _original_audio(video: Path, workdir: Path, sample_rate: int) -> np.ndarray:
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
             sample_rate: int, workdir: Path, output: Path, progress: Progress,
             max_speed: float, burn_subtitles: bool = False, threads: int = 2,
-            min_speed: float = 1.0) -> list[Placement]:
+            min_speed: float = 1.0, subtitle_style: str | None = None) -> list[Placement]:
     clips, accelerated, slowed = fit_clips(transcript, clips, sample_rate, max_speed, media.change_tempo,
                                            min_speed)
     if accelerated:
@@ -122,7 +122,7 @@ def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, n
         subtitles = workdir / "sous-titres.srt"
         subtitles.write_text(to_srt(transcript), encoding="utf-8")
         progress("Création de la vidéo doublée, sous-titres incrustés (ré-encodage de l'image)…")
-        media.replace_audio(video, voice, output, subtitles, threads)
+        media.replace_audio(video, voice, output, subtitles, threads, subtitle_style)
     else:
         progress("Création de la vidéo doublée…")
         media.replace_audio(video, voice, output)
@@ -156,13 +156,14 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
                 synthesis_lock: AbstractContextManager = nullcontext(),
                 transcript_lock: AbstractContextManager = nullcontext(),
                 burn_subtitles: bool = False, threads: int = 2, voice_label: str = "",
-                min_speed: float = 1.0) -> list[Placement]:
+                min_speed: float = 1.0, subtitle_style: str | None = None) -> list[Placement]:
     """Doublage d'un projet corrigé dans l'éditeur.
 
     Seules les phrases sans voix à jour sont (re)générées ; les autres reprennent la voix déjà
     écoutée et validée. Les phrases marquées « voix d'origine » gardent le son de la vidéo ; les phrases
     effacées (texte vide) restent silencieuses. Les verrous permettent de corriger le texte pendant le traitement.
-    `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs).
+    `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs), dans le style
+    `subtitle_style` (police et taille, voir subtitles.burn_style).
     `voice_label` (nom de la voix) est noté à côté de la vidéo, pour l'afficher.
     """
     transcript_path = workdir / "segments.json"
@@ -191,7 +192,7 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         clips += [(s.id, s.start, original_clip(original, sample_rate, transcript, s)) for s in kept]
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
     placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed,
-                         burn_subtitles, threads, min_speed)
+                         burn_subtitles, threads, min_speed, subtitle_style)
     partial.replace(output)  # l'ancienne vidéo reste téléchargeable jusqu'au bout
     marker = burned_subtitles_marker(output)
     if burn_subtitles:

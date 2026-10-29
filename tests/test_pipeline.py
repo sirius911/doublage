@@ -129,6 +129,21 @@ def test_la_voix_dit_la_partie_prononcee(tmp_path, monkeypatch):
 
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
+def test_image_avec_sous_titre_grave(tmp_path):
+    video = tmp_path / "video.mp4"
+    media._run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=black:s=320x240:d=3",
+                "-pix_fmt", "yuv420p", str(video)])
+    srt = tmp_path / "apercu.srt"
+    srt.write_text("1\n00:00:00,000 --> 99:00:00,000\nBonjour.\n", encoding="utf-8")
+    sans = media.subtitle_frame(video, 1.5, srt, tmp_path / "sans.jpg", "FontSize=1")
+    grand = media.subtitle_frame(video, 1.5, srt, tmp_path / "grand.jpg", "FontName=DejaVu Sans,FontSize=24")
+    assert grand.read_bytes()[:2] == b"\xff\xd8"  # JPEG
+    assert grand.stat().st_size > sans.stat().st_size  # plus de texte blanc sur fond noir
+    with pytest.raises(media.MediaError):
+        media.subtitle_frame(video, 10, srt, tmp_path / "apres.jpg")
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
 def test_changement_de_tempo_sans_changer_la_hauteur():
     sr = 24000
     t = np.arange(2 * sr) / sr

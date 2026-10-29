@@ -47,3 +47,12 @@ def test_echec_de_copie_annule_le_projet(tmp_path):
     with pytest.raises(OSError):
         store.create("x", "a.mp4", Casse(), "alice")
     assert store.list() == [] and not any((tmp_path / "projets").iterdir())
+
+
+def test_style_des_sous_titres(tmp_path):
+    import io
+    store = ProjectStore(tmp_path / "base.db", tmp_path)
+    projet = store.create("Démo", "demo.mp4", io.BytesIO(b"x"), "alice")
+    assert projet.subtitle_style == ("DejaVu Sans", 16)
+    store.set_subtitle_style(projet.id, "Liberation Sans", 20)
+    assert store.get(projet.id).subtitle_style == ("Liberation Sans", 20)

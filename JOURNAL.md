@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Accès direct au port 8091, barre fixe, police des sous-titres avec aperçu
+- Accès sans tunnel SSH impossible depuis le réseau interne : le pare-feu de la VM (firewalld) n'ouvrait que
+  22, 8000 et 9090. Port 8091 ouvert par l'administrateur ; étape ajoutée au README (installation, étape 5).
+- Barre de titre fixe au défilement (aide, voix…), sauf dans l'éditeur où la vidéo reste déjà en haut.
+- Sous-titres incrustés : police (DejaVu Sans, Liberation Sans, Liberation Serif — `fonts-liberation` ajouté
+  au Containerfile) et taille (petite à très grande, gabarit ffmpeg), retenues par projet. « Aperçu sur
+  l'image » : le serveur rend avec ffmpeg une image de la vidéo à l'instant affiché, la phrase gravée avec le
+  même filtre que la vidéo doublée ; l'image se pose sur le lecteur (clic ou lecture pour la fermer).
+- À vérifier sur la VM : l'image doit être reconstruite (nouvelle police) ; rendu réel de l'aperçu.
+
 ## 2026-10-29 — Notation [écrit|prononcé], état de l'enregistrement en bas de la fenêtre
 - Éditeur : phrase d'explication sous la vidéo retirée ; « Enregistré. » / erreurs dans une étiquette fixe en
   bas à droite de la fenêtre (la barre d'état du navigateur n'est plus accessible aux pages).
