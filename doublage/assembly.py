@@ -9,6 +9,8 @@ from .segments import Segment, Transcript
 
 # Écart toléré (secondes) : en dessous, la différence ne s'entend pas.
 FIT_TOLERANCE = 0.05
+# Bornes de la vitesse réglée à la main pour une phrase.
+MANUAL_SPEED_MIN, MANUAL_SPEED_MAX = 0.8, 1.25
 
 
 class Fit(StrEnum):
@@ -44,6 +46,8 @@ def fit(segment: Segment, slot_end: float, voice_duration: float,
     `slot_end` : début de la phrase suivante (ou fin de la vidéo pour la dernière).
     """
     voice, original = _s(voice_duration), _s(segment.duration)
+    if segment.speed is not None:
+        return _manual_fit(segment, slot_end, voice_duration)
     if voice_duration <= segment.duration + FIT_TOLERANCE:
         slower = round((1 - speed_factor(segment, slot_end, voice_duration, max_speed, min_speed)) * 100)
         slowed = f" Elle sera ralentie de {slower} % pour mieux suivre l'original." if slower > 0 else ""
@@ -62,6 +66,21 @@ def fit(segment: Segment, slot_end: float, voice_duration: float,
                          f"qui sera décalée : raccourcissez le texte.")
 
 
+def _manual_fit(segment: Segment, slot_end: float, voice_duration: float) -> tuple[Fit, str]:
+    played = voice_duration / segment.speed
+    percent = round((segment.speed - 1) * 100)
+    how = (f"accélérée de {percent} %" if percent > 0 else f"ralentie de {-percent} %" if percent < 0
+           else "à sa vitesse normale")
+    voice = f"Vitesse réglée à la main : la voix, {how}, dure {_s(played)}"
+    if played <= segment.duration + FIT_TOLERANCE:
+        return Fit.OK, f"{voice} et tient dans la phrase d'origine ({_s(segment.duration)})."
+    overlap = segment.start + played - slot_end
+    if overlap <= FIT_TOLERANCE:
+        return Fit.OVERFLOW, f"{voice} : elle dépasse la phrase d'origine mais finit avant la suivante."
+    return Fit.OVERLAP, (f"{voice} : elle déborde de {_s(overlap)} sur la phrase suivante, qui sera décalée. "
+                         f"Accélérez-la ou raccourcissez le texte.")
+
+
 def fit_clips(transcript: Transcript, clips: list[tuple[int, float, np.ndarray]], sample_rate: int,
               max_speed: float, change_tempo, min_speed: float = 1.0
               ) -> tuple[list[tuple[int, float, np.ndarray]], int, int]:
@@ -75,7 +94,9 @@ def fit_clips(transcript: Transcript, clips: list[tuple[int, float, np.ndarray]]
     for segment_id, start, audio in clips:
         segment = segments.get(segment_id)
         speed = 1.0
-        if segment is not None and not segment.keep_original:
+        if segment is not None and not segment.keep_original and segment.speed is not None:
+            speed = segment.speed
+        elif segment is not None and not segment.keep_original:
             speed = speed_factor(segment, transcript.slot_end(segment), len(audio) / sample_rate,
                                  max_speed, min_speed)
         if abs(speed - 1) > 0.005:

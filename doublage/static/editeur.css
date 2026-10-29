@@ -34,20 +34,30 @@
 #phrases .etat { color: #666; }
 #phrases li[data-etat="modifiee"] .etat { color: #b65c00; }
 /* Calage de la voix dans son créneau (explication au survol). Grisé si la voix est périmée. */
-#phrases .calage { display: none; cursor: help; }
+#phrases .calage { display: none; cursor: pointer; }
 #phrases li[data-voix] .calage { display: inline; }
 #phrases li[data-calage="vert"] .calage { color: #2e7d32; }
 #phrases li[data-calage="orange"] .calage { color: #ef8a00; }
 #phrases li[data-calage="rouge"] .calage { color: #c62828; }
 #phrases li[data-etat="modifiee"] .calage { opacity: .35; }
+/* Vitesse réglée à la main : valeur affichée après la pastille ; curseur ouvert par un clic sur celle-ci. */
+#phrases .vitesse-reglee { display: none; color: #1d4ed8; }
+#phrases li[data-voix][data-vitesse] .vitesse-reglee { display: inline; }
+#phrases .reglage { grid-column: 2; display: flex; align-items: center; gap: .4em; font-size: .8em; color: #444; }
+#phrases .reglage[hidden] { display: none; }
+#phrases .reglage input { flex: 1; max-width: 12em; }
+#phrases .reglage output { min-width: 3.2em; font-variant-numeric: tabular-nums; }
+#phrases .reglage button { font-size: inherit; padding: 0 .5em; }
+#phrases li:not([data-vitesse]) .reglage .auto { visibility: hidden; }
 /* « Voix d'origine » cochée : pas de voix de synthèse pour cette phrase. */
 #phrases .garder { margin-left: auto; color: #666; white-space: nowrap; cursor: pointer; }
 #phrases .garder input { vertical-align: middle; margin: 0 .2em 0 0; }
-#phrases li[data-origine] .voix, #phrases li[data-origine] .calage, #phrases li[data-origine] .etat { display: none; }
+#phrases li[data-origine] .voix, #phrases li[data-origine] .calage, #phrases li[data-origine] .etat,
+#phrases li[data-origine] .vitesse-reglee, #phrases li[data-origine] .reglage { display: none; }
 #phrases li[data-origine] .garder { color: #1d4ed8; }
 /* Phrase effacée (texte vide) : ni voix ni sous-titre ; ↺ la rétablit. */
 #phrases li[data-vide] .voix, #phrases li[data-vide] .calage, #phrases li[data-vide] .etat,
-#phrases li[data-vide] .garder { display: none; }
+#phrases li[data-vide] .garder, #phrases li[data-vide] .vitesse-reglee, #phrases li[data-vide] .reglage { display: none; }
 #phrases li[data-vide] .texte:empty::before { content: "(phrase effacée : ni voix ni sous-titre)"; color: #999; font-style: italic; }
 
 /* Deux colonnes à la hauteur de l'écran : la vidéo reste en haut à gauche, l'aide et la vidéo

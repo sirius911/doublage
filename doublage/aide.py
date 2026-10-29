@@ -112,6 +112,11 @@ phrase suivante, qui sera décalée. <b>Raccourcissez le texte</b>, puis rééco
 <tr><td><span class="pastille vert pale">●</span></td><td><b>Pastille pâle</b> : le texte a changé depuis la
 voix (« texte modifié : voix à régénérer »). Cliquez sur <span class="bouton">▶ Voix</span> pour la refaire.</td></tr>
 </table>
+<p class="note"><b>Régler la vitesse d'une phrase</b> : cliquez sur sa pastille. Un curseur apparaît (de ×0,80,
+plus lent, à ×1,25, plus rapide), placé sur la vitesse automatique ; <span class="bouton">▶ Voix</span> fait
+entendre la vitesse choisie, et la pastille indique si la voix tient toujours. Varier le rythme d'une phrase à
+l'autre rend la voix plus naturelle. La vitesse choisie s'affiche après la pastille (par ex. ×1,05) ;
+<span class="bouton">auto</span> revient à la vitesse automatique.</p>
 </section>
 
 <section id="doublee">

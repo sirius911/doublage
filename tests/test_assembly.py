@@ -88,3 +88,18 @@ def test_ralentissement_des_voix_courtes():
     resultat, accelerees, ralenties = fit_clips(t, clips, SR, 1.15, tempo, 0.9)
     assert (accelerees, ralenties) == (0, 1) and appels == [pytest.approx(0.95)]  # son d'origine intact
     assert len(resultat[0][2]) == 200 and len(resultat[1][2]) == 150
+
+
+def test_vitesse_reglee_a_la_main():
+    phrase = Segment(0, 0.0, 2.0, "a", "a", speed=1.1)
+    niveau, texte = fit(phrase, 3.0, 2.2, 1.15, 0.9)  # 2,2 s à ×1,1 = 2,0 s
+    assert niveau == Fit.OK and "réglée à la main" in texte and "accélérée de 10 %" in texte
+    phrase.speed = 0.8  # 2,2 s → 2,75 s : finit avant la phrase suivante (3,0)
+    assert fit(phrase, 3.0, 2.2)[0] == Fit.OVERFLOW
+    assert fit(phrase, 2.5, 2.2)[0] == Fit.OVERLAP
+
+    t = Transcript(10.0, [phrase])
+    appels = []
+    fit_clips(t, [(0, 0.0, np.ones(220, np.float32))], SR, 1.15,
+              lambda audio, sr, v: appels.append(v) or audio, 0.9)
+    assert appels == [0.8]  # la vitesse choisie remplace la vitesse automatique

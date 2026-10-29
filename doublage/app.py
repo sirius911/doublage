@@ -14,11 +14,11 @@ from urllib.parse import quote
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from . import __version__, media
 from .aide import help_content
-from .assembly import Fit, fit
+from .assembly import MANUAL_SPEED_MAX, MANUAL_SPEED_MIN, Fit, fit, speed_factor
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
@@ -413,18 +413,26 @@ def timecode(seconds: float) -> str:
     return f"{int(seconds // 60):02d}:{seconds % 60:04.1f}"
 
 
-def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tuple[Fit, str] | None:
-    """Calage de la voix existante d'une phrase dans son créneau (None : pas encore de voix)."""
+def voice_fit(project: Project, transcript: Transcript, segment: Segment) -> tuple[Fit, str, float] | None:
+    """Calage de la voix existante d'une phrase dans son créneau, et vitesse automatique (None : pas de voix)."""
     path = clip_path(project.folder, segment.id)
     if not path.exists():
         return None
-    return fit(segment, transcript.slot_end(segment), media.wav_duration(path),
-               get_settings().acceleration_max, get_settings().vitesse_min)
+    settings, duration, slot_end = get_settings(), media.wav_duration(path), transcript.slot_end(segment)
+    level, explanation = fit(segment, slot_end, duration, settings.acceleration_max, settings.vitesse_min)
+    auto = speed_factor(segment, slot_end, duration, settings.acceleration_max, settings.vitesse_min)
+    return level, explanation, round(auto, 3)
+
+
+def speed_label(speed: float) -> str:
+    return "×" + f"{speed:.2f}".replace(".", ",")
 
 
 def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
     calage = voice_fit(project, transcript, s)
-    voice = f' data-voix data-calage="{calage[0]}"' if calage else ""
+    voice = f' data-voix data-calage="{calage[0]}" data-vitesse-auto="{calage[2]}"' if calage else ""
+    voice += f' data-vitesse="{s.speed}"' if s.speed is not None else ""
+    speed = s.speed if s.speed is not None else calage[2] if calage else 1.0
     voice += " data-origine" if s.keep_original else ""
     voice += " data-vide" if not s.text else ""  # phrase effacée : ni voix ni sous-titre
     original = " ".join(s.original_text.split())  # comme le texte corrigé (Transcript.set_text)
@@ -439,9 +447,14 @@ def segment_row(project: Project, transcript: Transcript, s: Segment) -> str:
         f'<span class="actions"><button type="button" class="original">▶ Original</button>'
         f'<button type="button" class="voix">▶ Voix</button>'
         f'<span class="calage" title="{escape(calage[1]) if calage else ""}">●</span>'
+        f'<span class="vitesse-reglee">{speed_label(speed)}</span>'
         f'<span class="etat"></span>'
         f'<label class="garder" title="La vidéo doublée garde le son d’origine de cette phrase">'
-        f'<input type="checkbox"{" checked" if s.keep_original else ""}> voix d’origine</label></span></li>'
+        f'<input type="checkbox"{" checked" if s.keep_original else ""}> voix d’origine</label></span>'
+        # Réglage de la vitesse, ouvert par un clic sur la pastille (editeur.js).
+        f'<span class="reglage" hidden>Vitesse <input type="range" min="{MANUAL_SPEED_MIN}" '
+        f'max="{MANUAL_SPEED_MAX}" step="0.01" value="{speed}"> <output>{speed_label(speed)}</output> '
+        f'<button type="button" class="auto" title="Revenir à la vitesse automatique">auto</button></span></li>'
     )
 
 
@@ -662,6 +675,7 @@ def project_state(user: User, project: CurrentProject, jobs: Jobs) -> dict:
 class SegmentUpdate(BaseModel):
     texte: str | None = None
     voix_origine: bool | None = None
+    vitesse: float | None = Field(None, ge=MANUAL_SPEED_MIN, le=MANUAL_SPEED_MAX)  # null : automatique
 
 
 @app.put("/projets/{project_id}/phrases/{segment_id}")
@@ -677,9 +691,19 @@ def update_segment(user: User, project: CurrentProject, segment_id: int, update:
             transcript.set_text(segment_id, update.texte)
         if update.voix_origine is not None:
             segment.keep_original = update.voix_origine
+        if "vitesse" in update.model_fields_set:
+            segment.speed = update.vitesse
         transcript.save(project.transcript_path)
     return {"id": segment.id, "texte": segment.text, "etat": segment.status,
-            "voix_origine": segment.keep_original}
+            "voix_origine": segment.keep_original, "vitesse": segment.speed,
+            **voice_fit_fields(project, transcript, segment)}
+
+
+def voice_fit_fields(project: Project, transcript: Transcript, segment: Segment) -> dict:
+    calage = voice_fit(project, transcript, segment)
+    if calage is None:
+        return {}
+    return {"calage": calage[0], "calage_texte": calage[1], "vitesse_auto": calage[2]}
 
 
 @app.post("/projets/{project_id}/phrases/{segment_id}/voix")
@@ -702,9 +726,8 @@ def synthesize_one(user: User, project: CurrentProject, segment_id: int,
     with _transcript_lock:
         current = mark_synthesized(project.transcript_path, segment)
         transcript = Transcript.load(project.transcript_path)
-    level, explanation = voice_fit(project, transcript, segment)
     return {"id": segment_id, "etat": current.status if current else None,
-            "calage": level, "calage_texte": explanation}
+            **voice_fit_fields(project, transcript, current or segment)}
 
 
 @app.get("/projets/{project_id}/phrases/{segment_id}/voix")

@@ -21,6 +21,7 @@ class Segment:
     text: str
     status: Status = Status.TRANSCRIBED
     keep_original: bool = False  # la vidéo doublée garde le son d'origine de cette phrase
+    speed: float | None = None  # vitesse de la voix réglée à la main (None : automatique)
 
     @property
     def duration(self) -> float:

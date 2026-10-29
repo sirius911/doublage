@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-10-29 — Vitesse réglable par phrase
+- Demande de l'utilisateur : le ralentissement automatique rend parfois la voix monotone ; régler la vitesse
+  phrase par phrase donne plus de naturel.
+- Fait : clic sur la pastille → curseur ×0,80 à ×1,25 placé sur la vitesse automatique, bouton « auto ».
+  Vitesse enregistrée avec la phrase (`speed`, absente = automatique), gardée si le texte change ; la pastille
+  et son explication en tiennent compte ; valeur affichée en bleu après la pastille.
+- « ▶ Voix » joue désormais à la vitesse de la phrase (automatique ou choisie), avec la lecture du navigateur
+  qui garde la hauteur ; la vidéo doublée utilise toujours ffmpeg (atempo) : rendu très proche, pas identique.
+- Suite : essai sur la VM.
+
 ## 2026-10-29 — Hallucinations, phrase effacée, ralentissement
 - Après relance de la vidéo 4 avec le prompt : 43 phrases (médiane 7 s, max 21 s, 36 ponctuées, aucune
   d'un ou deux mots). Décalage acceptable à l'écoute sur les phrases longues : découpe (Q10) toujours repoussée.

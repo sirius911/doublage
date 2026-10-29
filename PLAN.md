@@ -88,6 +88,8 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Phrase effacée : texte vidé dans l'éditeur → ni voix ni sous-titre, phrase grisée, ↺ pour la rétablir
 - [x] Ralentissement automatique (10 % au plus, réglable) d'une voix qui finit nettement avant la phrase
       d'origine, symétrique de l'accélération
+- [x] Vitesse réglable par phrase (clic sur la pastille : curseur 0,8 à 1,25, bouton « auto ») ; « ▶ Voix »
+      joue à la vitesse choisie, pastille recalculée ; sans réglage, la vitesse automatique s'applique
 
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)

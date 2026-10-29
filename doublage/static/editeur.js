@@ -186,9 +186,61 @@
     video.play();
   }
 
+  // --- Vitesse de la voix : automatique, ou réglée à la main (clic sur la pastille) ---
+
+  const libelleVitesse = (v) => "×" + v.toFixed(2).replace(".", ",");
+
+  function vitesse(p) {
+    return parseFloat(p.li.dataset.vitesse || p.li.dataset.vitesseAuto || "1");
+  }
+
+  function majVitesse(p) {
+    const v = vitesse(p);
+    p.curseur.value = v;
+    p.sortie.textContent = p.vitesseReglee.textContent = libelleVitesse(v);
+  }
+
+  // Réponse du serveur après un réglage ou une nouvelle voix : vitesse et pastille à jour.
+  function majCalage(p, reponse) {
+    if (!("calage" in reponse)) return;
+    p.li.dataset.voix = "";
+    p.li.dataset.calage = reponse.calage;
+    p.li.dataset.vitesseAuto = reponse.vitesse_auto;
+    p.calage.title = reponse.calage_texte;
+    majVitesse(p);
+  }
+
+  async function reglerVitesse(p, valeur) {
+    etatEnregistrement.textContent = "Enregistrement…";
+    try {
+      const r = await fetch(`/projets/${PROJET}/phrases/${p.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vitesse: valeur }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      const reponse = await r.json();
+      if (reponse.vitesse === null) delete p.li.dataset.vitesse;
+      else p.li.dataset.vitesse = reponse.vitesse;
+      majCalage(p, reponse);
+      etatEnregistrement.textContent = "Enregistré.";
+      etatEnregistrement.className = "";
+    } catch (e) {
+      majVitesse(p);
+      etatEnregistrement.textContent = "Échec de l'enregistrement, réessayez (connexion ?).";
+      etatEnregistrement.className = "erreur";
+    }
+  }
+
+  let voixEnCours = null;  // phrase dont la voix est en lecture
+
+  // Lecture à la vitesse de la phrase ; le navigateur garde la hauteur de la voix.
   function ecouterVoix(p) {
     video.pause();
+    voixEnCours = p;
     lecteurVoix.src = `/projets/${PROJET}/phrases/${p.id}/voix?v=${Date.now()}`;  // pas de cache
+    lecteurVoix.preservesPitch = true;
+    lecteurVoix.defaultPlaybackRate = lecteurVoix.playbackRate = vitesse(p);
     lecteurVoix.play();
   }
 
@@ -206,10 +258,8 @@
         throw new Error(erreur.detail || "Échec de la génération.");
       }
       const reponse = await r.json();
-      p.li.dataset.voix = "";
       p.li.dataset.etat = reponse.etat;
-      p.li.dataset.calage = reponse.calage;
-      p.calage.title = reponse.calage_texte;
+      majCalage(p, reponse);
       majVoix(p);
       ecouterVoix(p);
     } catch (e) {
@@ -247,13 +297,25 @@
     p.etat = p.li.querySelector(".etat");
     p.calage = p.li.querySelector(".calage");
     p.retablir = p.li.querySelector(".retablir");
+    p.reglage = p.li.querySelector(".reglage");
+    p.curseur = p.reglage.querySelector("input");
+    p.sortie = p.reglage.querySelector("output");
+    p.vitesseReglee = p.li.querySelector(".vitesse-reglee");
+    p.calage.addEventListener("click", () => { p.reglage.hidden = !p.reglage.hidden; });
+    p.curseur.addEventListener("input", () => {
+      const v = parseFloat(p.curseur.value);
+      p.sortie.textContent = libelleVitesse(v);
+      if (voixEnCours === p) lecteurVoix.playbackRate = v;  // s'entend pendant le réglage
+    });
+    p.curseur.addEventListener("change", () => reglerVitesse(p, parseFloat(p.curseur.value)));
+    p.reglage.querySelector(".auto").addEventListener("click", () => reglerVitesse(p, null));
     majVoix(p);
     p.retablir.addEventListener("click", () => retablir(p));
     p.li.querySelector(".original").addEventListener("click", () => ecouterOriginal(p));
     p.boutonVoix.addEventListener("click", () => voix(p));
 
     p.li.addEventListener("click", (e) => {
-      if (e.target.closest(".actions, .retablir")) return;
+      if (e.target.closest(".actions, .retablir, .reglage")) return;
       if (e.target.closest(".aller") || p !== enCours) allerA(p);
     });
     p.texte.addEventListener("input", () => {
@@ -277,7 +339,9 @@
       if ("voix" in li.dataset) {
         p.li.dataset.voix = "";
         p.li.dataset.calage = li.dataset.calage;
+        p.li.dataset.vitesseAuto = li.dataset.vitesseAuto;
         p.calage.title = li.querySelector(".calage").title;
+        majVitesse(p);
       }
       majVoix(p);
     }

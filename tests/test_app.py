@@ -284,6 +284,17 @@ def test_voix_d_une_phrase(client, tmp_path):
 
     assert client.post(url + "/phrases/42/voix").status_code == 404
 
+    # Vitesse réglée à la main, puis retour à l'automatique.
+    r = client.put(url + "/phrases/0", json={"vitesse": 1.1}).json()
+    assert r["vitesse"] == 1.1 and "réglée à la main" in r["calage_texte"] and "vitesse_auto" in r
+    assert Transcript.load(projet.transcript_path).segments[0].speed == 1.1
+    page = client.get(url).text
+    assert 'data-vitesse="1.1"' in page and '<span class="vitesse-reglee">×1,10</span>' in page
+    assert client.put(url + "/phrases/0", json={"texte": "Bonjour à tous."}).json()["vitesse"] == 1.1  # gardée
+    assert client.put(url + "/phrases/0", json={"vitesse": None}).json()["vitesse"] is None
+    assert Transcript.load(projet.transcript_path).segments[0].speed is None
+    assert client.put(url + "/phrases/0", json={"vitesse": 2.0}).status_code == 422  # hors bornes
+
 
 def test_choix_de_la_voix(client):
     login(client)
