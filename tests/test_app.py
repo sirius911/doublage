@@ -585,3 +585,38 @@ def test_boites_dans_la_video_doublee_et_l_apercu(client, monkeypatch):
     assert appels[-1].startswith("drawbox=") and "enable" not in appels[-1]
     client.get(url + "/sous-titres/apercu", params={"t": 4.0})
     assert appels[-1] is None
+
+
+def test_section_masquage_dans_l_editeur(client, monkeypatch):
+    from doublage import media
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
+    page = client.get(url).text
+    assert 'id="calque-masques"' in page and 'id="nouvelle-boite"' in page and "/static/masquage.js" in page
+    # Avant la vidéo doublée : on masque avant de générer.
+    assert page.index('id="masquage"') < page.index('id="doublage"')
+    assert client.get("/static/masquage.js").status_code == 200
+
+    # Aperçu exact des boîtes, sans sous-titre.
+    appels = []
+
+    def fausse_image(video, at, subtitles, output, style=None, masks=None):
+        appels.append((subtitles, masks))
+        output.write_bytes(b"jpeg")
+        return output
+
+    monkeypatch.setattr(media, "subtitle_frame", fausse_image)
+    monkeypatch.setattr(media, "probe_video", lambda video: (1920, 1080, 30.0))
+    client.post(url + "/masques", json={"debut": 1.0, "fin": 3.0, "x": 0.1, "y": 0.1, "largeur": 0.2,
+                                        "hauteur": 0.05})
+    assert client.get(url + "/sous-titres/apercu", params={"t": 2.0, "sous_titres": "false"}).status_code == 200
+    assert appels[-1][0] is None and appels[-1][1].startswith("drawbox=")
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node absent")
+def test_scripts_de_l_editeur_valides():
+    for script in ("editeur.js", "masquage.js"):
+        chemin = os.path.join(os.path.dirname(doublage.app.__file__), "static", script)
+        subprocess.run(["node", "--check", chemin], check=True)

@@ -124,17 +124,18 @@ def replace_audio(video: Path, audio: Path, output: Path, subtitles: Path | None
     return output
 
 
-def subtitle_frame(video: Path, at: float, subtitles: Path, output: Path, style: str | None = None,
+def subtitle_frame(video: Path, at: float, subtitles: Path | None, output: Path, style: str | None = None,
                    masks: str | None = None) -> Path:
     """Image (JPEG) de la vidéo à `at` secondes, sous-titres (et boîtes `masks`) gravés comme par
     `replace_audio`.
 
     La vidéo est lue à partir de `at` : le SRT doit couvrir le tout début (00:00:00), et les boîtes ne
-    doivent pas dépendre du temps. Les fichiers désignés par les filtres sont dans le dossier du SRT.
+    doivent pas dépendre du temps. Les fichiers désignés par les filtres sont dans le dossier de `output`.
     """
+    filters = _image_filters(subtitles, style, masks)
     _run(["ffmpeg", "-y", "-v", "error", "-ss", f"{at:.3f}", "-i", str(video.resolve()),
-          "-vf", _image_filters(subtitles, style, masks), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
-         cwd=subtitles.parent)
+          *(["-vf", filters] if filters else []), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
+         cwd=output.parent)
     if not output.exists():
         raise MediaError("Aucune image à cet instant de la vidéo")
     return output

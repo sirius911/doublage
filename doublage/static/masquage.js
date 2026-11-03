@@ -1,0 +1,371 @@
+// Masquage des données patients : boîtes opaques posées sur la vidéo, avec un texte de remplacement
+// facultatif. Les boîtes sont tracées sur l'image (vidéo en pause), affichées sur le lecteur pendant leur
+// période, et gravées dans l'image de la vidéo doublée par le serveur. Position en proportion de l'image.
+(() => {
+  const video = document.getElementById("video");
+  const ecran = video.parentElement;
+  const calque = document.getElementById("calque-masques");
+  const liste = document.getElementById("boites");
+  const boutonNouvelle = document.getElementById("nouvelle-boite");
+  const boutonApercu = document.getElementById("apercu-masques");
+  const aide = document.getElementById("aide-masquage");
+  const apercu = document.getElementById("apercu-sous-titres");
+  const statut = (texte, erreur) => window.statutEditeur(texte, erreur);
+  const AIDE = aide.textContent;
+  const DUREE_PAR_DEFAUT = 3;  // secondes : à ajuster avec « fin ici »
+
+  let boites = [];  // { donnees (comme l'API), div, li }
+  let choisie = null;
+  let mode = null;  // null, "trace" (nouvelle boîte) ou "pipette"
+
+  const tc = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${(s % 60).toFixed(2).padStart(5, "0")}`;
+
+  // --- Calque posé exactement sur l'image (la vidéo peut avoir des bandes noires dans le lecteur) ---
+
+  function placerCalque() {
+    if (!video.videoWidth) return;
+    const l = video.clientWidth, h = video.clientHeight;
+    const echelle = Math.min(l / video.videoWidth, h / video.videoHeight);
+    const lv = video.videoWidth * echelle, hv = video.videoHeight * echelle;
+    Object.assign(calque.style, {
+      left: `${video.offsetLeft + (l - lv) / 2}px`, top: `${video.offsetTop + (h - hv) / 2}px`,
+      width: `${lv}px`, height: `${hv}px`,
+    });
+    for (const b of boites) dessiner(b);
+  }
+  new ResizeObserver(placerCalque).observe(video);
+  video.addEventListener("loadedmetadata", placerCalque);
+
+  // Position du pointeur en proportion de l'image (0 à 1).
+  function proportion(e) {
+    const r = calque.getBoundingClientRect();
+    return {
+      x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
+      y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)),
+    };
+  }
+
+  // --- Couleurs prises sur l'image (la vidéo est servie par l'application : lecture des pixels permise) ---
+
+  const toile = document.createElement("canvas");
+  function imageCourante() {
+    toile.width = video.videoWidth;
+    toile.height = video.videoHeight;
+    const ctx = toile.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0);
+    return ctx;
+  }
+  const hex = (r, g, b) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+
+  function couleurA(ctx, x, y) {
+    const px = Math.min(toile.width - 1, Math.round(x * toile.width));
+    const py = Math.min(toile.height - 1, Math.round(y * toile.height));
+    const [r, g, b] = ctx.getImageData(px, py, 1, 1).data;
+    return hex(r, g, b);
+  }
+
+  // Couleur de fond d'une zone : la plus fréquente sur son pourtour (la donnée est au milieu).
+  function fondDe(d) {
+    const ctx = imageCourante(), compte = new Map();
+    for (let i = 0; i <= 20; i++) {
+      const f = i / 20;
+      for (const [x, y] of [[d.x + f * d.largeur, d.y], [d.x + f * d.largeur, d.y + d.hauteur],
+                            [d.x, d.y + f * d.hauteur], [d.x + d.largeur, d.y + f * d.hauteur]]) {
+        const c = couleurA(ctx, x, y);
+        compte.set(c, (compte.get(c) || 0) + 1);
+      }
+    }
+    return [...compte].sort((a, b) => b[1] - a[1])[0][0];
+  }
+
+  // Texte noir sur fond clair, blanc sur fond foncé.
+  function texteLisible(fond) {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(fond.slice(i, i + 2), 16));
+    return 0.299 * r + 0.587 * g + 0.114 * b > 140 ? "#000000" : "#ffffff";
+  }
+
+  // --- Affichage des boîtes sur le lecteur ---
+
+  function dessiner(b) {
+    const d = b.donnees, hauteurCalque = calque.clientHeight;
+    Object.assign(b.div.style, {
+      left: `${d.x * 100}%`, top: `${d.y * 100}%`, width: `${d.largeur * 100}%`, height: `${d.hauteur * 100}%`,
+      background: d.fond, color: d.couleur_texte,
+    });
+    const taille = d.taille_texte * d.hauteur * hauteurCalque;
+    b.texte.textContent = d.texte;
+    Object.assign(b.texte.style, { fontSize: `${taille}px`, paddingLeft: `${taille * 0.25}px` });
+  }
+
+  // Sur la vidéo doublée (aperçu « nouvelle voix »), les boîtes sont déjà gravées : on montre l'image réelle.
+  const surVideoDoublee = () => video.currentSrc.includes("/export");
+
+  function afficher() {
+    const t = video.currentTime, doublee = surVideoDoublee();
+    calque.classList.toggle("en-pause", video.paused);  // boîtes sélectionnables à l'arrêt seulement
+    for (const b of boites) {
+      const visible = !doublee && b.donnees.debut <= t && t <= b.donnees.fin;
+      b.div.hidden = !visible;
+      b.div.classList.toggle("choisie", b === choisie);
+    }
+  }
+
+  function suivre() {
+    afficher();
+    if (!video.paused) {
+      if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(suivre);
+      else requestAnimationFrame(suivre);
+    }
+  }
+  video.addEventListener("play", () => { annulerMode(); suivre(); });
+  for (const evt of ["seeked", "timeupdate", "pause", "loadeddata"]) video.addEventListener(evt, afficher);
+
+  // --- Enregistrement ---
+
+  async function envoyer(methode, url, donnees) {
+    statut("Enregistrement…");
+    const r = await fetch(url, {
+      method: methode, headers: { "Content-Type": "application/json" },
+      body: donnees ? JSON.stringify(donnees) : undefined,
+    });
+    if (!r.ok) {
+      const erreur = await r.json().catch(() => ({}));
+      const message = typeof erreur.detail === "string" ? erreur.detail : "Échec de l'enregistrement.";
+      statut(message, true);
+      throw new Error(message);
+    }
+    statut("Enregistré.");
+    signalerVideoPerimee();
+    return r.status === 204 ? null : r.json();
+  }
+
+  async function modifier(b, changements) {
+    const avant = b.donnees;
+    b.donnees = { ...avant, ...changements };
+    dessiner(b); majLigne(b); afficher();
+    try {
+      b.donnees = await envoyer("PUT", `/projets/${PROJET}/masques/${avant.id}`, b.donnees);
+    } catch {
+      b.donnees = avant;
+    }
+    dessiner(b); majLigne(b); afficher();
+    trier();
+  }
+
+  // La vidéo doublée déjà générée ne contient pas cette modification : à signaler tout de suite.
+  function signalerVideoPerimee() {
+    const lien = document.querySelector('#doublage a[href$="/export"]');
+    if (!lien || document.querySelector("#doublage .masquage-perime")) return;
+    const p = document.createElement("p");
+    p.className = "masquage-perime";
+    p.innerHTML = "<strong>Les boîtes de masquage ont changé depuis : cette vidéo ne les contient pas. "
+      + "Mettez-la à jour avant de la diffuser.</strong>";
+    lien.closest("p").after(p);
+  }
+
+  // --- Liste des boîtes ---
+
+  function ligne(b) {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <span class="periode"><button type="button" class="aller" title="Aller au début de la boîte"></button>
+      <button type="button" class="debut-ici" title="La boîte commence à l'image affichée">début ici</button>
+      <button type="button" class="fin-ici" title="La boîte s'arrête à l'image affichée">fin ici</button></span>
+      <span class="reglages">
+      <label title="Couleur de fond">Fond <input type="color" class="fond"></label>
+      <button type="button" class="pipette" title="Prendre la couleur de fond sur l'image">pipette</button>
+      <input type="text" class="texte" maxlength="200" placeholder="Texte de remplacement (facultatif, fictif)">
+      <label title="Couleur du texte"><input type="color" class="couleur-texte"></label>
+      <label title="Taille du texte">A<input type="range" class="taille" min="0.3" max="1" step="0.05"></label>
+      <button type="button" class="supprimer" title="Supprimer la boîte">✕</button></span>`;
+    const q = (s) => li.querySelector(s);
+    q(".aller").addEventListener("click", () => { choisir(b); video.pause(); video.currentTime = b.donnees.debut; });
+    q(".debut-ici").addEventListener("click", () => {
+      if (video.currentTime >= b.donnees.fin) { statut("Le début doit venir avant la fin de la boîte.", true); return; }
+      modifier(b, { debut: video.currentTime });
+    });
+    q(".fin-ici").addEventListener("click", () => {
+      if (video.currentTime <= b.donnees.debut) { statut("La fin doit venir après le début de la boîte.", true); return; }
+      modifier(b, { fin: video.currentTime });
+    });
+    q(".fond").addEventListener("change", (e) => modifier(b, { fond: e.target.value }));
+    q(".couleur-texte").addEventListener("change", (e) => modifier(b, { couleur_texte: e.target.value }));
+    q(".taille").addEventListener("change", (e) => modifier(b, { taille_texte: parseFloat(e.target.value) }));
+    q(".taille").addEventListener("input", (e) => { b.donnees.taille_texte = parseFloat(e.target.value); dessiner(b); });
+    q(".texte").addEventListener("input", (e) => { b.donnees.texte = e.target.value; dessiner(b); });
+    q(".texte").addEventListener("change", (e) => modifier(b, { texte: e.target.value }));
+    q(".texte").addEventListener("keydown", (e) => { if (e.key === "Enter") e.target.blur(); });
+    q(".pipette").addEventListener("click", () => {
+      choisir(b);
+      video.pause();
+      changerMode("pipette", "Cliquez sur l'image à l'endroit dont la boîte doit prendre la couleur (Échap : annuler).");
+    });
+    q(".supprimer").addEventListener("click", async () => {
+      if (!confirm("Supprimer cette boîte de masquage ?")) return;
+      try {
+        await envoyer("DELETE", `/projets/${PROJET}/masques/${b.donnees.id}`);
+      } catch { return; }
+      b.div.remove(); li.remove();
+      boites = boites.filter((x) => x !== b);
+      if (choisie === b) choisir(null);
+      majNombre();
+    });
+    li.addEventListener("click", (e) => { if (!e.target.closest("button, input, label")) choisir(b); });
+    return li;
+  }
+
+  function majLigne(b) {
+    const q = (s) => b.li.querySelector(s), d = b.donnees;
+    q(".aller").textContent = `${tc(d.debut)} → ${tc(d.fin)}`;
+    q(".fond").value = d.fond;
+    q(".couleur-texte").value = d.couleur_texte;
+    q(".taille").value = d.taille_texte;
+    if (document.activeElement !== q(".texte")) q(".texte").value = d.texte;
+  }
+
+  function trier() {
+    boites.sort((a, b) => a.donnees.debut - b.donnees.debut || a.donnees.id - b.donnees.id);
+    for (const b of boites) liste.append(b.li);
+  }
+
+  function majNombre() {
+    document.getElementById("nombre-boites").textContent = boites.length ? `(${boites.length})` : "";
+    boutonApercu.hidden = !boites.length;
+  }
+
+  function choisir(b) {
+    choisie = b;
+    for (const x of boites) x.li.classList.toggle("choisie", x === b);
+    if (b) b.li.scrollIntoView({ block: "nearest" });
+    afficher();
+  }
+
+  function ajouter(donnees) {
+    const div = document.createElement("div");
+    div.className = "masque";
+    div.innerHTML = '<span class="texte-masque"></span><span class="poignee" title="Redimensionner"></span>';
+    const b = { donnees, div, texte: div.querySelector(".texte-masque") };
+    b.li = ligne(b);
+    calque.append(div);
+    boites.push(b);
+    deplacable(b);
+    dessiner(b); majLigne(b);
+    return b;
+  }
+
+  // --- Déplacer et redimensionner la boîte choisie (vidéo en pause) ---
+
+  function deplacable(b) {
+    b.div.addEventListener("pointerdown", (e) => {
+      if (mode || !video.paused) return;
+      e.preventDefault(); e.stopPropagation();
+      if (choisie !== b) { choisir(b); return; }
+      const poignee = e.target.classList.contains("poignee");
+      const depart = proportion(e), avant = { ...b.donnees };
+      b.div.setPointerCapture(e.pointerId);
+      const bouger = (m) => {
+        const p = proportion(m), dx = p.x - depart.x, dy = p.y - depart.y;
+        if (poignee) {
+          b.donnees.largeur = Math.max(0.005, Math.min(1 - avant.x, avant.largeur + dx));
+          b.donnees.hauteur = Math.max(0.005, Math.min(1 - avant.y, avant.hauteur + dy));
+        } else {
+          b.donnees.x = Math.max(0, Math.min(1 - avant.largeur, avant.x + dx));
+          b.donnees.y = Math.max(0, Math.min(1 - avant.hauteur, avant.y + dy));
+        }
+        dessiner(b);
+      };
+      const finir = () => {
+        b.div.removeEventListener("pointermove", bouger);
+        const { x, y, largeur, hauteur } = b.donnees;
+        b.donnees = avant;
+        if (x !== avant.x || y !== avant.y || largeur !== avant.largeur || hauteur !== avant.hauteur) {
+          modifier(b, { x, y, largeur, hauteur });
+        } else dessiner(b);
+      };
+      b.div.addEventListener("pointermove", bouger);
+      b.div.addEventListener("lostpointercapture", finir, { once: true });
+    });
+  }
+
+  // --- Tracer une nouvelle boîte, prendre une couleur ---
+
+  function changerMode(nouveau, message) {
+    mode = nouveau;
+    calque.classList.toggle("trace", mode !== null);
+    aide.textContent = message || AIDE;
+    aide.classList.toggle("actif", mode !== null);
+  }
+  function annulerMode() { changerMode(null); }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && mode) annulerMode(); });
+
+  boutonNouvelle.addEventListener("click", () => {
+    video.pause();
+    choisir(null);
+    changerMode("trace", "Tracez un rectangle sur l'image, autour de la donnée à cacher (Échap : annuler).");
+  });
+
+  calque.addEventListener("pointerdown", (e) => {
+    if (!mode) return;
+    e.preventDefault();
+    const depart = proportion(e);
+    if (mode === "pipette") {
+      const couleur = couleurA(imageCourante(), depart.x, depart.y);
+      annulerMode();
+      if (choisie) modifier(choisie, { fond: couleur, couleur_texte: texteLisible(couleur) });
+      return;
+    }
+    const cadre = document.createElement("div");
+    cadre.className = "trace-en-cours";
+    calque.append(cadre);
+    calque.setPointerCapture(e.pointerId);
+    let zone = null;
+    const bouger = (m) => {
+      const p = proportion(m);
+      zone = { x: Math.min(p.x, depart.x), y: Math.min(p.y, depart.y),
+               largeur: Math.abs(p.x - depart.x), hauteur: Math.abs(p.y - depart.y) };
+      Object.assign(cadre.style, { left: `${zone.x * 100}%`, top: `${zone.y * 100}%`,
+                                   width: `${zone.largeur * 100}%`, height: `${zone.hauteur * 100}%` });
+    };
+    calque.addEventListener("pointermove", bouger);
+    calque.addEventListener("lostpointercapture", async () => {
+      calque.removeEventListener("pointermove", bouger);
+      cadre.remove();
+      annulerMode();
+      if (!zone || zone.largeur < 0.005 || zone.hauteur < 0.005) return;  // simple clic : rien
+      const fond = fondDe(zone);
+      const debut = video.currentTime;
+      const fin = Math.min(debut + DUREE_PAR_DEFAUT, video.duration || debut + DUREE_PAR_DEFAUT);
+      try {
+        const donnees = await envoyer("POST", `/projets/${PROJET}/masques`, {
+          debut, fin, ...zone, fond, couleur_texte: texteLisible(fond), texte: "", taille_texte: 0.7,
+        });
+        const b = ajouter(donnees);
+        trier(); majNombre(); choisir(b);
+        statut(`Boîte créée pour ${DUREE_PAR_DEFAUT} s : réglez sa fin avec « fin ici ».`);
+        b.li.querySelector(".texte").focus();
+      } catch { /* message déjà affiché */ }
+    }, { once: true });
+  });
+
+  // --- Aperçu exact : image rendue par le serveur avec les boîtes gravées (comme dans la vidéo doublée) ---
+
+  boutonApercu.addEventListener("click", async () => {
+    video.pause();
+    statut("Préparation de l'aperçu…");
+    const r = await fetch(`/projets/${PROJET}/sous-titres/apercu?t=${video.currentTime.toFixed(3)}&sous_titres=false`);
+    if (!r.ok) { statut("Aperçu impossible.", true); return; }
+    if (apercu.src) URL.revokeObjectURL(apercu.src);
+    apercu.src = URL.createObjectURL(await r.blob());
+    apercu.hidden = false;
+    statut("Aperçu exact : cliquez sur l'image pour revenir à la vidéo.");
+  });
+
+  // --- Chargement ---
+
+  (async () => {
+    const r = await fetch(`/projets/${PROJET}/masques`);
+    if (!r.ok) return;
+    for (const d of (await r.json()).masques) ajouter(d);
+    trier(); majNombre(); placerCalque(); afficher();
+  })();
+})();

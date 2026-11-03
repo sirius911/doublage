@@ -489,11 +489,13 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <div class="colonne-video">
 <div class="ecran">
 <video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
+<div id="calque-masques"></div>
 <div id="sur-image" hidden spellcheck="true"></div>
 <img id="apercu-sous-titres" hidden alt="Aperçu du sous-titre incrusté" title="Cliquez pour fermer l'aperçu">
 </div>
 <div class="sous-video">
 <div class="sous-ecran">{voice_choice(project, catalog)}{sound_choice(project)}</div>
+{masking_section()}
 {dubbing_section(project, job)}
 </div>
 </div>
@@ -504,7 +506,17 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 </div>
 <div id="enregistrement" role="status" hidden></div>
 <script>const PROJET = {project.id};</script>
-<script src="/static/editeur.js"></script>"""
+<script src="/static/editeur.js"></script>
+<script src="/static/masquage.js"></script>"""
+
+
+def masking_section() -> str:
+    """Boîtes de masquage des données patients (liste remplie par masquage.js)."""
+    return """<section id="masquage"><h2>Masquage des données <small id="nombre-boites"></small></h2>
+<p class="generer"><button type="button" id="nouvelle-boite">＋ Nouvelle boîte</button>
+<button type="button" id="apercu-masques" hidden>Aperçu exact sur l'image</button>
+<small id="aide-masquage">Vidéo en pause au moment où la donnée apparaît, puis tracez un rectangle sur l'image.</small></p>
+<ol id="boites"></ol></section>"""
 
 
 def job_progress(project: Project, job: Job, when_done: str = "location.reload()") -> str:
@@ -665,9 +677,10 @@ def check_subtitle_style(font: str, size: int) -> None:
 
 @app.get("/projets/{project_id}/sous-titres/apercu")
 def subtitle_preview(user: User, project: CurrentProject, t: float = 0.0, police: str = DEFAULT_FONT,
-                     taille: int = DEFAULT_SIZE) -> Response:
+                     taille: int = DEFAULT_SIZE, sous_titres: bool = True) -> Response:
     """Image de la vidéo à l'instant `t`, la phrase affichée gravée dans la police et la taille choisies,
-    exactement comme dans la vidéo doublée (même filtre ffmpeg), sans générer la vidéo."""
+    exactement comme dans la vidéo doublée (même filtre ffmpeg), sans générer la vidéo. Les boîtes de
+    masquage visibles à cet instant sont gravées aussi ; `sous_titres=false` : les boîtes seules."""
     check_subtitle_style(police, taille)
     if not project.transcript_path.exists():
         raise HTTPException(404, "Pas encore de transcription")
@@ -680,8 +693,9 @@ def subtitle_preview(user: User, project: CurrentProject, t: float = 0.0, police
     text = display_text(segment.text) if segment else "Exemple de sous-titre"
     at = max(0.0, min(t, transcript.duration - 0.5))  # au-delà de la fin : aucune image
     with tempfile.TemporaryDirectory() as tmp:
-        srt = Path(tmp) / "apercu.srt"
-        srt.write_text(f"1\n00:00:00,000 --> 99:00:00,000\n{text}\n", encoding="utf-8")
+        srt = Path(tmp) / "apercu.srt" if sous_titres else None
+        if srt:
+            srt.write_text(f"1\n00:00:00,000 --> 99:00:00,000\n{text}\n", encoding="utf-8")
         with _masks_lock:
             masks = load_masks(project.folder)
         try:

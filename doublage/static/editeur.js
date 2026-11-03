@@ -24,6 +24,7 @@
     etatEnregistrement.hidden = false;
     if (texte === "Enregistré.") effacementStatut = setTimeout(() => { etatEnregistrement.hidden = true; }, 2000);
   }
+  window.statutEditeur = statut;  // aussi pour masquage.js
   let finExtrait = null;  // « ▶ Original » : la vidéo s'arrête à la fin de la phrase
 
   // --- Affichage sur l'image ---

@@ -124,10 +124,10 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 V1 — boîtes fixes :
 - [x] Format des masques par projet (`masques.json` : début, fin, rectangle en proportion de l'image, couleur
       de fond, texte de remplacement, couleur et taille du texte) ; début et fin calés sur les images de la vidéo
-- [ ] Éditeur : dessiner une boîte sur la vidéo en pause, régler début / fin (« depuis ici », « jusqu'ici »),
+- [x] Éditeur : dessiner une boîte sur la vidéo en pause, régler début / fin (« depuis ici », « jusqu'ici »),
       couleur par pipette sur l'image, texte ; liste des boîtes ; aperçu sur la vidéo à l'image près
-- [x] Export : boîtes gravées dans l'image (ré-encodage, même chaîne que les sous-titres incrustés ; piste
-      envisagée : rectangles et texte en sous-titres ASS), et dans l'image d'aperçu des sous-titres ;
+- [x] Export : boîtes gravées dans l'image (ré-encodage, même chaîne que les sous-titres incrustés : filtres
+      drawbox et drawtext, sous les sous-titres), et dans l'image d'aperçu des sous-titres ;
       sans boîte, l'image n'est pas ré-encodée
 - [ ] Vérification de la vidéo exportée : avance image par image, boîtes en surbrillance
 - [ ] Aide : quand masquer, défilements (grande boîte pendant le défilement), liste des endroits oubliés

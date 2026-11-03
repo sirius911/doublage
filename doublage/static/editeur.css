@@ -6,7 +6,7 @@
   padding: .3em .6em; border-radius: .3em;
   background: rgba(0, 0, 0, .75); color: #fff; text-align: center;
   font-size: clamp(14px, 2.2vw, 26px); line-height: 1.35;
-  pointer-events: none;
+  pointer-events: none; z-index: 1;  /* au-dessus des boîtes de masquage, comme à l'export */
 }
 /* Aperçu des sous-titres incrustés : image rendue par ffmpeg, posée sur le lecteur. */
 #apercu-sous-titres {
@@ -106,3 +106,35 @@
 }
 /* Voix en cours de génération : curseur d'attente sur toute la page. */
 html.travail, html.travail * { cursor: progress !important; }
+
+/* Masquage des données : boîtes opaques posées exactement sur l'image (calque calé par masquage.js). */
+#calque-masques { position: absolute; z-index: 1; pointer-events: none; overflow: hidden; }
+#calque-masques.trace { pointer-events: auto; cursor: crosshair; }
+#calque-masques .masque {
+  position: absolute; box-sizing: border-box; display: flex; align-items: center; overflow: visible;
+  font-family: "Liberation Sans", Arial, sans-serif; line-height: 1; white-space: pre;
+}
+#calque-masques .masque[hidden] { display: none; }
+#calque-masques.en-pause:not(.trace) .masque { pointer-events: auto; cursor: pointer; }
+#calque-masques.en-pause .masque.choisie { outline: 2px dashed #ffd54a; outline-offset: 1px; cursor: move; }
+#calque-masques .poignee { display: none; }
+#calque-masques.en-pause .masque.choisie .poignee {
+  display: block; position: absolute; right: -6px; bottom: -6px; width: 10px; height: 10px;
+  background: #ffd54a; border: 1px solid #000; cursor: nwse-resize;
+}
+#calque-masques .trace-en-cours { position: absolute; border: 2px dashed #ffd54a; background: rgba(255, 213, 74, .2); }
+
+#masquage h2 { font-size: 1.1rem; }
+#aide-masquage.actif { color: #b65c00; font-weight: bold; }
+#boites { list-style: none; padding: 0; margin: 0; }
+#boites li { padding: .3em .4em; border-bottom: 1px solid #eee; font-size: .85em; cursor: pointer; }
+#boites li.choisie { background: #fff3b0; }
+#boites .periode, #boites .reglages { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
+#boites .reglages { margin-top: .2em; }
+#boites .aller { font: .95em monospace; }
+#boites button { font-size: inherit; padding: 0 .5em; }
+#boites .texte { flex: 1; min-width: 10em; }
+#boites input[type="color"] { width: 2em; height: 1.4em; padding: 0; vertical-align: middle; }
+#boites input[type="range"] { width: 5em; vertical-align: middle; }
+#boites .supprimer { margin-left: auto; color: #b00; }
+.masquage-perime { color: #b00; }
