@@ -239,7 +239,8 @@ chaque passage sensible <b>image par image</b> : aucune image ne doit laisser vo
 Chaque boîte couvre en plus une image avant son début et une après sa fin, par sécurité.</p>
 <p class="note">Si vous modifiez les boîtes après la génération, un message rouge le signale : mettez à jour
 la vidéo doublée avant de la diffuser. La vidéo d'origine, elle, n'est pas masquée : ne diffusez que la
-vidéo doublée.</p>
+vidéo doublée, et <b>supprimez le projet</b> (× sur la page d'accueil) une fois la vidéo doublée
+exportée : la vidéo d'origine est effacée avec lui.</p>
 </section>
 
 <section id="astuces">

@@ -4,14 +4,12 @@ Questions qui demandent une réponse de votre part. Répondez directement sous c
 Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
-- Q16 — Masquage des données patients : filmer de vraies données de santé (Lifen), même masquées ensuite, est
-  un traitement de données. Faut-il un avis du DPO / RSSI avant d'utiliser le masquage ? Par ailleurs,
-  Lifen propose-t-il un environnement de démonstration (souvent prévu pour les commerciaux) ?
-- Q17 — Conservation de la vidéo source quand elle contient des données patients : la supprimer (avec l'audio
-  extrait) après validation de la vidéo doublée ? Après combien de jours ? Pour tous les projets ou seulement
-  ceux qui ont des boîtes de masquage ? (Sans source, plus de modification ni de nouvel export possible.)
+(aucune)
 
 ## Résolues
+- Q17 : vidéos conservées et gérées par les deux utilisateurs, supprimées manuellement (suppression du
+  projet) une fois la vidéo doublée exportée ; pas de suppression automatique.
+- Q16 : usage du masquage validé par le DPO et la DSI.
 - Q15 : pas un bug, la voix était encore utilisée par un autre projet (indiqué par le message d'erreur).
 - Q14 : page d'aide illustrée par des dessins dans la page (vrais boutons, pastilles et zones reproduits
   en petit, flèches, légendes), pas de captures d'écran ; une ou deux captures plus tard si besoin.

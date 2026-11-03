@@ -64,7 +64,9 @@ logiciels, la règle reste de tourner sur l'environnement de test avec des patie
 - **Vérification image par image** de la vidéo avant diffusion (aucune image ne doit laisser voir une donnée).
 - Les vidéos de l'enregistreur de Windows sont à fréquence d'images fixe (30 ou 29,97 i/s, mesuré sur la VM) :
   les débuts et fins de boîtes sont calés sur les images de chaque vidéo, sans conversion au dépôt.
-- La vidéo source reste en clair sur la VM : sa durée de conservation est à fixer (voir QUESTIONS.md).
+- La vidéo source reste en clair sur la VM, gérée par les deux utilisateurs : ils suppriment le projet
+  (vidéo source, audio et fichiers de travail compris) une fois la vidéo doublée exportée. Pas de suppression
+  automatique. Usage validé par le DPO et la DSI (Q16, Q17).
 
 ## Hors périmètre (pour l'instant)
 - Traduction dans une autre langue.

@@ -137,7 +137,8 @@ V1 — boîtes fixes :
 - [x] Aide (section « Masquer des données patients », lien depuis l'éditeur) : quand masquer, poser une boîte,
       défilements (grande boîte pendant le défilement), endroits oubliés (titre de fenêtre, onglets, barre
       d'adresse, infobulles, notifications), vérification image par image avant diffusion
-- [ ] Conservation de la vidéo source (selon Q17)
+- [x] Conservation de la vidéo source (Q17) : suppression manuelle du projet après export (déjà possible,
+      efface tout le dossier) ; rappel dans l'aide
 V2 — suivi des défilements, si les cas réels l'imposent :
 - [ ] Boîte qui suit le contenu : positions à quelques instants, interpolées entre eux ; vérification renforcée
 V3 — en option, si la V2 est trop fastidieuse :

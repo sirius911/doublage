@@ -8,7 +8,10 @@ Historique des sessions, la plus récente en haut.
 - Fait ensuite : contour en pointillés des boîtes sur l'aperçu « nouvelle voix » (vérification de l'image
   gravée, case « contours des boîtes ») ; section d'aide « Masquer des données patients », lien depuis l'éditeur.
 - Non éprouvé dans un navigateur (syntaxe seule) : à essayer sur la VM.
-- Reste en V1 : conservation de la source, bloquée par Q17 ; Q16 (DPO / RSSI) toujours ouverte.
+- Q16 et Q17 tranchées par l'utilisateur : usage validé par le DPO et la DSI ; vidéos gérées par les deux
+  utilisateurs, projet supprimé à la main après export (déjà possible), rappel ajouté dans l'aide.
+- V1 du masquage terminée, à éprouver sur de vrais tutoriels ; V2 (suivi des défilements) seulement si les
+  cas réels l'imposent.
 
 ## 2026-11-03 — Masquage : réglage à l'image près
 - Retour de l'utilisateur : la boîte apparaît un peu trop tôt ou trop tard (réglage « ici » imprécis avec la
