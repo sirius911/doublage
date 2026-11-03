@@ -135,7 +135,8 @@ html.travail, html.travail * { cursor: progress !important; }
 #boites .borne { white-space: nowrap; }
 #boites .aller-debut, #boites .aller-fin { font: .95em monospace; }
 #boites .moins-debut, #boites .moins-fin, #boites .plus-debut, #boites .plus-fin { padding: 0 .4em; }
-.image-affichee { margin: .3rem 0; display: flex; align-items: center; gap: .6em; flex-wrap: wrap; }
+.image-affichee { margin: .3rem 0; display: flex; align-items: center; justify-content: center; gap: .6em; flex-wrap: wrap; }
+.image-affichee small { flex-basis: 100%; text-align: center; }
 .image-affichee button { padding: .1em .8em; }
 .image-affichee #image-affichee { font: 1.15em monospace; min-width: 4ch; display: inline-block; }
 .image-affichee #temps-image { font-family: monospace; color: #555; }
