@@ -8,12 +8,21 @@ l'image (0 à 1), pour ne pas dépendre de la taille d'affichage dans l'éditeur
 import json
 import math
 import re
+import shutil
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 COLOR = re.compile(r"^#[0-9a-f]{6}$")
-# Police du texte de remplacement (installée dans le conteneur, mêmes proportions qu'Arial).
-FONT = "Liberation Sans"
+# Police du texte de remplacement : Liberation Sans (installée dans le conteneur, mêmes proportions
+# qu'Arial), sinon une police proche. Désignée par son fichier, copié dans le dossier de travail : ffmpeg
+# ne dépend pas de la recherche de polices du système (qui plante avec ffmpeg pour Windows).
+FONT_FILES = (
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+    "C:/Windows/Fonts/arial.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+)
+FONT_COPY = "police-masques.ttf"
 TEXT_MAX_LENGTH = 200
 # Marge de sécurité autour de la période d'une boîte, en images : la boîte apparaît un peu avant et
 # disparaît un peu après, pour qu'aucune image ne laisse voir la donnée (arrondis du navigateur, d'ffmpeg).
@@ -90,6 +99,15 @@ def save_masks(folder: Path, masks: list[Mask]) -> None:
     partial.replace(path)
 
 
+def _copy_font(folder: Path) -> None:
+    source = next((Path(f) for f in FONT_FILES if Path(f).exists()), None)
+    if source is None:
+        raise MaskError("Aucune police disponible pour le texte de remplacement des boîtes.")
+    copy = folder / FONT_COPY
+    if not copy.exists() or copy.stat().st_size != source.stat().st_size:
+        shutil.copyfile(source, copy)
+
+
 def masks_filter(masks: list[Mask], width: int, height: int, fps: float, folder: Path,
                  at: float | None = None) -> str | None:
     """Filtres ffmpeg qui gravent les boîtes dans l'image (None : aucune boîte).
@@ -110,7 +128,8 @@ def masks_filter(masks: list[Mask], width: int, height: int, fps: float, folder:
             textfile = folder / f"masque-{mask.id}.txt"
             textfile.write_text(mask.text.strip(), encoding="utf-8")
             size = max(6, round(mask.text_size * mask.h * height))
+            _copy_font(folder)
             filters.append(
-                f"drawtext=textfile={textfile.name}:expansion=none:font='{FONT}':fontsize={size}"
+                f"drawtext=textfile={textfile.name}:expansion=none:fontfile={FONT_COPY}:fontsize={size}"
                 f":fontcolor=0x{mask.text_color[1:]}:x={x + round(size * 0.25)}:y={y}+({h}-th)/2{enable}")
     return ",".join(filters) or None
