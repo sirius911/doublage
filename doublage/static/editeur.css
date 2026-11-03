@@ -122,6 +122,13 @@ html.travail, html.travail * { cursor: progress !important; }
   display: block; position: absolute; right: -6px; bottom: -6px; width: 10px; height: 10px;
   background: #ffd54a; border: 1px solid #000; cursor: nwse-resize;
 }
+/* Vérification sur la vidéo doublée : contour seul, écarté du bord pour ne rien cacher de l'image gravée. */
+#calque-masques.verification .masque {
+  background: transparent !important; outline: 2px dashed #ff00ff !important; outline-offset: 3px;
+  pointer-events: none !important;
+}
+#calque-masques.verification .masque > * { visibility: hidden; }
+.image-affichee .contours[hidden] { display: none; }
 #calque-masques .trace-en-cours { position: absolute; border: 2px dashed #ffd54a; background: rgba(255, 213, 74, .2); }
 
 #masquage h2 { font-size: 1.1rem; }

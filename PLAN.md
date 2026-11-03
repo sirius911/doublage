@@ -132,8 +132,8 @@ V1 — boîtes fixes :
 - [x] Réglage à l'image près (retour de l'utilisateur : début / fin imprécis) : boutons ◀ ▶ et flèches ← → image par
       image, boutons − / + sur le début et la fin, n° de l'image affiché sous la vidéo ; marge d'export ramenée à une image
       de chaque côté (vérifié avec ffmpeg à 30 et 29,97 i/s)
-- [~] Vérification de la vidéo exportée : avance image par image (possible dans l'éditeur sur l'aperçu
-      « nouvelle voix », avec `,` / `.`) ; reste : boîtes en surbrillance
+- [x] Vérification de la vidéo exportée : image par image dans l'éditeur sur l'aperçu « nouvelle voix »
+      (◀ ▶, flèches), contour des boîtes en pointillés sur l'image gravée (case « contours des boîtes »)
 - [ ] Aide : quand masquer, défilements (grande boîte pendant le défilement), liste des endroits oubliés
       (titre de fenêtre, barre d'adresse, infobulles, notifications, onglets)
 - [ ] Conservation de la vidéo source (selon Q17)

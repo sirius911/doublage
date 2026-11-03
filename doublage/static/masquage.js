@@ -132,16 +132,21 @@
     Object.assign(b.texte.style, { fontSize: `${taille}px`, paddingLeft: `${taille * 0.25}px` });
   }
 
-  // Sur la vidéo doublée (aperçu « nouvelle voix »), les boîtes sont déjà gravées : on montre l'image réelle.
+  // Sur la vidéo doublée (aperçu « nouvelle voix »), les boîtes sont déjà gravées : on montre l'image réelle,
+  // avec seulement le contour des boîtes (vérification : la donnée ne doit pas dépasser du cadre).
   const surVideoDoublee = () => video.currentSrc.includes("/export");
+  const contours = document.getElementById("contours-boites");
+  contours.addEventListener("change", () => afficher());
 
   // `t` : instant de l'image affichée (donné par le navigateur pendant la lecture, plus juste que currentTime).
   function afficher(t = video.currentTime) {
     const n = imageA(t), doublee = surVideoDoublee();
     calque.classList.toggle("en-pause", video.paused);  // boîtes sélectionnables à l'arrêt seulement
+    calque.classList.toggle("verification", doublee);
+    contours.parentElement.hidden = !doublee || !boites.length;
     majImageAffichee(t);
     for (const b of boites) {
-      const visible = !doublee && premiere(b.donnees) <= n && n <= derniere(b.donnees);
+      const visible = (!doublee || contours.checked) && premiere(b.donnees) <= n && n <= derniere(b.donnees);
       b.div.hidden = !visible;
       b.div.classList.toggle("choisie", b === choisie);
     }

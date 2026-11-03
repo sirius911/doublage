@@ -512,6 +512,8 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <p class="image-affichee"><button type="button" id="image-precedente" title="Image précédente (flèche gauche)">◀</button>
 <span>Image n° <strong id="image-affichee">–</strong> <span id="temps-image"></span></span>
 <button type="button" id="image-suivante" title="Image suivante (flèche droite)">▶</button>
+<label class="contours" hidden title="Vérification de la vidéo doublée : contour des boîtes sur l'image gravée">
+<input type="checkbox" id="contours-boites" checked> contours des boîtes</label>
 <small>flèches <kbd>←</kbd> <kbd>→</kbd> du clavier : image par image</small></p>
 <div class="sous-video">
 <div class="sous-ecran">{voice_choice(project, catalog)}{sound_choice(project)}</div>
