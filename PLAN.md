@@ -120,6 +120,24 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 - [x] Aide, Astuces : pause manquante après une virgule → `[,|.]` ou `[,|...]` (essayés par l'utilisateur :
       les sous-titres gardent la virgule, la voix marque la pause)
 
+## Phase 7 — Masquage des données patients (voir SPEC, Q16, Q17)
+V1 — boîtes fixes :
+- [ ] Format des masques par projet (`masques.json` : début, fin, rectangle en proportion de l'image, couleur
+      de fond, texte de remplacement, couleur et taille du texte) ; début et fin calés sur les images de la vidéo
+- [ ] Éditeur : dessiner une boîte sur la vidéo en pause, régler début / fin (« depuis ici », « jusqu'ici »),
+      couleur par pipette sur l'image, texte ; liste des boîtes ; aperçu sur la vidéo à l'image près
+- [ ] Export : boîtes gravées dans l'image (ré-encodage, même chaîne que les sous-titres incrustés ; piste
+      envisagée : rectangles et texte en sous-titres ASS), et dans l'image d'aperçu des sous-titres ;
+      sans boîte, l'image n'est pas ré-encodée
+- [ ] Vérification de la vidéo exportée : avance image par image, boîtes en surbrillance
+- [ ] Aide : quand masquer, défilements (grande boîte pendant le défilement), liste des endroits oubliés
+      (titre de fenêtre, barre d'adresse, infobulles, notifications, onglets)
+- [ ] Conservation de la vidéo source (selon Q17)
+V2 — suivi des défilements, si les cas réels l'imposent :
+- [ ] Boîte qui suit le contenu : positions à quelques instants, interpolées entre eux ; vérification renforcée
+V3 — en option, si la V2 est trop fastidieuse :
+- [ ] Suivi assisté (recherche du motif image par image), toujours vérifié par l'utilisateur
+
 ## Idées pour plus tard
 - Glossaire de prononciation (noms de logiciels, sigles)
 - Conserver les bruits de fond d'origine (clics) sous la nouvelle voix

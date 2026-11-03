@@ -49,7 +49,25 @@ Le traitement est **entièrement interne à l'établissement** : aucune donnée 
 - **Plus tard** : choix parmi un catalogue plus large de voix, et éventuellement des voix
   créées à partir d'un échantillon (avec l'accord de la personne enregistrée).
 
+## Masquage des données patients
+Certains logiciels (ex. Lifen) n'ont pas d'environnement de test : leurs tutoriels montrent de vraies données
+patients. Ces données doivent être **cachées de façon sûre** dans la vidéo exportée. Pour tous les autres
+logiciels, la règle reste de tourner sur l'environnement de test avec des patients fictifs.
+- **Boîte opaque** (pas de flou, qui laisse deviner un texte) : rectangle dessiné sur la vidéo en pause,
+  visible entre deux timecodes, d'une couleur de fond choisie par l'utilisateur (pipette sur l'image).
+- **Texte de remplacement** facultatif dans la boîte (données fictives : « DUPONT Jean »…), couleur et taille
+  choisies : on remplace la donnée vue par une autre, pour que l'explication reste lisible.
+- **Défilements d'écran** : en V1, une grande boîte couvre toute la zone qui défile pendant le défilement ;
+  plus tard, boîte qui suit le contenu (positions à quelques instants, interpolées).
+- Aperçu dans l'éditeur, boîtes gravées dans l'image à l'export (ré-encodage), et dans l'image d'aperçu
+  des sous-titres.
+- **Vérification image par image** de la vidéo avant diffusion (aucune image ne doit laisser voir une donnée).
+- Les vidéos de l'enregistreur de Windows sont à fréquence d'images fixe (30 ou 29,97 i/s, mesuré sur la VM) :
+  les débuts et fins de boîtes sont calés sur les images de chaque vidéo, sans conversion au dépôt.
+- La vidéo source reste en clair sur la VM : sa durée de conservation est à fixer (voir QUESTIONS.md).
+
 ## Hors périmètre (pour l'instant)
 - Traduction dans une autre langue.
-- Montage vidéo (coupes, effets).
+- Montage vidéo (coupes, effets), hormis le masquage des données patients ci-dessus.
+- Détection automatique des données à masquer (OCR, visages) : un oubli serait une fuite invisible.
 - Accès depuis l'extérieur de l'établissement.

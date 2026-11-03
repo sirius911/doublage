@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-03 — Masquage des données patients : cadrage
+- Besoin de l'utilisateur : certains logiciels (Lifen) n'ont pas de serveur de test, les tutoriels montrent de
+  vraies données ; il faut les cacher fortement, avec des défilements d'écran.
+- Décidé : boîtes opaques (pas de flou) de couleur choisie, avec texte de remplacement fictif facultatif ;
+  défilements couverts en V1 par une grande boîte, suivi interpolé en V2, suivi assisté éventuel en V3 ;
+  pas de détection automatique. Vérification image par image avant diffusion.
+- Mesuré sur la VM : vidéos de l'enregistreur Windows à fréquence fixe (30 et 29,97 i/s), pas de conversion.
+- SPEC (section « Masquage des données patients »), PLAN (Phase 7), Q16 (DPO, démo Lifen), Q17 (conservation).
+- Suite : Phase 7 V1, en commençant par le format des masques ; Q16 et Q17 à trancher par l'utilisateur.
+
 ## 2026-10-29 — Astuce : pause après une virgule
 - Question de l'utilisateur : pas de pause à une virgule, pause à la suivante. Normal : pour Pocket TTS une
   virgule est un indice, pas une pause obligatoire. Solution essayée et validée par l'utilisateur : la
