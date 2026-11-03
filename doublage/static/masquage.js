@@ -33,20 +33,27 @@
   }
 
   const imageAffichee = document.getElementById("image-affichee");
-  function majImageAffichee() {
-    const n = imageA(video.currentTime);
-    imageAffichee.textContent = `${tc(n / FPS)} (n° ${n})`;
+  const tempsImage = document.getElementById("temps-image");
+  function majImageAffichee(t) {
+    const n = imageA(t);
+    imageAffichee.textContent = n;
+    tempsImage.textContent = `(${tc(n / FPS)})`;
   }
 
-  // , et . : image précédente / suivante, vidéo en pause, hors saisie de texte (comme VLC).
+  // Image précédente / suivante : boutons ◀ ▶ sous la vidéo, et flèches du clavier hors saisie de texte.
+  // Les flèches remplacent le saut de 5 s du lecteur (écoute en phase de capture, avant le lecteur).
+  const pas = (sens) => allerImage(imageA(video.currentTime) + sens);
+  document.getElementById("image-precedente").addEventListener("click", () => pas(-1));
+  document.getElementById("image-suivante").addEventListener("click", () => pas(1));
   document.addEventListener("keydown", (e) => {
-    if (e.key !== "," && e.key !== ".") return;
-    if (e.ctrlKey || e.altKey || e.metaKey || !video.paused) return;
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
     const cible = e.target;
     if (cible.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(cible.tagName)) return;
     e.preventDefault();
-    allerImage(imageA(video.currentTime) + (e.key === "." ? 1 : -1));
-  });
+    e.stopPropagation();
+    pas(e.key === "ArrowRight" ? 1 : -1);
+  }, true);
 
   // --- Calque posé exactement sur l'image (la vidéo peut avoir des bandes noires dans le lecteur) ---
 
@@ -132,7 +139,7 @@
   function afficher(t = video.currentTime) {
     const n = imageA(t), doublee = surVideoDoublee();
     calque.classList.toggle("en-pause", video.paused);  // boîtes sélectionnables à l'arrêt seulement
-    majImageAffichee();
+    majImageAffichee(t);
     for (const b of boites) {
       const visible = !doublee && premiere(b.donnees) <= n && n <= derniere(b.donnees);
       b.div.hidden = !visible;

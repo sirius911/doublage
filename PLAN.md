@@ -129,8 +129,8 @@ V1 — boîtes fixes :
 - [x] Export : boîtes gravées dans l'image (ré-encodage, même chaîne que les sous-titres incrustés : filtres
       drawbox et drawtext, sous les sous-titres), et dans l'image d'aperçu des sous-titres ;
       sans boîte, l'image n'est pas ré-encodée
-- [x] Réglage à l'image près (retour de l'utilisateur : début / fin imprécis) : touches `,` / `.` image par
-      image, boutons − / + sur le début et la fin, n° de l'image affichée ; marge d'export ramenée à une image
+- [x] Réglage à l'image près (retour de l'utilisateur : début / fin imprécis) : boutons ◀ ▶ et flèches ← → image par
+      image, boutons − / + sur le début et la fin, n° de l'image affiché sous la vidéo ; marge d'export ramenée à une image
       de chaque côté (vérifié avec ffmpeg à 30 et 29,97 i/s)
 - [~] Vérification de la vidéo exportée : avance image par image (possible dans l'éditeur sur l'aperçu
       « nouvelle voix », avec `,` / `.`) ; reste : boîtes en surbrillance

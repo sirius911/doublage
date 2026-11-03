@@ -509,6 +509,10 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <div id="sur-image" hidden spellcheck="true"></div>
 <img id="apercu-sous-titres" hidden alt="Aperçu du sous-titre incrusté" title="Cliquez pour fermer l'aperçu">
 </div>
+<p class="image-affichee"><button type="button" id="image-precedente" title="Image précédente (flèche gauche)">◀</button>
+<span>Image n° <strong id="image-affichee">–</strong> <span id="temps-image"></span></span>
+<button type="button" id="image-suivante" title="Image suivante (flèche droite)">▶</button>
+<small>flèches <kbd>←</kbd> <kbd>→</kbd> du clavier : image par image</small></p>
 <div class="sous-video">
 <div class="sous-ecran">{voice_choice(project, catalog)}{sound_choice(project)}</div>
 {masking_section()}
@@ -531,10 +535,7 @@ def masking_section() -> str:
     return """<section id="masquage"><h2>Masquage des données <small id="nombre-boites"></small></h2>
 <p class="generer"><button type="button" id="nouvelle-boite">＋ Nouvelle boîte</button>
 <button type="button" id="apercu-masques" hidden>Aperçu exact sur l'image</button>
-<small id="aide-masquage">Vidéo en pause au moment où la donnée apparaît, puis tracez un rectangle sur l'image.</small></p>
-<p class="image-affichee"><small>Image affichée : <span id="image-affichee">–</span>
-· touches <kbd>,</kbd> et <kbd>.</kbd> : image précédente / suivante (vidéo en pause)</small></p>
-<ol id="boites"></ol></section>"""
+<small id="aide-masquage">Vidéo en pause au moment où la donnée apparaît, puis tracez un rectangle sur l'image.</small></p><ol id="boites"></ol></section>"""
 
 
 def job_progress(project: Project, job: Job, when_done: str = "location.reload()") -> str:
