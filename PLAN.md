@@ -144,6 +144,9 @@ V2 — suivi des défilements (demandé par l'utilisateur : nécessaire pour Lif
       interpolation linéaire (éditeur et export identiques) ; export par plages d'images de même rectangle
       (drawbox fixe), réunion des positions des images voisines par sécurité ; filtres longs passés par un
       fichier (`-/vf`, ffmpeg 7+) ; texte qui suit (expression de t) ; vérifié avec ffmpeg (donnée qui défile)
+- [x] Case « sous-titre sur l'image » sous la vidéo : cacher le texte de la phrase qui gêne le placement
+      des boîtes (retour de l'utilisateur ; choix gardé par le navigateur). Premier essai réel : 13 positions
+      pour un défilement Lifen
 V3 — en option, si la V2 est trop fastidieuse :
 - [ ] Suivi assisté (recherche du motif image par image), toujours vérifié par l'utilisateur
 

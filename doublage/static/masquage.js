@@ -40,6 +40,16 @@
     tempsImage.textContent = `(${tc(n / FPS)})`;
   }
 
+  // Sous-titre posé sur l'image : peut gêner le placement des boîtes ; choix gardé par le navigateur.
+  const caseTexte = document.getElementById("texte-sur-image");
+  const majTexte = () => ecran.classList.toggle("sans-texte", !caseTexte.checked);
+  caseTexte.checked = localStorage.getItem("doublage-texte-sur-image") !== "non";
+  caseTexte.addEventListener("change", () => {
+    localStorage.setItem("doublage-texte-sur-image", caseTexte.checked ? "oui" : "non");
+    majTexte();
+  });
+  majTexte();
+
   // Image précédente / suivante : boutons ◀ ▶ sous la vidéo, et flèches du clavier hors saisie de texte.
   // Les flèches remplacent le saut de 5 s du lecteur (écoute en phase de capture, avant le lecteur).
   const pas = (sens) => allerImage(imageA(video.currentTime) + sens);

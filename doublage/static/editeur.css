@@ -13,6 +13,7 @@
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   background: #000; cursor: zoom-out; z-index: 2;
 }
+.ecran.sans-texte #sur-image { display: none !important; }
 #sur-image.modifiable { pointer-events: auto; cursor: text; outline: 2px dashed rgba(255, 255, 255, .6); }
 #sur-image:focus { outline: 2px solid #ffd54a; }
 /* État de l'enregistrement automatique, en bas à droite de la fenêtre. */

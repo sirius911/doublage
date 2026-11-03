@@ -647,7 +647,7 @@ def test_frequence_d_images_donnee_a_l_editeur(client, monkeypatch):
     page = client.get(url).text
     assert "const IMAGES_PAR_SECONDE = 30.0;" in page and 'id="image-affichee"' in page
     assert 'id="image-precedente"' in page and 'id="image-suivante"' in page
-    assert 'id="contours-boites"' in page
+    assert 'id="contours-boites"' in page and 'id="texte-sur-image"' in page
     os.utime(projet.video, (time.time() + 5, time.time() + 5))  # nouvelle lecture (cache par date)
     monkeypatch.setattr(media, "probe_video", lambda video: (1920, 1080, 30000 / 1001))
     assert "const IMAGES_PAR_SECONDE = 29.97002997002997;" in client.get(url).text
