@@ -534,7 +534,8 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 
 def masking_section() -> str:
     """Boîtes de masquage des données patients (liste remplie par masquage.js)."""
-    return """<section id="masquage"><h2>Masquage des données <small id="nombre-boites"></small></h2>
+    return """<section id="masquage"><h2>Masquage des données <small id="nombre-boites"></small>
+<small><a href="/aide#masquage" target="_blank">aide</a></small></h2>
 <p class="generer"><button type="button" id="nouvelle-boite">＋ Nouvelle boîte</button>
 <button type="button" id="apercu-masques" hidden>Aperçu exact sur l'image</button>
 <small id="aide-masquage">Vidéo en pause au moment où la donnée apparaît, puis tracez un rectangle sur l'image.</small></p><ol id="boites"></ol></section>"""

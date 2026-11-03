@@ -41,7 +41,7 @@ du texte que vous relisez. La voix reste calée sur l'image. Tout se passe sur l
 <nav class="sommaire">
 <a href="#etapes">Les 4 étapes</a><a href="#depot">Déposer une vidéo</a><a href="#editeur">Corriger le texte</a>
 <a href="#pastilles">Les pastilles</a><a href="#prononciation">Prononciation</a><a href="#doublee">Vidéo doublée</a><a href="#voix">Les voix</a>
-<a href="#astuces">Astuces</a>
+<a href="#masquage">Masquage</a><a href="#astuces">Astuces</a>
 </nav>
 
 <section id="etapes">
@@ -197,6 +197,49 @@ apparaîtraient dans les sous-titres. La barre s'obtient avec <b>AltGr + 6</b>, 
 <b>AltGr + 5</b> et <b>AltGr + °</b>.</p>
 <p>Sur l'image de l'éditeur, le texte s'affiche comme les sous-titres pendant la lecture (« Zimbra ») ; à la
 pause, la notation complète réapparaît pour pouvoir la corriger.</p>
+</section>
+
+<section id="masquage">
+<h2>Masquer des données patients</h2>
+<p class="note attention">Tournez chaque fois que possible sur l'<b>environnement de test</b>, avec des
+patients fictifs. Le masquage est réservé aux logiciels sans environnement de test : il faut alors cacher
+<b>toute</b> donnée qui identifie un patient (nom, prénom, date de naissance, IPP, adresse, n° de séjour…).</p>
+<p>Le masquage pose des <b>boîtes opaques</b>, pas du flou : un texte flouté reste souvent devinable. Une
+boîte peut contenir un <b>texte de remplacement</b> fictif (« DUPONT Jean ») pour que l'explication reste
+claire. Les boîtes sont gravées dans l'image de la vidéo doublée.</p>
+<h3>Poser une boîte</h3>
+<ol>
+<li>Arrêtez la vidéo sur la <b>première image</b> où la donnée apparaît : <span class="bouton">◀</span>
+<span class="bouton">▶</span> sous la vidéo, ou les flèches <b>←</b> <b>→</b> du clavier, avancent d'une image.
+Le n° de l'image affichée est entre les deux boutons.</li>
+<li><span class="bouton">＋ Nouvelle boîte</span>, puis tracez un rectangle sur la donnée. Débordez un peu :
+une lettre qui dépasse d'un pixel se lit. La couleur de fond est prise automatiquement autour du rectangle ;
+<span class="bouton">pipette</span> permet d'en prendre une autre sur l'image.</li>
+<li>Réglez la <b>fin</b> : allez sur la <b>dernière image</b> où la donnée est visible et cliquez sur
+<span class="bouton">ici</span> à côté de « Fin ». <span class="bouton">−</span> et <span class="bouton">+</span>
+décalent le début ou la fin d'une image, et montrent l'image concernée.</li>
+<li>Facultatif : un texte de remplacement, sa couleur et sa taille. Pour déplacer ou agrandir la boîte, vidéo
+en pause, cliquez dessus puis faites-la glisser, ou tirez le carré jaune en bas à droite.</li>
+</ol>
+<p>Une boîte est <b>fixe</b> : si la fenêtre <b>défile</b> pendant que la donnée est visible, tracez une grande
+boîte qui couvre toute la zone qui défile, le temps du défilement. <span class="bouton">Aperçu exact sur
+l'image</span> montre l'image telle qu'elle sera gravée, à l'endroit où la vidéo est arrêtée.</p>
+<h3>Endroits souvent oubliés</h3>
+<ul>
+<li>le <b>titre de la fenêtre</b> et les <b>onglets</b> (le nom du patient y figure souvent) ;</li>
+<li>la <b>barre d'adresse</b> (un identifiant dans l'adresse) ;</li>
+<li>les <b>infobulles</b>, listes déroulantes et fenêtres de recherche qui s'ouvrent un instant ;</li>
+<li>les <b>notifications</b> de Windows ou de la messagerie, la barre des tâches ;</li>
+<li>les images qui passent vite : un changement d'écran, un défilement.</li>
+</ul>
+<h3>Vérifier avant de diffuser</h3>
+<p>Générez la vidéo doublée, puis, sous la vidéo de l'éditeur, « Son de la vidéo » : <b>nouvelle voix (aperçu)</b> : vous voyez
+l'image réellement gravée, avec le contour des boîtes en pointillés (case « contours des boîtes »). Parcourez
+chaque passage sensible <b>image par image</b> : aucune image ne doit laisser voir une donnée, même en partie.
+Chaque boîte couvre en plus une image avant son début et une après sa fin, par sécurité.</p>
+<p class="note">Si vous modifiez les boîtes après la génération, un message rouge le signale : mettez à jour
+la vidéo doublée avant de la diffuser. La vidéo d'origine, elle, n'est pas masquée : ne diffusez que la
+vidéo doublée.</p>
 </section>
 
 <section id="astuces">

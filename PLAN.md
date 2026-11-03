@@ -134,8 +134,9 @@ V1 — boîtes fixes :
       de chaque côté (vérifié avec ffmpeg à 30 et 29,97 i/s)
 - [x] Vérification de la vidéo exportée : image par image dans l'éditeur sur l'aperçu « nouvelle voix »
       (◀ ▶, flèches), contour des boîtes en pointillés sur l'image gravée (case « contours des boîtes »)
-- [ ] Aide : quand masquer, défilements (grande boîte pendant le défilement), liste des endroits oubliés
-      (titre de fenêtre, barre d'adresse, infobulles, notifications, onglets)
+- [x] Aide (section « Masquer des données patients », lien depuis l'éditeur) : quand masquer, poser une boîte,
+      défilements (grande boîte pendant le défilement), endroits oubliés (titre de fenêtre, onglets, barre
+      d'adresse, infobulles, notifications), vérification image par image avant diffusion
 - [ ] Conservation de la vidéo source (selon Q17)
 V2 — suivi des défilements, si les cas réels l'imposent :
 - [ ] Boîte qui suit le contenu : positions à quelques instants, interpolées entre eux ; vérification renforcée

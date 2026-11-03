@@ -436,7 +436,7 @@ def test_page_d_aide(client):
     login(client)
     assert 'href="/aide"' in client.get("/").text
     page = client.get("/aide").text
-    for ancre in ["etapes", "depot", "editeur", "pastilles", "doublee", "voix", "astuces"]:
+    for ancre in ["etapes", "depot", "editeur", "pastilles", "doublee", "voix", "masquage", "astuces"]:
         assert f'<section id="{ancre}">' in page and f'href="#{ancre}"' in page
     assert "jusqu'à 15 %" in page
     assert 'class="prompteur">Bonjour. Dans ce tutoriel' in page
