@@ -620,3 +620,22 @@ def test_scripts_de_l_editeur_valides():
     for script in ("editeur.js", "masquage.js"):
         chemin = os.path.join(os.path.dirname(doublage.app.__file__), "static", script)
         subprocess.run(["node", "--check", chemin], check=True)
+
+
+def test_frequence_d_images_donnee_a_l_editeur(client, monkeypatch):
+    """Réglage des boîtes à l'image près : la page connaît la fréquence d'images de la vidéo."""
+    from doublage import media
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
+
+    def illisible(video):
+        raise media.MediaError("pas une vidéo")
+
+    monkeypatch.setattr(media, "probe_video", illisible)
+    page = client.get(url).text
+    assert "const IMAGES_PAR_SECONDE = 30.0;" in page and 'id="image-affichee"' in page
+    os.utime(projet.video, (time.time() + 5, time.time() + 5))  # nouvelle lecture (cache par date)
+    monkeypatch.setattr(media, "probe_video", lambda video: (1920, 1080, 30000 / 1001))
+    assert "const IMAGES_PAR_SECONDE = 29.97002997002997;" in client.get(url).text

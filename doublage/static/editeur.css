@@ -131,7 +131,12 @@ html.travail, html.travail * { cursor: progress !important; }
 #boites li.choisie { background: #fff3b0; }
 #boites .periode, #boites .reglages { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
 #boites .reglages { margin-top: .2em; }
-#boites .aller { font: .95em monospace; }
+#boites .periode { gap: .3em 1em; }
+#boites .borne { white-space: nowrap; }
+#boites .aller-debut, #boites .aller-fin { font: .95em monospace; }
+#boites .moins-debut, #boites .moins-fin, #boites .plus-debut, #boites .plus-fin { padding: 0 .4em; }
+.image-affichee { margin: .2rem 0; color: #444; }
+.image-affichee #image-affichee { font-family: monospace; }
 #boites button { font-size: inherit; padding: 0 .5em; }
 #boites .texte { flex: 1; min-width: 10em; }
 #boites input[type="color"] { width: 2em; height: 1.4em; padding: 0; vertical-align: middle; }

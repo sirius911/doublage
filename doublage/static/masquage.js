@@ -20,6 +20,34 @@
 
   const tc = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${(s % 60).toFixed(2).padStart(5, "0")}`;
 
+  // --- Réglage à l'image près ---
+  // Une boîte couvre les images n° premiere à derniere : debut = premiere / FPS, fin = (derniere + 1) / FPS.
+  // L'image n° n est affichée de n / FPS à (n + 1) / FPS ; on s'y place en son milieu (pas d'arrondi douteux).
+  const FPS = window.IMAGES_PAR_SECONDE || 30;
+  const imageA = (t) => Math.floor(t * FPS + 1e-3);
+  const premiere = (d) => Math.round(d.debut * FPS);
+  const derniere = (d) => Math.round(d.fin * FPS) - 1;
+  function allerImage(n) {
+    video.pause();
+    video.currentTime = Math.max(0, (n + 0.5) / FPS);
+  }
+
+  const imageAffichee = document.getElementById("image-affichee");
+  function majImageAffichee() {
+    const n = imageA(video.currentTime);
+    imageAffichee.textContent = `${tc(n / FPS)} (n° ${n})`;
+  }
+
+  // , et . : image précédente / suivante, vidéo en pause, hors saisie de texte (comme VLC).
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "," && e.key !== ".") return;
+    if (e.ctrlKey || e.altKey || e.metaKey || !video.paused) return;
+    const cible = e.target;
+    if (cible.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(cible.tagName)) return;
+    e.preventDefault();
+    allerImage(imageA(video.currentTime) + (e.key === "." ? 1 : -1));
+  });
+
   // --- Calque posé exactement sur l'image (la vidéo peut avoir des bandes noires dans le lecteur) ---
 
   function placerCalque() {
@@ -100,25 +128,28 @@
   // Sur la vidéo doublée (aperçu « nouvelle voix »), les boîtes sont déjà gravées : on montre l'image réelle.
   const surVideoDoublee = () => video.currentSrc.includes("/export");
 
-  function afficher() {
-    const t = video.currentTime, doublee = surVideoDoublee();
+  // `t` : instant de l'image affichée (donné par le navigateur pendant la lecture, plus juste que currentTime).
+  function afficher(t = video.currentTime) {
+    const n = imageA(t), doublee = surVideoDoublee();
     calque.classList.toggle("en-pause", video.paused);  // boîtes sélectionnables à l'arrêt seulement
+    majImageAffichee();
     for (const b of boites) {
-      const visible = !doublee && b.donnees.debut <= t && t <= b.donnees.fin;
+      const visible = !doublee && premiere(b.donnees) <= n && n <= derniere(b.donnees);
       b.div.hidden = !visible;
       b.div.classList.toggle("choisie", b === choisie);
     }
   }
 
-  function suivre() {
-    afficher();
+  function suivre(_maintenant, image) {
+    afficher(image ? image.mediaTime : video.currentTime);
     if (!video.paused) {
       if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(suivre);
-      else requestAnimationFrame(suivre);
+      else requestAnimationFrame(() => suivre());
     }
   }
   video.addEventListener("play", () => { annulerMode(); suivre(); });
-  for (const evt of ["seeked", "timeupdate", "pause", "loadeddata"]) video.addEventListener(evt, afficher);
+  for (const evt of ["seeked", "pause", "loadeddata"]) video.addEventListener(evt, () => afficher());
+  video.addEventListener("timeupdate", () => { if (video.paused) afficher(); });
 
   // --- Enregistrement ---
 
@@ -168,9 +199,15 @@
   function ligne(b) {
     const li = document.createElement("li");
     li.innerHTML = `
-      <span class="periode"><button type="button" class="aller" title="Aller au début de la boîte"></button>
-      <button type="button" class="debut-ici" title="La boîte commence à l'image affichée">début ici</button>
-      <button type="button" class="fin-ici" title="La boîte s'arrête à l'image affichée">fin ici</button></span>
+      <span class="periode">
+      <span class="borne">Début <button type="button" class="aller-debut" title="Aller à la première image masquée"></button>
+      <button type="button" class="moins-debut" title="Commencer une image plus tôt">−</button><button type="button"
+       class="plus-debut" title="Commencer une image plus tard">+</button>
+      <button type="button" class="debut-ici" title="Commencer à l'image affichée">ici</button></span>
+      <span class="borne">Fin <button type="button" class="aller-fin" title="Aller à la dernière image masquée"></button>
+      <button type="button" class="moins-fin" title="Finir une image plus tôt">−</button><button type="button"
+       class="plus-fin" title="Finir une image plus tard">+</button>
+      <button type="button" class="fin-ici" title="Finir à l'image affichée (incluse)">ici</button></span></span>
       <span class="reglages">
       <label title="Couleur de fond">Fond <input type="color" class="fond"></label>
       <button type="button" class="pipette" title="Prendre la couleur de fond sur l'image">pipette</button>
@@ -179,15 +216,23 @@
       <label title="Taille du texte">A<input type="range" class="taille" min="0.3" max="1" step="0.05"></label>
       <button type="button" class="supprimer" title="Supprimer la boîte">✕</button></span>`;
     const q = (s) => li.querySelector(s);
-    q(".aller").addEventListener("click", () => { choisir(b); video.pause(); video.currentTime = b.donnees.debut; });
-    q(".debut-ici").addEventListener("click", () => {
-      if (video.currentTime >= b.donnees.fin) { statut("Le début doit venir avant la fin de la boîte.", true); return; }
-      modifier(b, { debut: video.currentTime });
-    });
-    q(".fin-ici").addEventListener("click", () => {
-      if (video.currentTime <= b.donnees.debut) { statut("La fin doit venir après le début de la boîte.", true); return; }
-      modifier(b, { fin: video.currentTime });
-    });
+    // Première et dernière image masquées ; après un réglage, la vidéo montre l'image concernée.
+    const regler = (debutImage, finImage, voir) => {
+      choisir(b);
+      if (finImage < debutImage) { statut("La fin de la boîte doit venir après son début.", true); return; }
+      if (debutImage < 0) { statut("La boîte commence déjà à la première image.", true); return; }
+      modifier(b, { debut: debutImage / FPS, fin: (finImage + 1) / FPS });
+      allerImage(voir);
+    };
+    const d = () => b.donnees;
+    q(".aller-debut").addEventListener("click", () => { choisir(b); allerImage(premiere(d())); });
+    q(".aller-fin").addEventListener("click", () => { choisir(b); allerImage(derniere(d())); });
+    q(".moins-debut").addEventListener("click", () => regler(premiere(d()) - 1, derniere(d()), premiere(d()) - 1));
+    q(".plus-debut").addEventListener("click", () => regler(premiere(d()) + 1, derniere(d()), premiere(d()) + 1));
+    q(".moins-fin").addEventListener("click", () => regler(premiere(d()), derniere(d()) - 1, derniere(d()) - 1));
+    q(".plus-fin").addEventListener("click", () => regler(premiere(d()), derniere(d()) + 1, derniere(d()) + 1));
+    q(".debut-ici").addEventListener("click", () => { const n = imageA(video.currentTime); regler(n, derniere(d()), n); });
+    q(".fin-ici").addEventListener("click", () => { const n = imageA(video.currentTime); regler(premiere(d()), n, n); });
     q(".fond").addEventListener("change", (e) => modifier(b, { fond: e.target.value }));
     q(".couleur-texte").addEventListener("change", (e) => modifier(b, { couleur_texte: e.target.value }));
     q(".taille").addEventListener("change", (e) => modifier(b, { taille_texte: parseFloat(e.target.value) }));
@@ -216,7 +261,8 @@
 
   function majLigne(b) {
     const q = (s) => b.li.querySelector(s), d = b.donnees;
-    q(".aller").textContent = `${tc(d.debut)} → ${tc(d.fin)}`;
+    q(".aller-debut").textContent = `${tc(d.debut)} (n° ${premiere(d)})`;
+    q(".aller-fin").textContent = `${tc(derniere(d) / FPS)} (n° ${derniere(d)})`;
     q(".fond").value = d.fond;
     q(".couleur-texte").value = d.couleur_texte;
     q(".taille").value = d.taille_texte;
@@ -333,15 +379,16 @@
       annulerMode();
       if (!zone || zone.largeur < 0.005 || zone.hauteur < 0.005) return;  // simple clic : rien
       const fond = fondDe(zone);
-      const debut = video.currentTime;
-      const fin = Math.min(debut + DUREE_PAR_DEFAUT, video.duration || debut + DUREE_PAR_DEFAUT);
+      const n = imageA(video.currentTime);
+      const derniereImage = video.duration ? Math.floor(video.duration * FPS) - 1 : Infinity;
+      const debut = n / FPS, fin = (Math.max(n, Math.min(n + DUREE_PAR_DEFAUT * FPS - 1, derniereImage)) + 1) / FPS;
       try {
         const donnees = await envoyer("POST", `/projets/${PROJET}/masques`, {
           debut, fin, ...zone, fond, couleur_texte: texteLisible(fond), texte: "", taille_texte: 0.7,
         });
         const b = ajouter(donnees);
         trier(); majNombre(); choisir(b);
-        statut(`Boîte créée pour ${DUREE_PAR_DEFAUT} s : réglez sa fin avec « fin ici ».`);
+        statut(`Boîte créée pour ${DUREE_PAR_DEFAUT} s : réglez sa fin (« ici », − / +).`);
         b.li.querySelector(".texte").focus();
       } catch { /* message déjà affiché */ }
     }, { once: true });

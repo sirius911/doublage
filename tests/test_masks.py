@@ -31,11 +31,13 @@ def test_rectangle_arrondi_vers_l_exterieur():
     assert boite(x=0.9, w=0.1, y=0.0, h=1.0).pixels(1920, 1080) == (1728, 0, 192, 1080)
 
 
-def test_marge_d_une_image_et_demie():
+def test_marge_d_une_image_de_chaque_cote():
     lo, hi = boite().window(30)
-    assert lo == pytest.approx(1.95) and hi == pytest.approx(4.05)
+    # Images de 2 s à 4 s exclu (n° 60 à 119 à 30 i/s) ; avec la marge, n° 59 à 120.
+    assert lo == pytest.approx(1.95) and hi == pytest.approx(4 + 0.5 / 30)
+    assert lo < 59 / 30 and 58 / 30 < lo and 120 / 30 < hi < 121 / 30
     assert boite(start=0.0).window(30)[0] == 0.0
-    assert boite().visible_at(1.96, 30) and not boite().visible_at(4.1, 30)
+    assert boite().visible_at(1.96, 30) and not boite().visible_at(4.04, 30)
 
 
 def test_filtre_ffmpeg(tmp_path):
@@ -43,10 +45,10 @@ def test_filtre_ffmpeg(tmp_path):
     filtre = masks_filter([boite(), boite(id=2, text=" DUPONT Jean ", background="#eeeeee")],
                           1920, 1080, 30, tmp_path)
     cache, fond, texte = filtre.split(",drawbox", 1)[0], *filtre.split(",drawbox", 1)[1].split(",drawtext")
-    assert cache == "drawbox=x=192:y=216:w=576:h=54:color=0xffffff@1:t=fill:enable='between(t,1.9500,4.0500)'"
+    assert cache == "drawbox=x=192:y=216:w=576:h=54:color=0xffffff@1:t=fill:enable='between(t,1.9500,4.0167)'"
     assert "color=0xeeeeee@1" in fond
     assert "textfile=masque-2.txt" in texte and "expansion=none" in texte and "fontsize=38" in texte
-    assert texte.endswith(":enable='between(t,1.9500,4.0500)'")
+    assert texte.endswith(":enable='between(t,1.9500,4.0167)'")
     assert (tmp_path / "masque-2.txt").read_text(encoding="utf-8") == "DUPONT Jean"
     assert not (tmp_path / "masque-1.txt").exists()
 

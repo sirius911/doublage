@@ -479,6 +479,22 @@ def voice_choice(project: Project, catalog: VoiceCatalog) -> str:
 <noscript><button type="submit">Changer</button></noscript></form>"""
 
 
+def frame_rate(video: Path) -> float:
+    """Images par seconde de la vidéo (30 si elle est illisible) : réglage des boîtes à l'image près."""
+    try:
+        return _frame_rate(str(video), video.stat().st_mtime)
+    except OSError:
+        return 30.0
+
+
+@lru_cache(maxsize=64)
+def _frame_rate(video: str, mtime: float) -> float:
+    try:
+        return media.probe_video(Path(video))[2]
+    except (media.MediaError, OSError, KeyError, IndexError, ValueError, ZeroDivisionError):
+        return 30.0
+
+
 def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
     """Vidéo avec le texte de la phrase en cours affiché sur l'image, et liste des phrases."""
     transcript = Transcript.load(project.transcript_path)
@@ -505,7 +521,7 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 </div>
 </div>
 <div id="enregistrement" role="status" hidden></div>
-<script>const PROJET = {project.id};</script>
+<script>const PROJET = {project.id}; const IMAGES_PAR_SECONDE = {frame_rate(project.video)};</script>
 <script src="/static/editeur.js"></script>
 <script src="/static/masquage.js"></script>"""
 
@@ -516,6 +532,8 @@ def masking_section() -> str:
 <p class="generer"><button type="button" id="nouvelle-boite">＋ Nouvelle boîte</button>
 <button type="button" id="apercu-masques" hidden>Aperçu exact sur l'image</button>
 <small id="aide-masquage">Vidéo en pause au moment où la donnée apparaît, puis tracez un rectangle sur l'image.</small></p>
+<p class="image-affichee"><small>Image affichée : <span id="image-affichee">–</span>
+· touches <kbd>,</kbd> et <kbd>.</kbd> : image précédente / suivante (vidéo en pause)</small></p>
 <ol id="boites"></ol></section>"""
 
 

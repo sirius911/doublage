@@ -227,3 +227,23 @@ def test_boite_gravee_dans_l_image(sample_video, tmp_path):
     apercu = media.subtitle_frame(sample_video, 3.0, srt, tmp_path / "apercu.jpg",
                                   masks=masks_filter(masques[:1], 320, 240, 10.0, tmp_path, at=3.0))
     assert apercu.read_bytes()[:2] == b"\xff\xd8"
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
+@pytest.mark.parametrize("rate,fps", [("30", 30.0), ("30000/1001", 30000 / 1001)])
+def test_boite_a_l_image_pres(tmp_path, rate, fps):
+    """Boîte réglée sur les images n° 60 à 119 : masquées de 59 à 120 (une image de marge), pas au-delà."""
+    from doublage.masks import Mask, masks_filter
+    video = tmp_path / "blanc.mp4"
+    media._run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", f"color=c=white:s=64x48:r={rate}:d=6",
+                "-pix_fmt", "yuv420p", str(video)])
+    audio = tmp_path / "son.wav"
+    media.write_wav(audio, np.zeros(6 * 16000, dtype=np.float32), 16000)
+    boite = Mask(1, 60 / fps, 120 / fps, 0.0, 0.0, 1.0, 1.0, background="#000000")
+    sortie = media.replace_audio(video, audio, tmp_path / "masquee.mp4", cwd=tmp_path,
+                                 masks=masks_filter([boite], 64, 48, fps, tmp_path))
+    brut = subprocess.run(["ffmpeg", "-v", "error", "-i", str(sortie), "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                          capture_output=True, check=True).stdout
+    images = np.frombuffer(brut, np.uint8).reshape(-1, 48, 64).mean(axis=(1, 2))
+    masquees = [n for n, m in enumerate(images) if m < 128]
+    assert masquees == list(range(59, 121))

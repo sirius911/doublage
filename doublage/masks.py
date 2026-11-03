@@ -24,9 +24,11 @@ FONT_FILES = (
 )
 FONT_COPY = "police-masques.ttf"
 TEXT_MAX_LENGTH = 200
-# Marge de sécurité autour de la période d'une boîte, en images : la boîte apparaît un peu avant et
-# disparaît un peu après, pour qu'aucune image ne laisse voir la donnée (arrondis du navigateur, d'ffmpeg).
-MARGIN_FRAMES = 1.5
+# Une boîte couvre les images dont l'instant (début de l'image) est dans [start, end[ : l'éditeur règle
+# start et end à l'image près (start = n° de la première image / fps, end = n° de la dernière + 1 / fps).
+# Marge de sécurité : une image de plus de chaque côté, pour qu'aucune image ne laisse voir la donnée
+# (décalage éventuel entre le navigateur et ffmpeg).
+MARGIN_FRAMES = 1
 
 
 class MaskError(ValueError):
@@ -66,8 +68,9 @@ class Mask:
 
     def window(self, fps: float) -> tuple[float, float]:
         """Période d'affichage dans la vidéo, marge de sécurité comprise."""
-        margin = MARGIN_FRAMES / fps
-        return max(0.0, self.start - margin), self.end + margin
+        # Bornes au milieu des intervalles entre images : pas d'image en limite d'arrondi.
+        return (max(0.0, self.start - (MARGIN_FRAMES + 0.5) / fps),
+                self.end + (MARGIN_FRAMES - 0.5) / fps)
 
     def pixels(self, width: int, height: int) -> tuple[int, int, int, int]:
         """Rectangle en pixels (x, y, largeur, hauteur), arrondi vers l'extérieur sur des valeurs paires
