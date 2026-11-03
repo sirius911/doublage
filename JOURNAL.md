@@ -2,6 +2,16 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-03 — Masquage : début de la V1
+- Fait : format `masques.json` et API (`/projets/{id}/masques`) ; export : boîtes gravées dans l'image
+  (drawbox + drawtext, texte lu dans un fichier, sous les sous-titres ; marge d'une image et demie ;
+  rectangle arrondi vers l'extérieur) ; avertissement si les boîtes ont changé après la génération ;
+  éditeur : tracé sur l'image en pause, couleur de fond détectée sur le pourtour, pipette, texte de
+  remplacement, déplacement / redimensionnement, « début ici » / « fin ici », aperçu exact (ffmpeg).
+- Non éprouvé : le rendu ffmpeg réel (pas de ffmpeg sur le poste : test en intégration continue) et
+  l'interface dans un navigateur. À essayer sur la VM.
+- Reste en V1 : vérification image par image, aide, conservation de la source (Q17).
+
 ## 2026-11-03 — Masquage des données patients : cadrage
 - Besoin de l'utilisateur : certains logiciels (Lifen) n'ont pas de serveur de test, les tutoriels montrent de
   vraies données ; il faut les cacher fortement, avec des défilements d'écran.
