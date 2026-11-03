@@ -170,3 +170,60 @@ def test_sous_titres_incrustes(sample_video, tmp_path):
     ecart = abs(_image(simple, 2) - _image(grave, 2))
     assert ecart[180:].mean() > 3 * ecart[:120].mean()  # texte en bas de l'image, haut quasi identique
     assert abs(_image(simple, 5) - _image(grave, 5)).mean() < 5  # plus de sous-titre après 3 s
+
+
+def test_boites_de_masquage_gravees(tmp_path, monkeypatch):
+    from doublage.masks import Mask, save_masks
+    from doublage.pipeline import masks_marker
+    sans_ffmpeg(monkeypatch)
+    appels = []
+
+    def remplacer(video, audio, output, subtitles=None, threads=2, style=None, masks=None, cwd=None):
+        appels.append((subtitles, masks, cwd))
+        output.write_bytes(b"video")
+
+    monkeypatch.setattr(media, "replace_audio", remplacer)
+    monkeypatch.setattr(media, "probe_video", lambda video: (1920, 1080, 30.0))
+    Transcript(5.0, [Segment(0, 0.0, 2.0, "Un.", "Un.")]).save(tmp_path / "segments.json")
+    sortie = tmp_path / "video_doublee.mp4"
+    dub_project(tmp_path / "video.mp4", tmp_path, sortie, FakeSynthesizer(), progress=lambda m: None)
+    assert appels[-1] == (None, None, None)  # sans boîte : image copiée telle quelle
+    assert masks_marker(sortie).read_text(encoding="utf-8") == "0"
+
+    save_masks(tmp_path, [Mask(1, 1.0, 2.0, 0.1, 0.1, 0.2, 0.05, text="DUPONT Jean")])
+    messages = []
+    dub_project(tmp_path / "video.mp4", tmp_path, sortie, FakeSynthesizer(), progress=messages.append)
+    sous_titres, filtre, dossier = appels[-1]
+    assert sous_titres is None and dossier == tmp_path
+    assert filtre.startswith("drawbox=") and "textfile=masque-1.txt" in filtre
+    assert (tmp_path / "masque-1.txt").exists()
+    assert any("1 boîte(s) de masquage" in m for m in messages)
+    assert masks_marker(sortie).read_text(encoding="utf-8") == "1"
+    assert not masks_marker(tmp_path / "video_doublee.partiel.mp4").exists()
+
+    dub_project(tmp_path / "video.mp4", tmp_path, sortie, FakeSynthesizer(), progress=lambda m: None,
+                burn_subtitles=True)
+    assert appels[-1][0].name == "sous-titres.srt" and appels[-1][1].startswith("drawbox=")
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
+def test_boite_gravee_dans_l_image(sample_video, tmp_path):
+    from doublage.masks import Mask, masks_filter
+    audio = media.extract_audio(sample_video, tmp_path / "son.wav")
+    assert media.probe_video(sample_video) == (320, 240, 10.0)
+    # Boîte noire sur la moitié gauche, de 2 à 4 s ; boîte blanche avec un texte noir à droite.
+    masques = [Mask(1, 2.0, 4.0, 0.0, 0.0, 0.5, 1.0, background="#000000"),
+               Mask(2, 2.0, 4.0, 0.5, 0.0, 0.5, 0.5, text="DUPONT Jean")]
+    filtre = masks_filter(masques, 320, 240, 10.0, tmp_path)
+    masquee = media.replace_audio(sample_video, audio, tmp_path / "masquee.mp4", masks=filtre, cwd=tmp_path)
+    image = _image(masquee, 3)
+    assert image[:, :160].max() < 30  # boîte noire opaque : plus rien de la mire
+    assert image[:120, 160:].mean() > 150 and image[:120, 160:].min() < 100  # fond blanc et texte noir
+    assert abs(_image(masquee, 6) - _image(sample_video, 6)).mean() < 5  # boîte disparue après 4 s
+
+    # Image d'aperçu : la boîte visible à cet instant, gravée sans condition de temps.
+    srt = tmp_path / "apercu.srt"
+    srt.write_text("1\n00:00:00,000 --> 99:00:00,000\nBonjour.\n", encoding="utf-8")
+    apercu = media.subtitle_frame(sample_video, 3.0, srt, tmp_path / "apercu.jpg",
+                                  masks=masks_filter(masques[:1], 320, 240, 10.0, tmp_path, at=3.0))
+    assert apercu.read_bytes()[:2] == b"\xff\xd8"

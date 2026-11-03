@@ -23,8 +23,9 @@ from .assembly import MANUAL_SPEED_MAX, MANUAL_SPEED_MIN, Fit, fit, speed_factor
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .masks import Mask, MaskError, load_masks, save_masks
-from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized, reset_voices,
+from .masks import Mask, MaskError, load_masks, masks_filter, masks_path, save_masks
+from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized,
+                       masks_marker, reset_voices,
                        synthesize_segment, transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
 from .segments import Segment, Transcript, display_text, notation_error
@@ -567,12 +568,19 @@ def dubbing_section(project: Project, job: Job | None) -> str:
 <p id="avertissement-sous-titres" hidden><small>L'image entière est alors ré-encodée : comptez en plus environ
 un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</small></p>
 </form>""")
+    masks = load_masks(project.folder)
+    if masks:
+        parts.append(f'<p class="masquage"><small>{len(masks)} boîte(s) de masquage seront gravées dans '
+                     "l'image (ré-encodage : environ un quart de la durée de la vidéo en plus).</small></p>")
     if exists:
         date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")
         voice_path = dubbed_voice_path(project.dubbed_video)
         voice = voice_path.read_text(encoding="utf-8") if voice_path.exists() else ""
         voice = f" avec la voix {escape(voice)}" if voice else ""  # vidéos générées avant ce suivi : rien
         burned = ", sous-titres incrustés" if burned_subtitles_marker(project.dubbed_video).exists() else ""
+        marker = masks_marker(project.dubbed_video)
+        hidden = int(marker.read_text(encoding="utf-8") or 0) if marker.exists() else 0
+        burned += f", {hidden} boîte(s) de masquage" if hidden else ""
         parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
                      f'<small>(générée le {date}{voice}{burned})</small><br><small>Aussi : '
                      f'<a href="/projets/{project.id}/audio" download>voix seule (WAV)</a>, sous-titres '
@@ -581,6 +589,11 @@ un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</s
         if project.transcript_path.stat().st_mtime > generated:
             parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
                          "mettez à jour la vidéo doublée pour les entendre.</small></p>")
+        if masks_path(project.folder).exists() and masks_path(project.folder).stat().st_mtime > generated:
+            # Une vidéo sans les dernières boîtes peut laisser voir des données patients.
+            parts.append('<p class="masquage-perime"><strong>Les boîtes de masquage ont changé depuis : '
+                         "cette vidéo ne les contient pas. Mettez-la à jour avant de la diffuser."
+                         "</strong></p>")
     parts.append("</section>")
     return "\n".join(parts)
 
@@ -669,9 +682,16 @@ def subtitle_preview(user: User, project: CurrentProject, t: float = 0.0, police
     with tempfile.TemporaryDirectory() as tmp:
         srt = Path(tmp) / "apercu.srt"
         srt.write_text(f"1\n00:00:00,000 --> 99:00:00,000\n{text}\n", encoding="utf-8")
+        with _masks_lock:
+            masks = load_masks(project.folder)
         try:
+            extra = {}
+            if masks:  # boîtes visibles à cet instant, gravées comme dans la vidéo doublée
+                width, height, fps = media.probe_video(project.video)
+                hidden = masks_filter(masks, width, height, fps, Path(tmp), at=at)
+                extra = {"masks": hidden} if hidden else {}
             image = media.subtitle_frame(project.video, at, srt, Path(tmp) / "apercu.jpg",
-                                         burn_style(police, taille)).read_bytes()
+                                         burn_style(police, taille), **extra).read_bytes()
         except media.MediaError as e:
             raise HTTPException(500, f"Aperçu impossible : {e}") from e
     return Response(image, media_type="image/jpeg", headers={"Cache-Control": "no-store"})

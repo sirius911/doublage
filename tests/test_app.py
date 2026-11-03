@@ -548,3 +548,40 @@ def test_boites_de_masquage(client):
     assert client.delete(url + "/masques/2").status_code == 204
     assert client.delete(url + "/masques/2").status_code == 404
     assert [m["id"] for m in client.get(url + "/masques").json()["masques"]] == [1]
+
+
+def test_boites_dans_la_video_doublee_et_l_apercu(client, monkeypatch):
+    from doublage import media
+    from doublage.pipeline import masks_marker
+    login(client)
+    url = creer_projet(client)
+    projet = app.dependency_overrides[get_projects]().get(int(url.rsplit("/", 1)[1]))
+    Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
+    assert "boîte(s) de masquage" not in client.get(url).text
+    boite = {"debut": 1.0, "fin": 3.0, "x": 0.1, "y": 0.1, "largeur": 0.2, "hauteur": 0.05}
+    client.post(url + "/masques", json=boite)
+    assert "1 boîte(s) de masquage seront gravées" in client.get(url).text
+
+    # Vidéo doublée avec les boîtes, puis boîtes modifiées : avertissement bien visible.
+    projet.dubbed_video.write_bytes(b"video")
+    masks_marker(projet.dubbed_video).write_text("1", encoding="utf-8")
+    os.utime(projet.dubbed_video, (time.time() - 60, time.time() - 60))
+    page = client.get(url).text
+    assert "1 boîte(s) de masquage)" in page and "Les boîtes de masquage ont changé" in page
+    os.utime(projet.dubbed_video, None)
+    assert "Les boîtes de masquage ont changé" not in client.get(url).text
+
+    # Aperçu des sous-titres : les boîtes visibles à cet instant sont gravées aussi.
+    appels = []
+
+    def fausse_image(video, at, subtitles, output, style=None, masks=None):
+        appels.append(masks)
+        output.write_bytes(b"jpeg")
+        return output
+
+    monkeypatch.setattr(media, "subtitle_frame", fausse_image)
+    monkeypatch.setattr(media, "probe_video", lambda video: (1920, 1080, 30.0))
+    client.get(url + "/sous-titres/apercu", params={"t": 2.0})
+    assert appels[-1].startswith("drawbox=") and "enable" not in appels[-1]
+    client.get(url + "/sous-titres/apercu", params={"t": 4.0})
+    assert appels[-1] is None

@@ -26,6 +26,15 @@ def probe_duration(path: Path) -> float:
     return float(json.loads(out)["format"]["duration"])
 
 
+def probe_video(path: Path) -> tuple[int, int, float]:
+    """Largeur, hauteur et fréquence d'images (images par seconde) de la vidéo."""
+    out = _run(["ffprobe", "-v", "error", "-select_streams", "v:0",
+                "-show_entries", "stream=width,height,r_frame_rate", "-of", "json", str(path)])
+    stream = json.loads(out)["streams"][0]
+    num, _, den = stream["r_frame_rate"].partition("/")
+    return int(stream["width"]), int(stream["height"]), float(num) / float(den or 1)
+
+
 def extract_audio(video: Path, output: Path, sample_rate: int = 16000) -> Path:
     """Extrait la piste audio en WAV mono (format adapté à Whisper)."""
     _run([
@@ -84,34 +93,47 @@ def _subtitles_filter(subtitles: Path, style: str | None) -> str:
     return f"subtitles={subtitles.name}" + (f":force_style='{style}'" if style else "")
 
 
+def _image_filters(subtitles: Path | None, style: str | None, masks: str | None) -> str | None:
+    """Filtres de l'image : boîtes de masquage d'abord, sous-titres par-dessus."""
+    filters = [f for f in (masks, subtitles and _subtitles_filter(subtitles, style)) if f]
+    return ",".join(filters) or None
+
+
 def replace_audio(video: Path, audio: Path, output: Path, subtitles: Path | None = None,
-                  threads: int = 2, style: str | None = None) -> Path:
+                  threads: int = 2, style: str | None = None, masks: str | None = None,
+                  cwd: Path | None = None) -> Path:
     """Remplace la bande son de la vidéo, sans ré-encoder l'image.
 
-    Avec `subtitles` (fichier SRT), les sous-titres sont gravés dans l'image : celle-ci est alors
-    ré-encodée (H.264, `threads` cœurs), ce qui prend bien plus de temps. `style` : police et taille
-    (force_style de ffmpeg).
+    Avec `subtitles` (fichier SRT), les sous-titres sont gravés dans l'image ; avec `masks` (filtres de
+    masks.masks_filter), les boîtes de masquage aussi. L'image est alors ré-encodée (H.264, `threads`
+    cœurs), ce qui prend bien plus de temps. `style` : police et taille (force_style de ffmpeg).
+    ffmpeg est lancé depuis `cwd` (par défaut le dossier du SRT), où se trouvent les fichiers désignés par
+    les filtres.
     """
-    if subtitles is None:
+    filters = _image_filters(subtitles, style, masks)
+    if filters is None:
         image = ["-c:v", "copy"]
     else:
-        image = ["-vf", _subtitles_filter(subtitles, style), "-c:v", "libx264", "-preset", "veryfast",
+        image = ["-vf", filters, "-c:v", "libx264", "-preset", "veryfast",
                  "-crf", "20", "-pix_fmt", "yuv420p", "-threads", str(threads)]
     _run([
         "ffmpeg", "-y", "-v", "error", "-i", str(video.resolve()), "-i", str(audio.resolve()),
         "-map", "0:v:0", "-map", "1:a:0", *image, "-c:a", "aac", "-b:a", "160k",
         "-shortest", str(output.resolve()),
-    ], cwd=subtitles.parent if subtitles else None)
+    ], cwd=cwd or (subtitles.parent if subtitles else None))
     return output
 
 
-def subtitle_frame(video: Path, at: float, subtitles: Path, output: Path, style: str | None = None) -> Path:
-    """Image (JPEG) de la vidéo à `at` secondes, sous-titres gravés comme par `replace_audio`.
+def subtitle_frame(video: Path, at: float, subtitles: Path, output: Path, style: str | None = None,
+                   masks: str | None = None) -> Path:
+    """Image (JPEG) de la vidéo à `at` secondes, sous-titres (et boîtes `masks`) gravés comme par
+    `replace_audio`.
 
-    La vidéo est lue à partir de `at` : le SRT doit couvrir le tout début (00:00:00).
+    La vidéo est lue à partir de `at` : le SRT doit couvrir le tout début (00:00:00), et les boîtes ne
+    doivent pas dépendre du temps. Les fichiers désignés par les filtres sont dans le dossier du SRT.
     """
     _run(["ffmpeg", "-y", "-v", "error", "-ss", f"{at:.3f}", "-i", str(video.resolve()),
-          "-vf", _subtitles_filter(subtitles, style), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
+          "-vf", _image_filters(subtitles, style, masks), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
          cwd=subtitles.parent)
     if not output.exists():
         raise MediaError("Aucune image à cet instant de la vidéo")

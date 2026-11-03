@@ -9,6 +9,7 @@ import numpy as np
 
 from . import media
 from .assembly import Placement, assemble, fit_clips
+from .masks import load_masks, masks_filter
 from .segments import Segment, Status, Transcript, spoken_text
 from .subtitles import to_srt
 from .transcription import Transcriber, trim_silences
@@ -72,6 +73,11 @@ def burned_subtitles_marker(output: Path) -> Path:
     return output.with_name(output.stem + ".sous-titres")
 
 
+def masks_marker(output: Path) -> Path:
+    """Témoin : nombre de boîtes de masquage gravées dans l'image de la vidéo doublée `output`."""
+    return output.with_name(output.stem + ".masques")
+
+
 def dubbed_voice_path(output: Path) -> Path:
     """Nom de la voix avec laquelle la vidéo doublée `output` a été générée."""
     return output.with_name(output.stem + ".voix")
@@ -105,7 +111,9 @@ def _original_audio(video: Path, workdir: Path, sample_rate: int) -> np.ndarray:
 def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, np.ndarray]],
             sample_rate: int, workdir: Path, output: Path, progress: Progress,
             max_speed: float, burn_subtitles: bool = False, threads: int = 2,
-            min_speed: float = 1.0, subtitle_style: str | None = None) -> list[Placement]:
+            min_speed: float = 1.0, subtitle_style: str | None = None,
+            burn_masks: bool = False) -> list[Placement]:
+    """`burn_masks` : grave les boîtes de masquage du projet (masques.json de `workdir`) dans l'image."""
     clips, accelerated, slowed = fit_clips(transcript, clips, sample_rate, max_speed, media.change_tempo,
                                            min_speed)
     if accelerated:
@@ -117,15 +125,27 @@ def _render(video: Path, transcript: Transcript, clips: list[tuple[int, float, n
     track, placements = assemble(clips, total, sample_rate)
     voice = media.write_wav(workdir / "doublage.wav", track, sample_rate)
 
-    if burn_subtitles:
+    masks = load_masks(workdir) if burn_masks else []
+    hidden = None
+    if masks:
+        width, height, fps = media.probe_video(video)
+        hidden = masks_filter(masks, width, height, fps, workdir)
+    if burn_subtitles or hidden:
         # Timecodes des phrases d'origine, comme les sous-titres téléchargeables.
-        subtitles = workdir / "sous-titres.srt"
-        subtitles.write_text(to_srt(transcript), encoding="utf-8")
-        progress("Création de la vidéo doublée, sous-titres incrustés (ré-encodage de l'image)…")
-        media.replace_audio(video, voice, output, subtitles, threads, subtitle_style)
+        subtitles = None
+        if burn_subtitles:
+            subtitles = workdir / "sous-titres.srt"
+            subtitles.write_text(to_srt(transcript), encoding="utf-8")
+        what = " et ".join(w for w in ("sous-titres incrustés" if burn_subtitles else "",
+                                       f"{len(masks)} boîte(s) de masquage" if hidden else "") if w)
+        progress(f"Création de la vidéo doublée, {what} (ré-encodage de l'image)…")
+        extra = {"masks": hidden, "cwd": workdir} if hidden else {}
+        media.replace_audio(video, voice, output, subtitles, threads, subtitle_style, **extra)
     else:
         progress("Création de la vidéo doublée…")
         media.replace_audio(video, voice, output)
+    if burn_masks:
+        masks_marker(output).write_text(str(len(masks)), encoding="utf-8")
     late = [p for p in placements if p.delay > 0.5]
     if late:
         progress(f"Attention : {len(late)} phrase(s) décalée(s) de plus de 0,5 s "
@@ -165,6 +185,7 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
     `burn_subtitles` grave le texte corrigé dans l'image (ré-encodage sur `threads` cœurs), dans le style
     `subtitle_style` (police et taille, voir subtitles.burn_style).
     `voice_label` (nom de la voix) est noté à côté de la vidéo, pour l'afficher.
+    Les boîtes de masquage du projet sont toujours gravées dans l'image (ré-encodage s'il y en a).
     """
     transcript_path = workdir / "segments.json"
     with transcript_lock:
@@ -192,8 +213,9 @@ def dub_project(video: Path, workdir: Path, output: Path, synthesizer: Synthesiz
         clips += [(s.id, s.start, original_clip(original, sample_rate, transcript, s)) for s in kept]
     partial = output.with_name(output.stem + ".partiel" + output.suffix)
     placements = _render(video, transcript, clips, sample_rate, workdir, partial, progress, max_speed,
-                         burn_subtitles, threads, min_speed, subtitle_style)
+                         burn_subtitles, threads, min_speed, subtitle_style, burn_masks=True)
     partial.replace(output)  # l'ancienne vidéo reste téléchargeable jusqu'au bout
+    masks_marker(partial).replace(masks_marker(output))
     marker = burned_subtitles_marker(output)
     if burn_subtitles:
         marker.touch()

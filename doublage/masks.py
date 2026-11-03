@@ -83,7 +83,11 @@ def load_masks(folder: Path) -> list[Mask]:
 
 def save_masks(folder: Path, masks: list[Mask]) -> None:
     data = {"masks": [asdict(m) for m in sorted(masks, key=lambda m: (m.start, m.id))]}
-    masks_path(folder).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Écriture puis remplacement : le doublage peut lire le fichier à tout moment.
+    path = masks_path(folder)
+    partial = path.with_suffix(".partiel")
+    partial.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    partial.replace(path)
 
 
 def masks_filter(masks: list[Mask], width: int, height: int, fps: float, folder: Path,

@@ -126,7 +126,7 @@ V1 — boîtes fixes :
       de fond, texte de remplacement, couleur et taille du texte) ; début et fin calés sur les images de la vidéo
 - [ ] Éditeur : dessiner une boîte sur la vidéo en pause, régler début / fin (« depuis ici », « jusqu'ici »),
       couleur par pipette sur l'image, texte ; liste des boîtes ; aperçu sur la vidéo à l'image près
-- [ ] Export : boîtes gravées dans l'image (ré-encodage, même chaîne que les sous-titres incrustés ; piste
+- [x] Export : boîtes gravées dans l'image (ré-encodage, même chaîne que les sous-titres incrustés ; piste
       envisagée : rectangles et texte en sous-titres ASS), et dans l'image d'aperçu des sous-titres ;
       sans boîte, l'image n'est pas ré-encodée
 - [ ] Vérification de la vidéo exportée : avance image par image, boîtes en surbrillance
