@@ -23,7 +23,7 @@ from .assembly import MANUAL_SPEED_MAX, MANUAL_SPEED_MIN, Fit, fit, speed_factor
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
-from .masks import Mask, MaskError, load_masks, masks_filter, masks_path, save_masks
+from .masks import Key, Mask, MaskError, load_masks, masks_filter, masks_path, save_masks
 from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized,
                        masks_marker, reset_voices,
                        synthesize_segment, transcribe_video)
@@ -866,6 +866,15 @@ def project_video(user: User, project: CurrentProject) -> FileResponse:
 
 # --- Boîtes de masquage des données patients ---
 
+class KeyData(BaseModel):
+    """Position d'une boîte qui suit le contenu, à un instant."""
+    t: float = Field(ge=0)
+    x: float
+    y: float
+    largeur: float
+    hauteur: float
+
+
 class MaskData(BaseModel):
     """Boîte de masquage, telle qu'échangée avec l'éditeur (position en proportion de l'image)."""
     debut: float = Field(ge=0)
@@ -878,10 +887,12 @@ class MaskData(BaseModel):
     texte: str = ""
     couleur_texte: str = "#000000"
     taille_texte: float = 0.7
+    positions: list[KeyData] = []  # suivi du contenu ; vide : boîte fixe
 
     def to_mask(self, mask_id: int) -> Mask:
+        keys = [Key(k.t, k.x, k.y, k.largeur, k.hauteur) for k in self.positions]
         mask = Mask(mask_id, self.debut, self.fin, self.x, self.y, self.largeur, self.hauteur,
-                    self.fond.lower(), self.texte.strip(), self.couleur_texte.lower(), self.taille_texte)
+                    self.fond.lower(), self.texte.strip(), self.couleur_texte.lower(), self.taille_texte, keys)
         try:
             mask.check()
         except MaskError as e:
@@ -892,7 +903,8 @@ class MaskData(BaseModel):
 def mask_fields(mask: Mask) -> dict:
     return {"id": mask.id, "debut": mask.start, "fin": mask.end, "x": mask.x, "y": mask.y,
             "largeur": mask.w, "hauteur": mask.h, "fond": mask.background, "texte": mask.text,
-            "couleur_texte": mask.text_color, "taille_texte": mask.text_size}
+            "couleur_texte": mask.text_color, "taille_texte": mask.text_size,
+            "positions": [{"t": k.t, "x": k.x, "y": k.y, "largeur": k.w, "hauteur": k.h} for k in mask.keys]}
 
 
 @app.get("/projets/{project_id}/masques")

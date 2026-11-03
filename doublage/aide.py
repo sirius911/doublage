@@ -221,9 +221,25 @@ décalent le début ou la fin d'une image, et montrent l'image concernée.</li>
 <li>Facultatif : un texte de remplacement, sa couleur et sa taille. Pour déplacer ou agrandir la boîte, vidéo
 en pause, cliquez dessus puis faites-la glisser, ou tirez le carré jaune en bas à droite.</li>
 </ol>
-<p>Une boîte est <b>fixe</b> : si la fenêtre <b>défile</b> pendant que la donnée est visible, tracez une grande
-boîte qui couvre toute la zone qui défile, le temps du défilement. <span class="bouton">Aperçu exact sur
-l'image</span> montre l'image telle qu'elle sera gravée, à l'endroit où la vidéo est arrêtée.</p>
+<p><span class="bouton">Aperçu exact sur l'image</span> montre l'image telle qu'elle sera gravée, à l'endroit
+où la vidéo est arrêtée.</p>
+<h3>Quand l'écran défile : suivre le contenu</h3>
+<p>Une boîte est fixe. Si la donnée bouge (défilement d'une liste, fenêtre déplacée), cochez
+<b>suivre le contenu</b> dans la ligne de la boîte : la position sur l'image affichée est enregistrée. Allez
+ensuite sur une autre image (fin du défilement par exemple) et faites glisser la boîte sur la donnée : une
+position de plus est enregistrée. Entre deux positions, la boîte glisse en ligne droite, à vitesse constante.</p>
+<ul>
+<li>Un défilement à la molette avance par à-coups : posez une position au <b>début et à la fin de chaque
+à-coup</b>, sinon la boîte glisse pendant que la donnée est immobile.</li>
+<li>Le petit rond bleu au coin de la boîte est plein sur une image où une position est enregistrée.
+<span class="bouton">◀</span> <span class="bouton">▶</span> dans la ligne de la boîte vont à la position
+précédente ou suivante ; <span class="bouton">✕ position ici</span> supprime celle de l'image affichée.</li>
+<li>Avant la première position et après la dernière, la boîte reste immobile.</li>
+<li>Par sécurité, sur chaque image, la boîte gravée couvre aussi sa place sur les images voisines : elle
+s'allonge un peu dans le sens du mouvement.</li>
+<li>Si le défilement est trop irrégulier, une grande boîte fixe sur toute la zone qui défile, le temps du
+défilement, reste la solution la plus sûre.</li>
+</ul>
 <h3>Endroits souvent oubliés</h3>
 <ul>
 <li>le <b>titre de la fenêtre</b> et les <b>onglets</b> (le nom du patient y figure souvent) ;</li>

@@ -545,6 +545,16 @@ def test_boites_de_masquage(client):
     assert client.post(url + "/masques", json={**boite, "x": 0.9}).status_code == 400
     assert client.post(url + "/masques", json={**boite, "fond": "rouge"}).status_code == 400
 
+    # Suivi du contenu : positions triées par instant ; une position hors de l'image est refusée.
+    positions = [{"t": 2.0, "x": 0.1, "y": 0.3, "largeur": 0.2, "hauteur": 0.05},
+                 {"t": 1.0, "x": 0.1, "y": 0.1, "largeur": 0.2, "hauteur": 0.05}]
+    suivie = client.put(url + "/masques/1", json={**boite, "positions": positions}).json()
+    assert [p["t"] for p in suivie["positions"]] == [1.0, 2.0]
+    assert client.get(url + "/masques").json()["masques"][1]["positions"] == suivie["positions"]
+    hors = [{**positions[0], "x": 0.95}]
+    assert client.put(url + "/masques/1", json={**boite, "positions": hors}).status_code == 400
+    assert client.put(url + "/masques/1", json=boite).json()["positions"] == []  # redevenue fixe
+
     assert client.delete(url + "/masques/2").status_code == 204
     assert client.delete(url + "/masques/2").status_code == 404
     assert [m["id"] for m in client.get(url + "/masques").json()["masques"]] == [1]

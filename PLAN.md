@@ -139,8 +139,11 @@ V1 — boîtes fixes :
       d'adresse, infobulles, notifications), vérification image par image avant diffusion
 - [x] Conservation de la vidéo source (Q17) : suppression manuelle du projet après export (déjà possible,
       efface tout le dossier) ; rappel dans l'aide
-V2 — suivi des défilements, si les cas réels l'imposent :
-- [ ] Boîte qui suit le contenu : positions à quelques instants, interpolées entre eux ; vérification renforcée
+V2 — suivi des défilements (demandé par l'utilisateur : nécessaire pour Lifen) :
+- [x] Boîte qui suit le contenu : case « suivre le contenu », une position par déplacement sur une image,
+      interpolation linéaire (éditeur et export identiques) ; export par plages d'images de même rectangle
+      (drawbox fixe), réunion des positions des images voisines par sécurité ; filtres longs passés par un
+      fichier (`-/vf`, ffmpeg 7+) ; texte qui suit (expression de t) ; vérifié avec ffmpeg (donnée qui défile)
 V3 — en option, si la V2 est trop fastidieuse :
 - [ ] Suivi assisté (recherche du motif image par image), toujours vérifié par l'utilisateur
 

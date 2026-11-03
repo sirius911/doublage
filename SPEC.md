@@ -57,8 +57,9 @@ logiciels, la règle reste de tourner sur l'environnement de test avec des patie
   visible entre deux timecodes, d'une couleur de fond choisie par l'utilisateur (pipette sur l'image).
 - **Texte de remplacement** facultatif dans la boîte (données fictives : « DUPONT Jean »…), couleur et taille
   choisies : on remplace la donnée vue par une autre, pour que l'explication reste lisible.
-- **Défilements d'écran** : en V1, une grande boîte couvre toute la zone qui défile pendant le défilement ;
-  plus tard, boîte qui suit le contenu (positions à quelques instants, interpolées).
+- **Défilements d'écran** : boîte qui suit le contenu (positions posées par l'utilisateur à quelques images,
+  interpolées en ligne droite entre elles) ; sur chaque image, la boîte gravée couvre aussi sa place sur les
+  images voisines. Pour un défilement trop irrégulier : une grande boîte fixe sur la zone qui défile.
 - Aperçu dans l'éditeur, boîtes gravées dans l'image à l'export (ré-encodage), et dans l'image d'aperçu
   des sous-titres.
 - **Vérification image par image** de la vidéo avant diffusion (aucune image ne doit laisser voir une donnée).

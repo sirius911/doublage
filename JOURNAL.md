@@ -2,6 +2,19 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-03 — Masquage V2 : boîte qui suit le contenu
+- Demande de l'utilisateur : le suivi des défilements est nécessaire (Lifen).
+- Fait : positions de suivi (`positions` dans l'API, `keys` dans `masques.json`), interpolation linéaire
+  identique dans l'éditeur et à l'export ; export par plages d'images de même rectangle (drawbox ne peut pas
+  bouger), avec la réunion des positions des images voisines ; texte qui suit (expression de t) ; filtres
+  longs par fichier (`-/vf`). Éditeur : case « suivre le contenu », position ajoutée à chaque déplacement,
+  ◀ ▶ entre positions, suppression, rond bleu au coin. Aide mise à jour.
+- Vérifié avec ffmpeg : carré qui défile de 2 px par image couvert sur chaque image ; surcoût de 300
+  drawbox négligeable. Interface non éprouvée dans un navigateur.
+- À vérifier sur la VM : `-/vf` demande ffmpeg 7 ou plus (python:3.12-slim = Debian 13, ffmpeg 7.1).
+- Suite : retour de l'utilisateur sur un vrai défilement ; V3 (suivi assisté) si poser les positions est
+  trop long.
+
 ## 2026-11-03 — Masquage : vérification et aide
 - Retours de l'utilisateur : flèches plutôt que `,` / `.`, n° d'image visible → boutons ◀ ▶ et flèches ← →,
   n° d'image centré sous la vidéo (validé par l'utilisateur, poussé sur `main`).

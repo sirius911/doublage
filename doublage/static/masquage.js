@@ -121,15 +121,49 @@
 
   // --- Affichage des boîtes sur le lecteur ---
 
-  function dessiner(b) {
-    const d = b.donnees, hauteurCalque = calque.clientHeight;
+  // --- Suivi du contenu (défilements) : positions à quelques images, interpolées entre elles (comme à
+  // l'export, masks.py), gardées avant la première et après la dernière. ---
+
+  const imagePosition = (p) => Math.round(p.t * FPS);
+  function rectA(d, n) {
+    const ps = d.positions || [];
+    if (!ps.length) return { x: d.x, y: d.y, largeur: d.largeur, hauteur: d.hauteur };
+    for (let i = 0; i < ps.length - 1; i++) {
+      const fa = imagePosition(ps[i]), fb = imagePosition(ps[i + 1]), a = ps[i], b = ps[i + 1];
+      if (n < fb) {
+        const r = fb > fa ? Math.min(1, Math.max(0, (n - fa) / (fb - fa))) : 1;
+        const m = (k) => a[k] + (b[k] - a[k]) * r;
+        return { x: m("x"), y: m("y"), largeur: m("largeur"), hauteur: m("hauteur") };
+      }
+    }
+    const { x, y, largeur, hauteur } = ps[ps.length - 1];
+    return { x, y, largeur, hauteur };
+  }
+  // Positions avec celle de l'image n remplacée ou ajoutée ; la boîte fixe garde la première.
+  function avecPosition(d, n, r) {
+    const ps = (d.positions || []).filter((p) => imagePosition(p) !== n);
+    ps.push({ t: n / FPS, ...r });
+    ps.sort((a, b) => a.t - b.t);
+    return { positions: ps, ...premierePosition(ps) };
+  }
+  const premierePosition = (ps) => ({ x: ps[0].x, y: ps[0].y, largeur: ps[0].largeur, hauteur: ps[0].hauteur });
+
+  let imageVue = 0;  // n° de l'image sur laquelle les boîtes sont placées
+
+  function placer(b, r = rectA(b.donnees, imageVue)) {
     Object.assign(b.div.style, {
-      left: `${d.x * 100}%`, top: `${d.y * 100}%`, width: `${d.largeur * 100}%`, height: `${d.hauteur * 100}%`,
-      background: d.fond, color: d.couleur_texte,
+      left: `${r.x * 100}%`, top: `${r.y * 100}%`, width: `${r.largeur * 100}%`, height: `${r.hauteur * 100}%`,
     });
-    const taille = d.taille_texte * d.hauteur * hauteurCalque;
-    b.texte.textContent = d.texte;
+    const taille = b.donnees.taille_texte * r.hauteur * calque.clientHeight;
     Object.assign(b.texte.style, { fontSize: `${taille}px`, paddingLeft: `${taille * 0.25}px` });
+  }
+
+  function dessiner(b) {
+    const d = b.donnees;
+    Object.assign(b.div.style, { background: d.fond, color: d.couleur_texte });
+    b.texte.textContent = d.texte;
+    b.div.classList.toggle("suivie", !!(d.positions || []).length);
+    placer(b);
   }
 
   // Sur la vidéo doublée (aperçu « nouvelle voix »), les boîtes sont déjà gravées : on montre l'image réelle,
@@ -145,10 +179,13 @@
     calque.classList.toggle("verification", doublee);
     contours.parentElement.hidden = !doublee || !boites.length;
     majImageAffichee(t);
+    imageVue = n;
     for (const b of boites) {
       const visible = (!doublee || contours.checked) && premiere(b.donnees) <= n && n <= derniere(b.donnees);
       b.div.hidden = !visible;
       b.div.classList.toggle("choisie", b === choisie);
+      if (visible) placer(b);
+      majPositions(b);
     }
   }
 
@@ -226,7 +263,13 @@
       <input type="text" class="texte" maxlength="200" placeholder="Texte de remplacement (facultatif, fictif)">
       <label title="Couleur du texte"><input type="color" class="couleur-texte"></label>
       <label title="Taille du texte">A<input type="range" class="taille" min="0.3" max="1" step="0.05"></label>
-      <button type="button" class="supprimer" title="Supprimer la boîte">✕</button></span>`;
+      <button type="button" class="supprimer" title="Supprimer la boîte">✕</button></span>
+      <span class="suivi-ligne">
+      <label title="La boîte suit la donnée quand l'écran défile"><input type="checkbox" class="suivi"> suivre le contenu</label>
+      <span class="positions" hidden><button type="button" class="pos-prec" title="Aller à la position précédente">◀</button>
+      <span class="nb-positions"></span>
+      <button type="button" class="pos-suiv" title="Aller à la position suivante">▶</button>
+      <button type="button" class="pos-suppr" title="Supprimer la position de l'image affichée">✕ position ici</button></span></span>`;
     const q = (s) => li.querySelector(s);
     // Première et dernière image masquées ; après un réglage, la vidéo montre l'image concernée.
     const regler = (debutImage, finImage, voir) => {
@@ -267,8 +310,53 @@
       if (choisie === b) choisir(null);
       majNombre();
     });
+    // Suivi : la première position est prise sur l'image affichée (ou au début de la boîte si elle n'y est
+    // pas) ; ensuite, chaque déplacement de la boîte sur une autre image ajoute une position.
+    q(".suivi").addEventListener("change", (e) => {
+      const coche = e.target.checked;
+      choisir(b);  // remet la case selon les données : on a lu son état avant
+      const ps = d().positions || [];
+      if (coche) {
+        let n = imageA(video.currentTime);
+        if (n < premiere(d()) || n > derniere(d())) n = premiere(d());
+        modifier(b, avecPosition(d(), n, rectA(d(), n)));
+        statut("Suivi activé : sur une autre image, déplacez la boîte sur la donnée ; chaque déplacement "
+          + "ajoute une position, la boîte glisse de l'une à l'autre.");
+      } else {
+        if (ps.length > 1 && !confirm(`Ne plus suivre le contenu ? Les ${ps.length} positions seront effacées `
+          + "(la boîte reste à sa position sur l'image affichée).")) return;
+        modifier(b, { positions: [], ...rectA(d(), imageA(video.currentTime)) });
+      }
+    });
+    const allerPosition = (sens) => {
+      choisir(b);
+      const n = imageA(video.currentTime), images = (d().positions || []).map(imagePosition);
+      const cible = sens < 0 ? images.filter((i) => i < n).pop() : images.find((i) => i > n);
+      if (cible === undefined) statut(sens < 0 ? "Pas de position avant cette image." : "Pas de position après cette image.");
+      else allerImage(cible);
+    };
+    q(".pos-prec").addEventListener("click", () => allerPosition(-1));
+    q(".pos-suiv").addEventListener("click", () => allerPosition(1));
+    q(".pos-suppr").addEventListener("click", () => {
+      choisir(b);
+      const n = imageA(video.currentTime), ps = d().positions || [];
+      const reste = ps.filter((p) => imagePosition(p) !== n);
+      if (reste.length === ps.length) { statut("Aucune position sur cette image.", true); return; }
+      if (!reste.length) { statut("C'est la dernière position : décochez « suivre le contenu ».", true); return; }
+      modifier(b, { positions: reste, ...premierePosition(reste) });
+    });
     li.addEventListener("click", (e) => { if (!e.target.closest("button, input, label")) choisir(b); });
     return li;
+  }
+
+  function majPositions(b) {
+    const q = (s) => b.li.querySelector(s), ps = b.donnees.positions || [];
+    const images = ps.map(imagePosition), i = images.indexOf(imageVue);
+    q(".suivi").checked = ps.length > 0;
+    q(".positions").hidden = !ps.length;
+    q(".nb-positions").textContent = `${ps.length} position${ps.length > 1 ? "s" : ""}`
+      + (i >= 0 ? ` (n° ${i + 1} sur cette image)` : "");
+    b.div.classList.toggle("sur-position", i >= 0);
   }
 
   function majLigne(b) {
@@ -319,26 +407,24 @@
       e.preventDefault(); e.stopPropagation();
       if (choisie !== b) { choisir(b); return; }
       const poignee = e.target.classList.contains("poignee");
-      const depart = proportion(e), avant = { ...b.donnees };
+      // Boîte suivie : on déplace sa position sur l'image affichée (ajoutée si elle n'existe pas).
+      const n = imageVue, depart = proportion(e), avant = rectA(b.donnees, n), r = { ...avant };
       b.div.setPointerCapture(e.pointerId);
       const bouger = (m) => {
         const p = proportion(m), dx = p.x - depart.x, dy = p.y - depart.y;
         if (poignee) {
-          b.donnees.largeur = Math.max(0.005, Math.min(1 - avant.x, avant.largeur + dx));
-          b.donnees.hauteur = Math.max(0.005, Math.min(1 - avant.y, avant.hauteur + dy));
+          r.largeur = Math.max(0.005, Math.min(1 - avant.x, avant.largeur + dx));
+          r.hauteur = Math.max(0.005, Math.min(1 - avant.y, avant.hauteur + dy));
         } else {
-          b.donnees.x = Math.max(0, Math.min(1 - avant.largeur, avant.x + dx));
-          b.donnees.y = Math.max(0, Math.min(1 - avant.hauteur, avant.y + dy));
+          r.x = Math.max(0, Math.min(1 - avant.largeur, avant.x + dx));
+          r.y = Math.max(0, Math.min(1 - avant.hauteur, avant.y + dy));
         }
-        dessiner(b);
+        placer(b, r);
       };
       const finir = () => {
         b.div.removeEventListener("pointermove", bouger);
-        const { x, y, largeur, hauteur } = b.donnees;
-        b.donnees = avant;
-        if (x !== avant.x || y !== avant.y || largeur !== avant.largeur || hauteur !== avant.hauteur) {
-          modifier(b, { x, y, largeur, hauteur });
-        } else dessiner(b);
+        if (["x", "y", "largeur", "hauteur"].every((k) => r[k] === avant[k])) { placer(b); return; }
+        modifier(b, (b.donnees.positions || []).length ? avecPosition(b.donnees, n, r) : r);
       };
       b.div.addEventListener("pointermove", bouger);
       b.div.addEventListener("lostpointercapture", finir, { once: true });

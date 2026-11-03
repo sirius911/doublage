@@ -99,6 +99,19 @@ def _image_filters(subtitles: Path | None, style: str | None, masks: str | None)
     return ",".join(filters) or None
 
 
+# Au-delà, les filtres (boîte suivie image par image) passent par un fichier : la ligne de commande est
+# limitée (32 000 caractères sous Windows, 128 Kio par argument sous Linux). `-/vf` : ffmpeg 7 et plus.
+FILTERS_INLINE_MAX = 20000
+
+
+def _filter_args(filters: str, folder: Path) -> list[str]:
+    if len(filters) <= FILTERS_INLINE_MAX:
+        return ["-vf", filters]
+    script = folder / "filtres-image.txt"
+    script.write_text(filters, encoding="utf-8")
+    return ["-/vf", script.name]
+
+
 def replace_audio(video: Path, audio: Path, output: Path, subtitles: Path | None = None,
                   threads: int = 2, style: str | None = None, masks: str | None = None,
                   cwd: Path | None = None) -> Path:
@@ -111,16 +124,17 @@ def replace_audio(video: Path, audio: Path, output: Path, subtitles: Path | None
     les filtres.
     """
     filters = _image_filters(subtitles, style, masks)
+    cwd = cwd or (subtitles.parent if subtitles else output.parent)
     if filters is None:
         image = ["-c:v", "copy"]
     else:
-        image = ["-vf", filters, "-c:v", "libx264", "-preset", "veryfast",
+        image = [*_filter_args(filters, cwd), "-c:v", "libx264", "-preset", "veryfast",
                  "-crf", "20", "-pix_fmt", "yuv420p", "-threads", str(threads)]
     _run([
         "ffmpeg", "-y", "-v", "error", "-i", str(video.resolve()), "-i", str(audio.resolve()),
         "-map", "0:v:0", "-map", "1:a:0", *image, "-c:a", "aac", "-b:a", "160k",
         "-shortest", str(output.resolve()),
-    ], cwd=cwd or (subtitles.parent if subtitles else None))
+    ], cwd=cwd)
     return output
 
 
@@ -134,7 +148,7 @@ def subtitle_frame(video: Path, at: float, subtitles: Path | None, output: Path,
     """
     filters = _image_filters(subtitles, style, masks)
     _run(["ffmpeg", "-y", "-v", "error", "-ss", f"{at:.3f}", "-i", str(video.resolve()),
-          *(["-vf", filters] if filters else []), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
+          *(_filter_args(filters, output.parent) if filters else []), "-frames:v", "1", "-q:v", "3", str(output.resolve())],
          cwd=output.parent)
     if not output.exists():
         raise MediaError("Aucune image à cet instant de la vidéo")

@@ -247,3 +247,30 @@ def test_boite_a_l_image_pres(tmp_path, rate, fps):
     images = np.frombuffer(brut, np.uint8).reshape(-1, 48, 64).mean(axis=(1, 2))
     masquees = [n for n, m in enumerate(images) if m < 128]
     assert masquees == list(range(59, 121))
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg absent")
+def test_boite_qui_suit_le_contenu(tmp_path, monkeypatch):
+    """Donnée (carré noir) qui défile de 2 pixels par image : la boîte blanche la suit et la couvre sur
+    chaque image de sa période, texte de remplacement compris."""
+    from doublage.masks import Mask, masks_filter
+    video = tmp_path / "defile.mp4"
+    media._run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=white:s=160x48:r=10:d=6",
+                "-f", "lavfi", "-i", "color=c=black:s=8x8:r=10:d=6",
+                "-filter_complex", "[0][1]overlay=x='20*t':y=20:eval=frame", "-pix_fmt", "yuv420p", str(video)])
+    audio = tmp_path / "son.wav"
+    media.write_wav(audio, np.zeros(6 * 16000, dtype=np.float32), 16000)
+    # Positions relevées aux images 10 (x = 20) et 40 (x = 80) ; boîte des images 10 à 39.
+    cle = lambda t, x: {"t": t, "x": x / 160, "y": 20 / 48, "w": 8 / 160, "h": 8 / 48}
+    boite = Mask(1, 1.0, 4.0, 20 / 160, 20 / 48, 8 / 160, 8 / 48, text="X", keys=[cle(1.0, 20), cle(4.0, 80)])
+    monkeypatch.setattr(media, "FILTERS_INLINE_MAX", 100)  # filtres passés par un fichier (longue boîte suivie)
+    sortie = media.replace_audio(video, audio, tmp_path / "masquee.mp4", cwd=tmp_path,
+                                 masks=masks_filter([boite], 160, 48, 10.0, tmp_path))
+    assert (tmp_path / "filtres-image.txt").exists()
+    brut = subprocess.run(["ffmpeg", "-v", "error", "-i", str(sortie), "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                          capture_output=True, check=True).stdout
+    images = np.frombuffer(brut, np.uint8).reshape(-1, 48, 160)
+    sombres = [int((image < 60).sum()) for image in images]
+    assert all(s > 40 for s in sombres[:9]) and all(s > 40 for s in sombres[41:])  # donnée visible hors période
+    # Pendant la période : plus de carré, seulement la lettre X du texte de remplacement (quelques pixels).
+    assert all(s < 30 for s in sombres[10:40]), sombres[10:40]
