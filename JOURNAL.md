@@ -2,6 +2,15 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-03 — Masquage : réglage à l'image près
+- Retour de l'utilisateur : la boîte apparaît un peu trop tôt ou trop tard (réglage « ici » imprécis avec la
+  barre du lecteur ; marge d'export asymétrique, 1 image avant, 2 après).
+- Fait : touches `,` / `.` (image précédente / suivante), n° de l'image affichée, début / fin avec − / + et
+  « ici », enregistrés en images entières ; affichage calé sur `mediaTime` ; marge d'export d'une image de
+  chaque côté, vérifiée avec ffmpeg (test à 30 et 29,97 i/s). ffmpeg installé sur le poste.
+- Fusionné dans `main` et poussé à la demande de l'utilisateur ; mise à jour de la VM par l'utilisateur.
+- Reste en V1 : boîtes en surbrillance pendant la vérification, aide, conservation de la source (Q17).
+
 ## 2026-11-03 — Masquage : début de la V1
 - Fait : format `masques.json` et API (`/projets/{id}/masques`) ; export : boîtes gravées dans l'image
   (drawbox + drawtext, texte lu dans un fichier, sous les sous-titres ; marge d'une image et demie ;
