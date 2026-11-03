@@ -524,3 +524,27 @@ def test_apercu_des_sous_titres(client, monkeypatch):
     client.get(url + "/sous-titres/apercu", params={"t": 999})
     assert appels[-1][0] == 4.5  # instant ramené dans la vidéo
     assert client.get(url + "/sous-titres/apercu", params={"taille": 13}).status_code == 400
+
+
+def test_boites_de_masquage(client):
+    login(client)
+    url = creer_projet(client)
+    assert client.get(url + "/masques").json() == {"masques": []}
+    boite = {"debut": 1.0, "fin": 3.0, "x": 0.1, "y": 0.1, "largeur": 0.2, "hauteur": 0.05,
+             "fond": "#EEEEEE", "texte": " DUPONT Jean "}
+    r = client.post(url + "/masques", json=boite)
+    assert r.status_code == 201
+    creee = r.json()
+    assert creee["id"] == 1 and creee["fond"] == "#eeeeee" and creee["texte"] == "DUPONT Jean"
+    assert client.post(url + "/masques", json={**boite, "debut": 0.5}).json()["id"] == 2
+    assert [m["id"] for m in client.get(url + "/masques").json()["masques"]] == [2, 1]  # par début
+
+    assert client.put(url + "/masques/1", json={**boite, "texte": ""}).json()["texte"] == ""
+    assert client.put(url + "/masques/9", json=boite).status_code == 404
+    assert client.post(url + "/masques", json={**boite, "fin": 0.5}).status_code == 400
+    assert client.post(url + "/masques", json={**boite, "x": 0.9}).status_code == 400
+    assert client.post(url + "/masques", json={**boite, "fond": "rouge"}).status_code == 400
+
+    assert client.delete(url + "/masques/2").status_code == 204
+    assert client.delete(url + "/masques/2").status_code == 404
+    assert [m["id"] for m in client.get(url + "/masques").json()["masques"]] == [1]

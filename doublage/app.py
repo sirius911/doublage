@@ -23,6 +23,7 @@ from .assembly import MANUAL_SPEED_MAX, MANUAL_SPEED_MIN, Fit, fit, speed_factor
 from .auth import SESSION_DURATION, UserStore
 from .config import get_settings
 from .jobs import Job, JobManager, JobState
+from .masks import Mask, MaskError, load_masks, save_masks
 from .pipeline import (burned_subtitles_marker, clip_path, dub_project, dubbed_voice_path, mark_synthesized, reset_voices,
                        synthesize_segment, transcribe_video)
 from .projects import VIDEO_EXTENSIONS, Project, ProjectError, ProjectStore
@@ -95,6 +96,7 @@ Catalog = Annotated[VoiceCatalog, Depends(get_catalog)]
 _synthesis_lock = threading.Lock()
 # Les corrections arrivent en rafale (enregistrement automatique) : une écriture à la fois.
 _transcript_lock = threading.Lock()
+_masks_lock = threading.Lock()  # masques.json
 
 
 class LoginRequired(Exception):
@@ -804,3 +806,70 @@ def segment_voice(user: User, project: CurrentProject, segment_id: int) -> FileR
 def project_video(user: User, project: CurrentProject) -> FileResponse:
     # FileResponse gère les requêtes partielles (Range) : le lecteur peut se déplacer dans la vidéo.
     return FileResponse(project.video, filename=project.video_name)
+
+
+# --- Boîtes de masquage des données patients ---
+
+class MaskData(BaseModel):
+    """Boîte de masquage, telle qu'échangée avec l'éditeur (position en proportion de l'image)."""
+    debut: float = Field(ge=0)
+    fin: float = Field(gt=0)
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    largeur: float = Field(gt=0, le=1)
+    hauteur: float = Field(gt=0, le=1)
+    fond: str = "#ffffff"
+    texte: str = ""
+    couleur_texte: str = "#000000"
+    taille_texte: float = 0.7
+
+    def to_mask(self, mask_id: int) -> Mask:
+        mask = Mask(mask_id, self.debut, self.fin, self.x, self.y, self.largeur, self.hauteur,
+                    self.fond.lower(), self.texte.strip(), self.couleur_texte.lower(), self.taille_texte)
+        try:
+            mask.check()
+        except MaskError as e:
+            raise HTTPException(400, str(e)) from e
+        return mask
+
+
+def mask_fields(mask: Mask) -> dict:
+    return {"id": mask.id, "debut": mask.start, "fin": mask.end, "x": mask.x, "y": mask.y,
+            "largeur": mask.w, "hauteur": mask.h, "fond": mask.background, "texte": mask.text,
+            "couleur_texte": mask.text_color, "taille_texte": mask.text_size}
+
+
+@app.get("/projets/{project_id}/masques")
+def list_masks(user: User, project: CurrentProject) -> dict:
+    with _masks_lock:
+        return {"masques": [mask_fields(m) for m in load_masks(project.folder)]}
+
+
+@app.post("/projets/{project_id}/masques", status_code=201)
+def add_mask(user: User, project: CurrentProject, data: MaskData) -> dict:
+    with _masks_lock:
+        masks = load_masks(project.folder)
+        mask = data.to_mask(max((m.id for m in masks), default=0) + 1)
+        save_masks(project.folder, [*masks, mask])
+    return mask_fields(mask)
+
+
+@app.put("/projets/{project_id}/masques/{mask_id}")
+def update_mask(user: User, project: CurrentProject, mask_id: int, data: MaskData) -> dict:
+    with _masks_lock:
+        masks = load_masks(project.folder)
+        if not any(m.id == mask_id for m in masks):
+            raise HTTPException(404, "Boîte introuvable")
+        mask = data.to_mask(mask_id)
+        save_masks(project.folder, [mask if m.id == mask_id else m for m in masks])
+    return mask_fields(mask)
+
+
+@app.delete("/projets/{project_id}/masques/{mask_id}", status_code=204)
+def delete_mask(user: User, project: CurrentProject, mask_id: int) -> Response:
+    with _masks_lock:
+        masks = load_masks(project.folder)
+        if not any(m.id == mask_id for m in masks):
+            raise HTTPException(404, "Boîte introuvable")
+        save_masks(project.folder, [m for m in masks if m.id != mask_id])
+    return Response(status_code=204)

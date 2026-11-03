@@ -122,7 +122,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 
 ## Phase 7 — Masquage des données patients (voir SPEC, Q16, Q17)
 V1 — boîtes fixes :
-- [ ] Format des masques par projet (`masques.json` : début, fin, rectangle en proportion de l'image, couleur
+- [x] Format des masques par projet (`masques.json` : début, fin, rectangle en proportion de l'image, couleur
       de fond, texte de remplacement, couleur et taille du texte) ; début et fin calés sur les images de la vidéo
 - [ ] Éditeur : dessiner une boîte sur la vidéo en pause, régler début / fin (« depuis ici », « jusqu'ici »),
       couleur par pipette sur l'image, texte ; liste des boîtes ; aperçu sur la vidéo à l'image près
