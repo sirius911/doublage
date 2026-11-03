@@ -2,6 +2,14 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-03 — Masquage : vérification et aide
+- Retours de l'utilisateur : flèches plutôt que `,` / `.`, n° d'image visible → boutons ◀ ▶ et flèches ← →,
+  n° d'image centré sous la vidéo (validé par l'utilisateur, poussé sur `main`).
+- Fait ensuite : contour en pointillés des boîtes sur l'aperçu « nouvelle voix » (vérification de l'image
+  gravée, case « contours des boîtes ») ; section d'aide « Masquer des données patients », lien depuis l'éditeur.
+- Non éprouvé dans un navigateur (syntaxe seule) : à essayer sur la VM.
+- Reste en V1 : conservation de la source, bloquée par Q17 ; Q16 (DPO / RSSI) toujours ouverte.
+
 ## 2026-11-03 — Masquage : réglage à l'image près
 - Retour de l'utilisateur : la boîte apparaît un peu trop tôt ou trop tard (réglage « ici » imprécis avec la
   barre du lecteur ; marge d'export asymétrique, 1 image avant, 2 après).
