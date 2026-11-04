@@ -6,7 +6,8 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 ## Nouvelles
 
 ## Intégrées
-- Design de l'éditeur : voix en haut à droite, « Vidéo doublée » dans un bandeau, masquage séparé sous la vidéo → PLAN Phase 6
+- Sélection d'une boîte de masquage → vidéo au début de la boîte → PLAN Phase 7
+- Bordure entre les boîtes de masquage → PLAN Phase 7
 - Chaque utilisateur dans son propre espace, sans voir les vidéos des autres → PLAN Phase 6 (Q18)
 - Première phrase annoncée à 00:00 alors que la parole commence à 6 s → PLAN Phase 6 (début recalé sur le son)
 - Corrections de textes de la page d'aide → PLAN Phase 6
