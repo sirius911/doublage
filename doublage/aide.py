@@ -60,8 +60,11 @@ du texte que vous relisez. La voix reste calée sur l'image. Tout se passe sur l
 cliquez sur <span class="bouton">Déposer la vidéo</span>. Une barre indique l'avancement de l'envoi.</p>
 <p>Sur la page du projet, cliquez sur <span class="bouton">Lancer la transcription</span>. Comptez de quelques
 secondes à quelques minutes selon la durée de la vidéo ; la page s'actualise toute seule à la fin.</p>
-<p class="note">Les projets sont visibles par tous les utilisateurs. La croix <span class="croix">×</span> à
-droite d'un projet le supprime entièrement (vidéo, texte, voix), après confirmation.</p>
+<p class="note">Un nouveau projet est <b>privé</b> : vous seul le voyez. Le bouton <span class="bouton">Privé</span>
+à droite du projet le <b>partage</b> avec tous les utilisateurs (il devient <span class="bouton">Partagé</span>,
+et un nouveau clic le rend de nouveau privé). Un projet partagé peut être corrigé par vos collègues, mais vous
+seul pouvez changer son partage ou le supprimer. La croix <span class="croix">×</span> le supprime entièrement
+(vidéo, texte, voix), après confirmation.</p>
 </section>
 
 <section id="editeur">

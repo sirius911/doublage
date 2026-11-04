@@ -56,6 +56,30 @@ def cmd_utilisateur(args: argparse.Namespace) -> None:
         print(f"Compte enregistré : {args.nom}")
 
 
+def cmd_projet(args: argparse.Namespace) -> None:
+    """Administration des projets, y compris les projets privés (projets oubliés, compte supprimé)."""
+    from datetime import datetime
+
+    from .projects import ProjectStore
+
+    settings = get_settings()
+    store = ProjectStore(settings.data_dir / "doublage.db", settings.data_dir)
+    if args.action == "liste":
+        for p in store.list():
+            print(f"{p.id:>4}  {datetime.fromtimestamp(p.created):%d/%m/%Y}  {p.owner:<12}  "
+                  f"{'partagé' if p.shared else 'privé  '}  {p.name}")
+        return
+    project = store.get(args.id)
+    if project is None:
+        raise SystemExit(f"Projet inconnu : {args.id}")
+    if args.action == "attribuer":
+        store.set_owner(project.id, args.nom)
+        print(f"« {project.name} » attribué à {args.nom}")
+    else:  # à faire quand aucun traitement n'est en cours sur le projet
+        store.delete(project.id)
+        print(f"Projet supprimé : « {project.name} »")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="doublage", description=__doc__)
     sub = parser.add_subparsers(required=True)
@@ -79,6 +103,15 @@ def main(argv: list[str] | None = None) -> None:
     actions.add_parser("supprimer", help="supprimer un compte").add_argument("nom")
     actions.add_parser("liste", help="lister les comptes")
     p.set_defaults(func=cmd_utilisateur)
+
+    p = sub.add_parser("projet", help="administrer les projets de tous les utilisateurs")
+    actions = p.add_subparsers(dest="action", required=True)
+    actions.add_parser("liste", help="lister tous les projets (privés compris)")
+    a = actions.add_parser("attribuer", help="donner un projet à un autre utilisateur")
+    a.add_argument("id", type=int)
+    a.add_argument("nom")
+    actions.add_parser("supprimer", help="supprimer un projet et ses fichiers").add_argument("id", type=int)
+    p.set_defaults(func=cmd_projet)
 
     args = parser.parse_args(argv)
     args.func(args)

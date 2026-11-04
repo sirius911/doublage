@@ -22,6 +22,12 @@ body { font-family: system-ui, sans-serif; display: flex; flex-direction: column
   padding: 0 .3em; cursor: pointer;
 }
 .projets .supprimer:hover { color: #c62828; }
+/* Partage : « Privé » discret, « Partagé » en couleur. */
+.projets .partage {
+  border: 1px solid #bbb; background: none; color: #777; font-size: .8em; border-radius: 1em;
+  padding: .05em .6em; cursor: pointer;
+}
+.projets .partage.actif { border-color: #1565c0; color: #1565c0; }
 main { width: 100%; box-sizing: border-box; margin: 0 auto; padding: 1rem; }
 
 /* Éditeur : toute la hauteur de l'écran, seules les zones intérieures défilent. */

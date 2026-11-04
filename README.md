@@ -227,3 +227,12 @@ dans `data/doublage.db`) :
 # Sur la VM, dans le conteneur :
 cd /srv/apps/doublage && deploiement/podman-doublage podman exec -it doublage doublage utilisateur ajouter alice
 ```
+
+Chaque projet est privé (visible par son seul créateur) tant qu'il ne l'a pas partagé. Pour les projets
+oubliés ou ceux d'un compte supprimé, l'administrateur passe par la ligne de commande :
+
+```bash
+.venv/bin/doublage projet liste                  # tous les projets, privés compris
+.venv/bin/doublage projet attribuer 12 bob       # donne le projet 12 à bob
+.venv/bin/doublage projet supprimer 12           # efface le projet et ses fichiers (hors traitement en cours)
+```

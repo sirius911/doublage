@@ -41,8 +41,8 @@ def client(store) -> TestClient:
     return TestClient(app)
 
 
-def login(client: TestClient, password: str = "secret"):
-    return client.post("/connexion", data={"nom": "alice", "mot_de_passe": password},
+def login(client: TestClient, password: str = "secret", nom: str = "alice"):
+    return client.post("/connexion", data={"nom": nom, "mot_de_passe": password},
                        follow_redirects=False)
 
 
@@ -139,6 +139,37 @@ def test_suppression_d_un_projet(client, tmp_path):
     assert client.get(url).status_code == 404
     assert "Aucun projet" in client.get("/").text
     assert client.post(url + "/suppression").status_code == 404
+
+
+def test_projets_prives_et_partages(client, store):
+    store.set_user("bob", "secret")
+    login(client)
+    url = creer_projet(client, nom="patient.mp4")
+    accueil = client.get("/").text
+    assert f'action="{url}/partage"' in accueil and ">Privé<" in accueil
+
+    login(client, nom="bob")  # projet privé d'alice : introuvable pour bob, absent de sa liste
+    assert "patient.mp4" not in client.get("/").text
+    assert client.get(url).status_code == 404 and client.get(url + "/video").status_code == 404
+    assert client.post(url + "/partage", data={"partage": "1"}).status_code == 404
+    assert client.post(url + "/suppression").status_code == 404
+
+    login(client)
+    r = client.post(url + "/partage", data={"partage": "1"}, follow_redirects=False)
+    assert r.status_code == 303 and ">Partagé<" in client.get("/").text
+
+    login(client, nom="bob")  # partagé : visible et modifiable, mais ni partage ni suppression
+    accueil = client.get("/").text
+    assert "déposé par alice" in accueil and "partagé avec tous" in accueil
+    assert f'{url}/suppression' not in accueil and f'{url}/partage' not in accueil
+    assert client.get(url).status_code == 200
+    assert client.post(url + "/partage", data={"partage": "0"}).status_code == 403
+    assert client.post(url + "/suppression").status_code == 403
+
+    login(client)  # de nouveau privé
+    client.post(url + "/partage", data={"partage": "0"})
+    login(client, nom="bob")
+    assert client.get(url).status_code == 404
 
 
 def test_suppression_refusee_pendant_un_traitement(client, tmp_path):
@@ -475,8 +506,13 @@ def test_page_des_voix(client, monkeypatch):
     client.post(url + "/phrases/0/voix")
     assert app.dependency_overrides[get_engine]().voices[-1] == voix.ref
     r = client.post(f"/voix/{voix.id}/suppression")
-    assert r.status_code == 409 and "utilisée par" in r.text
+    assert r.status_code == 409 and "utilisée par : zimbra." in r.text
+    app.dependency_overrides[get_store]().set_user("bob", "secret")
+    login(client, nom="bob")  # le nom d'un projet privé d'alice n'est pas révélé
+    r = client.post(f"/voix/{voix.id}/suppression")
+    assert r.status_code == 409 and "utilisée par : 1 projet privé d&#x27;autres utilisateurs." in r.text
 
+    login(client)
     client.post(url + "/voix", data={"voix": "estelle"})
     r = client.post(f"/voix/{voix.id}/suppression", follow_redirects=False)
     assert r.status_code == 303 and app.dependency_overrides[get_catalog]().custom() == []

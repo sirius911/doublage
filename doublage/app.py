@@ -179,17 +179,28 @@ def header(user: str, title: str = "") -> str:
 <form method="post" action="/deconnexion"><button type="submit">Se déconnecter</button></form></header>"""
 
 
+def project_row(p: Project, user: str) -> str:
+    """Ligne de la liste des projets. Partage et suppression : réservés au propriétaire."""
+    date = f"{datetime.fromtimestamp(p.created):%d/%m/%Y à %H:%M}"
+    if p.owner != user:
+        return (f'<li><span><a href="/projets/{p.id}">{escape(p.name)}</a> '
+                f'<small>— {escape(p.video_name)}, déposé par {escape(p.owner)} le {date}, '
+                f'partagé avec tous</small></span></li>')
+    share = (f'<form method="post" action="/projets/{p.id}/partage">'
+             f'<input type="hidden" name="partage" value="{0 if p.shared else 1}">'
+             f'<button type="submit" class="partage{" actif" if p.shared else ""}" title="'
+             f'{"Partagé avec tous les utilisateurs : cliquer pour le rendre privé" if p.shared else "Privé (vous seul le voyez) : cliquer pour le partager avec tous les utilisateurs"}">'
+             f'{"Partagé" if p.shared else "Privé"}</button></form>')
+    return (f'<li><span><a href="/projets/{p.id}">{escape(p.name)}</a> '
+            f'<small>— {escape(p.video_name)}, déposé le {date}</small></span>{share}'
+            f'<form method="post" action="/projets/{p.id}/suppression" data-nom="{escape(p.name)}" '
+            f'onsubmit="return confirm(\'Supprimer définitivement le projet « \' + this.dataset.nom + '
+            f'\' » ?\\nLa vidéo, la transcription corrigée, les voix et la vidéo doublée seront effacées.\')">'
+            f'<button type="submit" class="supprimer" title="Supprimer le projet">×</button></form></li>')
+
+
 def home_page(user: str, projects: ProjectStore, error: str = "") -> str:
-    rows = "".join(
-        f'<li><span><a href="/projets/{p.id}">{escape(p.name)}</a> '
-        f'<small>— {escape(p.video_name)}, déposé par {escape(p.owner)} le '
-        f'{datetime.fromtimestamp(p.created):%d/%m/%Y à %H:%M}</small></span>'
-        f'<form method="post" action="/projets/{p.id}/suppression" data-nom="{escape(p.name)}" '
-        f'onsubmit="return confirm(\'Supprimer définitivement le projet « \' + this.dataset.nom + '
-        f'\' » ?\\nLa vidéo, la transcription corrigée, les voix et la vidéo doublée seront effacées.\')">'
-        f'<button type="submit" class="supprimer" title="Supprimer le projet">×</button></form></li>'
-        for p in projects.list()
-    )
+    rows = "".join(project_row(p, user) for p in projects.list(user))
     message = f'<p style="color: #b00">{escape(error)}</p>' if error else ""
     return page("Doublage", f"""<h2>Nouveau projet</h2>
 {message}
@@ -352,19 +363,26 @@ def voice_sample(user: User, voice: Annotated[Voice, Depends(custom_voice)]) -> 
 @app.post("/voix/{voice_id}/suppression", response_model=None)
 def delete_voice(user: User, voice: Annotated[Voice, Depends(custom_voice)], catalog: Catalog,
                  projects: Projects) -> RedirectResponse | HTMLResponse:
-    used = [p.name for p in projects.list() if p.voice == voice.id]
+    used = [p for p in projects.list() if p.voice == voice.id]
     if used:  # ces projets repasseraient sans prévenir sur la voix par défaut
+        names = [p.name for p in used if p.visible_by(user)]  # pas les noms des projets privés des autres
+        hidden = len(used) - len(names)
+        if hidden:
+            names.append(f"{hidden} projet{'s' if hidden > 1 else ''} privé{'s' if hidden > 1 else ''} "
+                         f"d'autres utilisateurs")
         return HTMLResponse(voices_page(user, catalog, f"« {voice.label} » est utilisée par : "
-                                        f"{', '.join(used)}. Choisissez une autre voix dans ces projets "
+                                        f"{', '.join(names)}. Choisissez une autre voix dans ces projets "
                                         f"avant de la supprimer."), status_code=409)
     with _synthesis_lock:
         catalog.delete(voice.id)
     return RedirectResponse("/voix", status_code=303)
 
 
-def get_project(project_id: int, projects: Projects) -> Project:
+def get_project(project_id: int, projects: Projects, user: User) -> Project:
+    """Projet demandé, s'il est visible par l'utilisateur : sinon « introuvable », pour ne pas révéler
+    l'existence des projets privés des autres."""
     project = projects.get(project_id)
-    if project is None:
+    if project is None or not project.visible_by(user):
         raise HTTPException(404, "Projet introuvable")
     return project
 
@@ -398,10 +416,22 @@ def get_synthesizer(project: CurrentProject, catalog: Catalog,
     return ProjectVoice(engine, catalog.for_project(project.voice).ref)
 
 
+@app.post("/projets/{project_id}/partage")
+def share_project(user: User, project: CurrentProject, projects: Projects,
+                  partage: Annotated[bool, Form()]) -> RedirectResponse:
+    """Partage le projet avec tous les utilisateurs, ou le rend privé (propriétaire seulement)."""
+    if project.owner != user:
+        raise HTTPException(403, "Seul le propriétaire du projet peut changer son partage")
+    projects.set_shared(project.id, partage)
+    return RedirectResponse("/", status_code=303)
+
+
 @app.post("/projets/{project_id}/suppression", response_model=None)
 def delete_project(user: User, project: CurrentProject, projects: Projects,
                    jobs: Jobs) -> RedirectResponse | HTMLResponse:
     """Supprime le projet et tous ses fichiers (la confirmation est demandée par la page)."""
+    if project.owner != user:
+        raise HTTPException(403, "Seul le propriétaire du projet peut le supprimer")
     job = jobs.get(project.id)
     if job is not None and job.active:  # le traitement écrirait dans un dossier effacé
         work = "la transcription" if job.kind == "transcription" else "le doublage"

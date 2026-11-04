@@ -28,7 +28,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
 
 ## Phase 2 — Interface web
 - [x] Connexion par identifiant / mot de passe (comptes créés en ligne de commande, mots de passe chiffrés)
-- [x] Liste des projets + dépôt d'une vidéo (projets visibles par tous les utilisateurs)
+- [x] Liste des projets + dépôt d'une vidéo (projets visibles par tous les utilisateurs, revu en Phase 6 : Q18)
 - [x] Suivi de l'envoi de la vidéo (pourcentage, Mo envoyés, temps restant) — demandé après essai sur la VM
 - [x] Lancement de la transcription avec barre de progression (étape + temps écoulé : Whisper ne donne pas d'avancement)
 - [x] Éditeur : vidéo en fond, texte de la phrase en cours affiché sur l'image au bon timecode
@@ -119,6 +119,10 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       sur la page Voix et dans l'aide (section « Les voix »)
 - [x] Aide, Astuces : pause manquante après une virgule → `[,|.]` ou `[,|...]` (essayés par l'utilisateur :
       les sous-titres gardent la virgule, la voix marque la pause)
+- [x] Espaces par utilisateur (Q18) : projet privé par défaut, bouton « Privé / Partagé » sur l'accueil
+      (propriétaire seul, comme la suppression), projet d'un autre non partagé → 404 ; projets existants
+      privés ; noms des projets privés des autres masqués dans le message « voix utilisée » ;
+      `doublage projet liste | attribuer | supprimer` pour l'administrateur
 
 ## Phase 7 — Masquage des données patients (voir SPEC, Q16, Q17)
 V1 — boîtes fixes :

@@ -12,7 +12,7 @@ from .subtitles import DEFAULT_FONT, DEFAULT_SIZE
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".m4v", ".webm", ".avi"}
 
 
-COLUMNS = "id, name, video_name, owner, created, voice, subtitle_font, subtitle_size"
+COLUMNS = "id, name, video_name, owner, created, voice, subtitle_font, subtitle_size, shared"
 
 
 class ProjectError(ValueError):
@@ -30,6 +30,10 @@ class Project:
     voice: str | None = None  # identifiant dans le catalogue ; None = voix par défaut
     subtitle_font: str | None = None  # sous-titres incrustés ; None = valeurs par défaut
     subtitle_size: int | None = None
+    shared: bool = False  # visible par tous les utilisateurs ; sinon par son seul propriétaire
+
+    def visible_by(self, user: str) -> bool:
+        return self.shared or self.owner == user
 
     @property
     def subtitle_style(self) -> tuple[str, int]:
@@ -70,13 +74,16 @@ class ProjectStore:
             if "subtitle_font" not in columns:  # base créée avant le choix de la police
                 db.execute("ALTER TABLE projects ADD COLUMN subtitle_font TEXT")
                 db.execute("ALTER TABLE projects ADD COLUMN subtitle_size INTEGER")
+            if "shared" not in columns:  # base créée avant les espaces par utilisateur : projets privés
+                db.execute("ALTER TABLE projects ADD COLUMN shared INTEGER NOT NULL DEFAULT 0")
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
 
     def _project(self, row: tuple) -> Project:
-        id_, name, video_name, owner, created, voice, font, size = row
-        return Project(id_, name, video_name, owner, created, self.root / str(id_), voice, font, size)
+        id_, name, video_name, owner, created, voice, font, size, shared = row
+        return Project(id_, name, video_name, owner, created, self.root / str(id_), voice, font, size,
+                       bool(shared))
 
     def set_voice(self, project_id: int, voice: str) -> None:
         with self._connect() as db:
@@ -86,6 +93,14 @@ class ProjectStore:
         with self._connect() as db:
             db.execute("UPDATE projects SET subtitle_font = ?, subtitle_size = ? WHERE id = ?",
                        (font, size, project_id))
+
+    def set_shared(self, project_id: int, shared: bool) -> None:
+        with self._connect() as db:
+            db.execute("UPDATE projects SET shared = ? WHERE id = ?", (int(shared), project_id))
+
+    def set_owner(self, project_id: int, owner: str) -> None:
+        with self._connect() as db:
+            db.execute("UPDATE projects SET owner = ? WHERE id = ?", (owner, project_id))
 
     def create(self, name: str, video_name: str, video: BinaryIO, owner: str) -> Project:
         """Crée le projet et y copie la vidéo (lue par morceaux : les fichiers sont gros)."""
@@ -117,10 +132,12 @@ class ProjectStore:
             row = db.execute(query, (project_id,)).fetchone()
         return self._project(row) if row else None
 
-    def list(self) -> list[Project]:
+    def list(self, user: str | None = None) -> list[Project]:
+        """Tous les projets, ou seulement ceux que `user` peut voir (les siens et les projets partagés)."""
         with self._connect() as db:
             rows = db.execute(f"SELECT {COLUMNS} FROM projects ORDER BY created DESC, id DESC").fetchall()
-        return [self._project(r) for r in rows]
+        projects = [self._project(r) for r in rows]
+        return projects if user is None else [p for p in projects if p.visible_by(user)]
 
     def delete(self, project_id: int) -> None:
         with self._connect() as db:

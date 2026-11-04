@@ -12,6 +12,11 @@ Le traitement est **entièrement interne à l'établissement** : aucune donnée 
 - Accès depuis le réseau interne, via un navigateur.
 - Connexion par identifiant et mot de passe (sécurité simple : le site peut être visible de tout le réseau
   interne, mais seuls les utilisateurs ayant un compte y accèdent).
+- **Espaces par utilisateur** (Q18) : un projet est privé, visible par son seul créateur. Le créateur peut le
+  partager avec tous les utilisateurs, et le rendre de nouveau privé. Partage et suppression sont réservés au
+  créateur ; un projet partagé est modifiable par tous. Les voix du catalogue sont communes à tous.
+  Pas de compte administrateur dans l'interface : l'administrateur liste, réattribue ou supprime les projets
+  (privés compris) en ligne de commande.
 
 ## Parcours utilisateur
 1. **Dépôt** d'un fichier vidéo complet (MP4, MKV, MOV…).
@@ -65,9 +70,10 @@ logiciels, la règle reste de tourner sur l'environnement de test avec des patie
 - **Vérification image par image** de la vidéo avant diffusion (aucune image ne doit laisser voir une donnée).
 - Les vidéos de l'enregistreur de Windows sont à fréquence d'images fixe (30 ou 29,97 i/s, mesuré sur la VM) :
   les débuts et fins de boîtes sont calés sur les images de chaque vidéo, sans conversion au dépôt.
-- La vidéo source reste en clair sur la VM, gérée par les deux utilisateurs : ils suppriment le projet
+- La vidéo source reste en clair sur la VM, gérée par son créateur (Q18) : il supprime le projet
   (vidéo source, audio et fichiers de travail compris) une fois la vidéo doublée exportée. Pas de suppression
-  automatique. Usage validé par le DPO et la DSI (Q16, Q17).
+  automatique ; projets oubliés supprimés par l'administrateur en ligne de commande. Usage validé par le DPO
+  et la DSI (Q16, Q17).
 
 ## Hors périmètre (pour l'instant)
 - Traduction dans une autre langue.
