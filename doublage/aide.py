@@ -233,7 +233,7 @@ décalent le début ou la fin d'une image, et montrent l'image concernée.</li>
 en pause, cliquez dessus puis faites-la glisser, ou tirez le carré jaune en bas à droite.</li>
 </ol>
 <p><span class="bouton">Aperçu exact sur l'image</span> montre l'image telle qu'elle sera gravée, à l'endroit
-où la vidéo est arrêtée.</p>
+où la vidéo est arrêtée. Cliquer sur une boîte de la liste place la vidéo sur sa première image.</p>
 <h3>Quand l'écran défile : suivre le contenu</h3>
 <p>Une boîte est fixe. Si la donnée bouge (défilement d'une liste, fenêtre déplacée), cochez
 <b>suivre le contenu</b> dans la ligne de la boîte : la position sur l'image affichée est enregistrée. Allez

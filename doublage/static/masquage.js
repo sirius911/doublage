@@ -356,7 +356,14 @@
       if (!reste.length) { statut("C'est la dernière position : décochez « suivre le contenu ».", true); return; }
       modifier(b, { positions: reste, ...premierePosition(reste) });
     });
-    li.addEventListener("click", (e) => { if (!e.target.closest("button, input, label")) choisir(b); });
+    // Clic sur la ligne d'une autre boîte : la vidéo se place sur sa première image. Pas de saut si elle
+    // est déjà choisie (on règle peut-être une position au milieu d'un défilement).
+    li.addEventListener("click", (e) => {
+      if (e.target.closest("button, input, label")) return;
+      const autre = choisie !== b;
+      choisir(b);
+      if (autre) allerImage(premiere(d()));
+    });
     return li;
   }
 
