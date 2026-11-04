@@ -2,6 +2,12 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-04 — Masquage : deux retours sur la liste des boîtes
+- Idées de l'utilisateur. Fait : clic sur la ligne d'une autre boîte → vidéo sur sa première image (pas de
+  saut si la boîte est déjà choisie, pour ne pas perdre l'image d'un réglage en cours) ; trait de séparation
+  entre deux boîtes et sous « Nouvelle boîte ». Aide : une phrase.
+- Non vu dans un navigateur (la liste est remplie par masquage.js, qui demande une session) : à regarder sur la VM.
+
 ## 2026-11-04 — Éditeur réorganisé (design)
 - Idée de l'utilisateur ; choix validés : « Vidéo doublée » en **bandeau** (pas un menu, pour garder
   l'avertissement « boîtes de masquage changées » sous les yeux), « Son de la vidéo » reste sous la vidéo.

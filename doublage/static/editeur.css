@@ -221,7 +221,10 @@ html.travail, html.travail * { cursor: progress !important; }
 #aide-masquage { color: #555; }
 #aide-masquage.actif { color: #b65c00; font-weight: bold; }
 #boites { list-style: none; padding: 0; margin: 0; }
-#boites li { padding: .35em .75em; border-bottom: 1px solid #eee; font-size: .85em; cursor: pointer; }
+#boites li { padding: .45em .75em; font-size: .85em; cursor: pointer; }
+/* Séparation nette entre deux boîtes (le cadre fait le tour). */
+#boites { border-top: 1px solid var(--bord); }
+#boites li + li { border-top: 1px solid #cfd4dc; }
 #boites li.choisie { background: #fff3b0; }
 #boites .periode, #boites .reglages { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
 #boites .reglages { margin-top: .2em; }

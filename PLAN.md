@@ -160,7 +160,7 @@ V2 — suivi des défilements (demandé par l'utilisateur : nécessaire pour Lif
       pour un défilement Lifen
 - [x] Cliquer sur la ligne d'une autre boîte place la vidéo sur sa première image (idée de l'utilisateur) ;
       pas de saut quand on reclique sur la boîte déjà choisie (réglage en cours d'un défilement)
-- [ ] Liste des boîtes : séparation plus visible entre deux boîtes (idée de l'utilisateur)
+- [x] Liste des boîtes : séparation plus visible entre deux boîtes (idée de l'utilisateur)
 V3 — en option, si la V2 est trop fastidieuse :
 - [ ] Suivi assisté (recherche du motif image par image), toujours vérifié par l'utilisateur
 
