@@ -45,6 +45,16 @@
 /* Schémas. */
 .schema { margin: 1rem 0; padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: .5rem; }
 .mini-editeur { display: grid; grid-template-columns: 3fr 2fr; gap: .8rem; font-size: .85em; }
+.mini-bandeau, .mini-doublee {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .8rem; padding: .4rem .6rem;
+  background: #f6f7f9; border: 1px solid #e2e5ea; border-radius: .3rem;
+}
+.mini-bandeau { grid-column: 1 / -1; }
+.mini-droite { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; }
+.bouton.principal { background: #2563eb; border-color: #2563eb; color: #fff; }
+.mini-centre { justify-content: center; gap: .4em; }
+.mini-cadre { padding: .3rem .5rem; border: 1px solid #e2e5ea; border-radius: .3rem; background: #fff; }
+.mini-voix { display: flex; align-items: center; padding-bottom: .3rem; margin-bottom: .3rem; border-bottom: 1px solid #e2e5ea; }
 .mini-gauche { display: flex; flex-direction: column; gap: .4rem; }
 .mini-ecran {
   position: relative; aspect-ratio: 16 / 9; border-radius: .2rem;
@@ -69,8 +79,7 @@
 .mini-actions { grid-column: 2; display: flex; align-items: center; gap: .3em; font-size: .9em; }
 .mini-actions small { color: #666; }
 .mini-garder { margin-left: auto; white-space: nowrap; }
-.mini-doublee { display: flex; flex-direction: column; gap: .6rem; font-size: .9em; }
-.mini-generer { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; }
+.mini-doublee { font-size: .9em; }
 
 .legende { list-style: none; padding: 0; }
 .legende li { position: relative; padding-left: 2em; margin: .5rem 0; }

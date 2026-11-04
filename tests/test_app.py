@@ -343,6 +343,9 @@ def test_choix_de_la_voix(client):
     engine = app.dependency_overrides[get_engine]()
     page = client.get(url).text
     assert '<option value="estelle" selected>Estelle</option>' in page and '<option value="alba">Alba</option>' in page
+    # En haut à droite : en tête de la colonne des phrases, au-dessus du titre « Phrases ».
+    assert (page.index('class="colonne-phrases"') < page.index('id="choix-voix"')
+            < page.index("<h2>Phrases") < page.index('id="phrases"'))
 
     client.post(url + "/phrases/0/voix")
     assert engine.voices[-1] == "estelle"  # voix par défaut
@@ -414,7 +417,7 @@ def test_video_doublee(client, monkeypatch):
                         style=None: (
         incrustes.append(subtitles.read_text(encoding="utf-8") if subtitles else None), styles.append(style),
         output.write_bytes(b"video")))
-    assert '<p id="style-sous-titres" class="generer" hidden>' in page
+    assert '<span id="style-sous-titres" hidden>' in page
     assert "<option selected>DejaVu Sans</option>" in page and '<option value="16" selected>normale' in page
     client.post(url + "/doublage", data={"sous_titres": "1", "police": "Liberation Serif", "taille": "20"})
     app.dependency_overrides[get_jobs]().wait(projet_id, timeout=30)
@@ -434,8 +437,8 @@ def test_video_doublee(client, monkeypatch):
 
     # Aperçu dans l'éditeur : choix du son, vidéo servie sans téléchargement forcé.
     assert 'name="son" value="doublee"' in page and "Des corrections ont été faites" not in page
-    # Sur la ligne de la voix, sous la vidéo, pas dans la section « Vidéo doublée ».
-    assert page.index('id="choix-son"') < page.index('id="doublage"')
+    # Réglage du lecteur, sous la vidéo, pas dans le bandeau « Vidéo doublée » (en haut de l'éditeur).
+    assert page.index('id="doublage"') < page.index('id="video"') < page.index('id="choix-son"')
     apercu = client.get(url + "/export?apercu=1")
     assert apercu.status_code == 200 and "content-disposition" not in apercu.headers
     # Une correction après la génération : l'aperçu est signalé comme périmé.
@@ -641,8 +644,8 @@ def test_section_masquage_dans_l_editeur(client, monkeypatch):
     Transcript(5.0, [Segment(0, 0.0, 2.5, "Bonjour.", "Bonjour.")]).save(projet.transcript_path)
     page = client.get(url).text
     assert 'id="calque-masques"' in page and 'id="nouvelle-boite"' in page and "/static/masquage.js" in page
-    # Avant la vidéo doublée : on masque avant de générer.
-    assert page.index('id="masquage"') < page.index('id="doublage"')
+    # Cadre séparé sous la vidéo, avant la liste des phrases.
+    assert page.index('id="video"') < page.index('id="masquage"') < page.index('id="phrases"')
     assert client.get("/static/masquage.js").status_code == 200
 
     # Aperçu exact des boîtes, sans sous-titre.

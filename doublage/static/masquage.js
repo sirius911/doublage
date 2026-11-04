@@ -245,12 +245,13 @@
   // La vidéo doublée déjà générée ne contient pas cette modification : à signaler tout de suite.
   function signalerVideoPerimee() {
     const lien = document.querySelector('#doublage a[href$="/export"]');
-    if (!lien || document.querySelector("#doublage .masquage-perime")) return;
+    const alertes = document.querySelector("#doublage .alertes");
+    if (!lien || !alertes || document.querySelector("#doublage .masquage-perime")) return;
     const p = document.createElement("p");
     p.className = "masquage-perime";
     p.innerHTML = "<strong>Les boîtes de masquage ont changé depuis : cette vidéo ne les contient pas. "
       + "Mettez-la à jour avant de la diffuser.</strong>";
-    lien.closest("p").after(p);
+    alertes.append(p);
   }
 
   // --- Liste des boîtes ---

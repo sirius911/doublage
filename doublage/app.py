@@ -532,6 +532,7 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
     n = len(transcript.segments)
     return f"""<link rel="stylesheet" href="/static/editeur.css">
 <div class="editeur">
+{dubbing_section(project, job)}
 <div class="colonne-video">
 <div class="ecran">
 <video id="video" src="/projets/{project.id}/video" controls preload="metadata"></video>
@@ -539,21 +540,24 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 <div id="sur-image" hidden spellcheck="true"></div>
 <img id="apercu-sous-titres" hidden alt="Aperçu du sous-titre incrusté" title="Cliquez pour fermer l'aperçu">
 </div>
+<div class="lecteur">
 <p class="image-affichee"><button type="button" id="image-precedente" title="Image précédente (flèche gauche)">◀</button>
 <span>Image n° <strong id="image-affichee">–</strong> <span id="temps-image"></span></span>
-<button type="button" id="image-suivante" title="Image suivante (flèche droite)">▶</button>
-<label title="Cacher le texte de la phrase posé sur l'image (pour placer les boîtes)">
+<button type="button" id="image-suivante" title="Image suivante (flèche droite)">▶</button></p>
+<div class="options-lecteur">
+<span class="cases"><label title="Cacher le texte de la phrase posé sur l'image (pour placer les boîtes)">
 <input type="checkbox" id="texte-sur-image" checked> sous-titre sur l'image</label>
 <label class="contours" hidden title="Vérification de la vidéo doublée : contour des boîtes sur l'image gravée">
 <input type="checkbox" id="contours-boites" checked> contours des boîtes</label>
-<small>flèches <kbd>←</kbd> <kbd>→</kbd> du clavier : image par image</small></p>
+<small>flèches <kbd>←</kbd> <kbd>→</kbd> : image par image</small></span>
+{sound_choice(project)}</div>
+</div>
 <div class="sous-video">
-<div class="sous-ecran">{voice_choice(project, catalog)}{sound_choice(project)}</div>
 {masking_section()}
-{dubbing_section(project, job)}
 </div>
 </div>
 <div class="colonne-phrases">
+{voice_choice(project, catalog)}
 <h2>Phrases <small>({n})</small></h2>
 <ol id="phrases">{rows}</ol>
 </div>
@@ -566,8 +570,8 @@ def editor(project: Project, job: Job | None, catalog: VoiceCatalog) -> str:
 
 def masking_section() -> str:
     """Boîtes de masquage des données patients (liste remplie par masquage.js)."""
-    return """<section id="masquage"><h2>Masquage des données <small id="nombre-boites"></small>
-<small><a href="/aide#masquage" target="_blank">aide</a></small></h2>
+    return """<section id="masquage" class="cadre"><h2>Masquage des données patients <small id="nombre-boites"></small>
+<small class="lien-aide"><a href="/aide#masquage" target="_blank">aide</a></small></h2>
 <p class="generer"><button type="button" id="nouvelle-boite">＋ Nouvelle boîte</button>
 <button type="button" id="apercu-masques" hidden>Aperçu exact sur l'image</button>
 <small id="aide-masquage">Vidéo en pause au moment où la donnée apparaît, puis tracez un rectangle sur l'image.</small></p><ol id="boites"></ol></section>"""
@@ -596,10 +600,10 @@ def subtitle_style_choice(project: Project) -> str:
     fonts = "".join(f'<option{" selected" if f == font else ""}>{f}</option>' for f in FONTS)
     sizes = "".join(f'<option value="{s}"{" selected" if s == size else ""}>{label}</option>'
                     for s, label in SIZES.items())
-    return f"""<p id="style-sous-titres" class="generer" hidden>
+    return f"""<span id="style-sous-titres" hidden>
 <label>Police <select name="police">{fonts}</select></label>
 <label>Taille <select name="taille">{sizes}</select></label>
-<button type="button" id="voir-sous-titres">Aperçu sur l'image</button></p>"""
+<button type="button" id="voir-sous-titres">Aperçu sur l'image</button></span>"""
 
 
 def sound_choice(project: Project) -> str:
@@ -615,29 +619,30 @@ def sound_choice(project: Project) -> str:
 
 
 def dubbing_section(project: Project, job: Job | None) -> str:
+    """Bandeau « Vidéo doublée » en haut de l'éditeur, toujours visible : génération, téléchargements et
+    avertissements (dont « boîtes de masquage changées », à ne pas laisser passer avant une diffusion)."""
     if job and job.kind == "doublage" and job.active:
-        # À la fin, seule cette section est rafraîchie : la vidéo et les corrections en cours restent.
-        return f"""<section id="doublage"><h2>Vidéo doublée</h2>
-{job_progress(project, job, "rafraichirDoublage()")}</section>"""
-    parts = ['<section id="doublage"><h2>Vidéo doublée</h2>']
-    if job and job.kind == "doublage" and job.state == JobState.FAILED:
-        parts.append(f'<p style="color: #b00">La génération a échoué : {escape(job.error)}</p>')
+        # À la fin, seul ce bandeau est rafraîchi : la vidéo et les corrections en cours restent.
+        return f"""<section id="doublage" class="bandeau"><div class="ligne"><h2>Vidéo doublée</h2>
+<div class="progression">{job_progress(project, job, "rafraichirDoublage()")}</div></div></section>"""
     exists = project.dubbed_video.exists()
     if exists:
         generated = project.dubbed_video.stat().st_mtime
-    # Le texte du bouton et l'avertissement suivent la case (editeur.js).
+    # Le texte du bouton, le style et l'avertissement suivent la case (editeur.js).
     label = "Mettre à jour la vidéo doublée" if exists else "Générer la vidéo doublée"
-    parts.append(f"""<form method="post" action="/projets/{project.id}/doublage">
-<p class="generer"><button type="submit" data-libelle="{label}">{label}</button>
-<label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés</label></p>
+    parts = ['<section id="doublage" class="bandeau"><div class="ligne"><h2>Vidéo doublée</h2>',
+             f"""<form class="generer" method="post" action="/projets/{project.id}/doublage">
+<button type="submit" class="principal" data-libelle="{label}">{label}</button>
+<label><input type="checkbox" name="sous_titres" value="1"> Sous-titres incrustés</label>
 {subtitle_style_choice(project)}
-<p id="avertissement-sous-titres" hidden><small>L'image entière est alors ré-encodée : comptez en plus environ
-un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</small></p>
-</form>""")
+</form>"""]
+    alerts = []
+    if job and job.kind == "doublage" and job.state == JobState.FAILED:
+        alerts.append(f'<p class="erreur">La génération a échoué : {escape(job.error)}</p>')
     masks = load_masks(project.folder)
     if masks:
-        parts.append(f'<p class="masquage"><small>{len(masks)} boîte(s) de masquage seront gravées dans '
-                     "l'image (ré-encodage : environ un quart de la durée de la vidéo en plus).</small></p>")
+        alerts.append(f'<p class="masquage info">{len(masks)} boîte(s) de masquage seront gravées dans '
+                      "l'image (ré-encodage : environ un quart de la durée de la vidéo en plus).</p>")
     if exists:
         date = datetime.fromtimestamp(generated).strftime("%d/%m/%Y à %H:%M")
         voice_path = dubbed_voice_path(project.dubbed_video)
@@ -647,19 +652,30 @@ un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</s
         marker = masks_marker(project.dubbed_video)
         hidden = int(marker.read_text(encoding="utf-8") or 0) if marker.exists() else 0
         burned += f", {hidden} boîte(s) de masquage" if hidden else ""
-        parts.append(f'<p><a href="/projets/{project.id}/export" download>Télécharger la vidéo doublée</a> '
-                     f'<small>(générée le {date}{voice}{burned})</small><br><small>Aussi : '
-                     f'<a href="/projets/{project.id}/audio" download>voix seule (WAV)</a>, sous-titres '
-                     f'<a href="/projets/{project.id}/sous-titres.srt" download>SRT</a> / '
-                     f'<a href="/projets/{project.id}/sous-titres.vtt" download>VTT</a></small></p>')
+        parts.append(f'<div class="resultat"><a class="telecharger" href="/projets/{project.id}/export" download>'
+                     f'⬇ Télécharger la vidéo doublée</a>'
+                     f'<details class="autres-exports"><summary>Autres exports</summary><ul>'
+                     f'<li><a href="/projets/{project.id}/audio" download>Voix seule (WAV)</a></li>'
+                     f'<li><a href="/projets/{project.id}/sous-titres.srt" download>Sous-titres SRT</a></li>'
+                     f'<li><a href="/projets/{project.id}/sous-titres.vtt" download>Sous-titres VTT</a></li>'
+                     f'</ul></details>'
+                     f'<small class="date">(générée le {date}{voice}{burned})</small></div>')
         if project.transcript_path.stat().st_mtime > generated:
-            parts.append('<p style="color: #b65c00"><small>Des corrections ont été faites depuis : '
-                         "mettez à jour la vidéo doublée pour les entendre.</small></p>")
+            alerts.append('<p class="corrections">Des corrections ont été faites depuis : '
+                          "mettez à jour la vidéo doublée pour les entendre.</p>")
         if masks_path(project.folder).exists() and masks_path(project.folder).stat().st_mtime > generated:
             # Une vidéo sans les dernières boîtes peut laisser voir des données patients.
-            parts.append('<p class="masquage-perime"><strong>Les boîtes de masquage ont changé depuis : '
-                         "cette vidéo ne les contient pas. Mettez-la à jour avant de la diffuser."
-                         "</strong></p>")
+            alerts.append('<p class="masquage-perime"><strong>Les boîtes de masquage ont changé depuis : '
+                          "cette vidéo ne les contient pas. Mettez-la à jour avant de la diffuser."
+                          "</strong></p>")
+    else:
+        parts.append('<div class="resultat"><small class="date">Pas encore générée.</small></div>')
+    parts.append("</div>")  # fin de la ligne principale du bandeau
+    # Sous la ligne principale ; suit la case (editeur.js).
+    parts.append("<p id=\"avertissement-sous-titres\" hidden>L'image entière est alors ré-encodée : comptez en plus "
+                 "environ un quart de la durée de la vidéo (un peu plus d'une minute pour 5 minutes).</p>")
+    # Toujours présent : masquage.js y ajoute l'avertissement dès qu'une boîte change.
+    parts.append(f'<div class="alertes">{"".join(alerts)}</div>')
     parts.append("</section>")
     return "\n".join(parts)
 

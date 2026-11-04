@@ -190,6 +190,13 @@
     });
   }
 
+  // « Autres exports » (bandeau) : la liste se ferme au clic ailleurs ou après un téléchargement.
+  document.addEventListener("click", (e) => {
+    for (const d of document.querySelectorAll(".autres-exports[open]")) {
+      if (!d.contains(e.target) || e.target.closest("a")) d.open = false;
+    }
+  });
+
   // Délégation : la section « Vidéo doublée » est remplacée à la fin de chaque génération.
   document.addEventListener("change", (e) => {
     if (e.target.name === "son") changerSon(e.target.value === "doublee");

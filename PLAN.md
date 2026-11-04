@@ -123,7 +123,7 @@ Légende : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[?]` bloqué (voir
       (propriétaire seul, comme la suppression), projet d'un autre non partagé → 404 ; projets existants
       privés ; noms des projets privés des autres masqués dans le message « voix utilisée » ;
       `doublage projet liste | attribuer | supprimer` pour l'administrateur
-- [ ] Éditeur réorganisé (idée de l'utilisateur, choix validés le 2026-11-04) : « Vidéo doublée » dans un
+- [x] Éditeur réorganisé (idée de l'utilisateur, choix validés le 2026-11-04) : « Vidéo doublée » dans un
       bandeau toujours visible en haut de l'éditeur (bouton, case et style des sous-titres, date, téléchargement
       et autres exports, progression et avertissements — pas dans un menu fermé : l'avertissement « boîtes
       changées » doit rester sous les yeux) ; choix de la voix en haut à droite, au-dessus de « Phrases » ;

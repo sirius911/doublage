@@ -2,6 +2,18 @@
 
 Historique des sessions, la plus récente en haut.
 
+## 2026-11-04 — Éditeur réorganisé (design)
+- Idée de l'utilisateur ; choix validés : « Vidéo doublée » en **bandeau** (pas un menu, pour garder
+  l'avertissement « boîtes de masquage changées » sous les yeux), « Son de la vidéo » reste sous la vidéo.
+- Fait : bandeau en haut de l'éditeur (bouton principal, case et style des sous-titres, « ⬇ Télécharger la
+  vidéo doublée », menu « Autres exports » WAV / SRT / VTT, date ; messages dessous, alerte masquage en
+  rouge encadré) ; voix en tête de la colonne des phrases ; ◀ ▶ centrés, cases du lecteur à gauche et son à
+  droite ; masquage dans un cadre séparé ; variables de couleurs communes. Aide : schéma et textes à jour.
+- Vérifié en local (serveur simulé + captures Edge sans interface) à 1600 et 1280 px : bandeau sur une
+  ligne, téléchargements renvoyés à la ligne à 1280 px avec sous-titres cochés. Vidéo et liste des boîtes
+  non chargées sur les captures (page enregistrée hors connexion) : à essayer sur la VM.
+- Suite : retour de l'utilisateur sur le rendu.
+
 ## 2026-11-04 — Espaces par utilisateur (Q18)
 - Idée de l'utilisateur : chacun dans son espace. Elle contredisait la Phase 2 et Q17, d'où Q18, tranchée :
   projet privé par défaut, partage avec tous réversible, administration en ligne de commande, projets

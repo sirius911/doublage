@@ -69,21 +69,27 @@ seul pouvez changer son partage ou le supprimer. La croix <span class="croix">×
 
 <section id="editeur">
 <h2>Corriger le texte</h2>
-<p>Après la transcription, la page du projet devient l'éditeur : la vidéo à gauche, la liste des phrases à
-droite.</p>
+<p>Après la transcription, la page du projet devient l'éditeur : en haut, le bandeau de la vidéo doublée ;
+dessous, la vidéo à gauche (avec le masquage des données en dessous) et, à droite, la voix et la liste des
+phrases.</p>
 
 <figure class="schema">
 <div class="mini-editeur">
+  <div class="mini-bandeau"><span class="repere r5">5</span><b>Vidéo doublée</b>
+    <span class="bouton principal">Mettre à jour la vidéo doublée</span><small>☐ Sous-titres incrustés</small>
+    <span class="mini-droite"><span class="bouton">⬇ Télécharger</span></span></div>
   <div class="mini-gauche">
     <div class="mini-ecran">
       <span class="repere r1">1</span>
       <div class="mini-texte">Ceci est un tutoriel sur…</div>
     </div>
-    <div class="mini-ligne"><span class="repere r4">4</span>Voix : <span class="mini-select">Estelle ▾</span>
+    <div class="mini-ligne mini-centre"><span class="bouton">◀</span> Image n° 152 <span class="bouton">▶</span></div>
+    <div class="mini-ligne"><small>☑ sous-titre sur l'image</small>
       <span class="mini-son"><span class="repere r6">6</span>Son : ◉ original ○ nouvelle voix</span></div>
-    <div class="mini-ligne"><span class="repere r5">5</span><b>Vidéo doublée</b></div>
+    <div class="mini-cadre"><b>Masquage des données patients</b> <span class="bouton">＋ Nouvelle boîte</span></div>
   </div>
   <div class="mini-phrases">
+    <div class="mini-voix"><span class="repere r4">4</span>Voix : <span class="mini-select">Estelle ▾</span></div>
     <b>Phrases</b>
     <div class="mini-phrase"><span class="tc">00:00</span><span>Bonjour à tous.</span>
       <span class="mini-actions"><span class="bouton">▶ Original</span><span class="bouton">▶ Voix</span>
@@ -110,8 +116,8 @@ liste la suit pendant la lecture.</li>
 d'origine ; <span class="bouton">▶ Voix</span> fait entendre la voix de synthèse (cela peut prendre
 plusieurs secondes la première fois).</li>
 <li><span class="repere">4</span><b>Voix du projet</b> : voir <a href="#voix">Les voix</a>.</li>
-<li><span class="repere">5</span><b>Vidéo doublée</b> : voir <a href="#doublee">plus bas</a>.</li>
-<li><span class="repere">6</span><b>Son de la vidéo</b> (une fois la vidéo doublée générée) : « nouvelle voix »
+<li><span class="repere">5</span><b>Vidéo doublée</b>, dans le bandeau du haut : voir <a href="#doublee">plus bas</a>.</li>
+<li><span class="repere">6</span><b>Son de la vidéo</b>, sous la vidéo à droite (une fois la vidéo doublée générée) : « nouvelle voix »
 fait jouer la vidéo doublée dans l'éditeur, avec le texte et la liste toujours synchronisés ; « original »
 revient au son d'origine.</li>
 </ol>
@@ -150,14 +156,16 @@ l'autre rend la voix plus naturelle. La vitesse choisie s'affiche après la past
 <section id="doublee">
 <h2>Générer et télécharger la vidéo doublée</h2>
 <figure class="schema">
-<div class="mini-doublee">
-  <div class="mini-generer"><span class="bouton">Mettre à jour la vidéo doublée</span>
-  <label><input type="checkbox" disabled> Sous-titres incrustés</label></div>
-  <div><span class="lien">Télécharger la vidéo doublée</span> <small>(générée le 28/10/2026 à 10:15 avec la voix Estelle)</small><br>
-  <small>Aussi : <span class="lien">voix seule (WAV)</span>, sous-titres <span class="lien">SRT</span> /
-  <span class="lien">VTT</span></small></div>
+<div class="mini-doublee"><b>Vidéo doublée</b>
+  <span class="bouton principal">Mettre à jour la vidéo doublée</span>
+  <label><input type="checkbox" disabled> Sous-titres incrustés</label>
+  <span class="mini-droite"><span class="bouton">⬇ Télécharger la vidéo doublée</span>
+  <span class="bouton">Autres exports ▾</span>
+  <small>(générée le 28/10/2026 à 10:15 avec la voix Estelle)</small></span>
 </div>
 </figure>
+<p>Tout se fait dans le <b>bandeau en haut de l'éditeur</b>, toujours visible : la progression de la
+génération et les messages (corrections à prendre en compte, boîtes de masquage changées) s'y affichent.</p>
 <ul>
 <li><span class="bouton">Générer la vidéo doublée</span> génère le fichier vidéo avec la voix sélectionnée.
 Les voix déjà générées ne sont pas refaites : seules les phrases nouvelles ou corrigées le sont.</li>
@@ -166,14 +174,14 @@ de la vidéo). Choisissez la <b>police</b> et la <b>taille</b> ; <span class="bo
 montre le résultat à l'endroit où la vidéo est arrêtée.</li>
 <li>Après une correction, un message orange le signale : cliquez sur <span class="bouton">Mettre à jour la
 vidéo doublée</span> pour en tenir compte.</li>
-<li>Également disponibles : la <b>voix seule</b> (fichier WAV) et les <b>sous-titres</b> (SRT ou VTT, pour les
+<li><span class="bouton">Autres exports ▾</span> : la <b>voix seule</b> (fichier WAV) et les <b>sous-titres</b> (SRT ou VTT, pour les
 lecteurs vidéo et les plateformes de diffusion).</li>
 </ul>
 </section>
 
 <section id="voix">
 <h2>Les voix</h2>
-<p><b>Choisir la voix d'un projet</b> : liste « Voix » sous la vidéo de l'éditeur. Changer de voix efface les
+<p><b>Choisir la voix d'un projet</b> : liste « Voix » en haut à droite de l'éditeur, au-dessus des phrases. Changer de voix efface les
 voix déjà générées pour ce projet (le texte corrigé est conservé) ; une confirmation est demandée.</p>
 <p><b>Ajouter une voix</b> : menu « Voix » en haut de la page. Il faut un enregistrement de
 {SAMPLE_MIN_SECONDS} à {SAMPLE_MAX_SECONDS} secondes d'une seule personne, sans musique ni bruit de fond

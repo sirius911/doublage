@@ -1,4 +1,10 @@
 /* Mise en page commune : barre de titre d'une ligne, contenu centré. */
+:root {
+  --bord: #e2e5ea;          /* contour des cadres */
+  --fond-titre: #f6f7f9;    /* titre d'un cadre, bandeau */
+  --accent: #2563eb;        /* action principale, liens-boutons */
+  --accent-fonce: #1d4ed8;
+}
 html, body { margin: 0; }
 body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
 .barre {

@@ -76,25 +76,100 @@
 #phrases li[data-vide] .garder, #phrases li[data-vide] .vitesse-reglee, #phrases li[data-vide] .reglage { display: none; }
 #phrases li[data-vide] .texte:empty::before { content: "(phrase effacée : ni voix ni sous-titre)"; color: #999; font-style: italic; }
 
-/* Deux colonnes à la hauteur de l'écran : la vidéo reste en haut à gauche, l'aide et la vidéo
-   doublée défilent dessous ; la liste des phrases défile à droite sous son titre. */
+/* Éditeur : bandeau « Vidéo doublée » en haut, puis deux colonnes à la hauteur de l'écran. La vidéo et ses
+   commandes restent en haut à gauche, le masquage défile dessous ; à droite, la voix du projet puis la
+   liste des phrases, qui défile sous son titre. */
 .editeur {
   flex: 1; min-height: 0; display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.25rem;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto minmax(0, 1fr);
+  gap: .75rem 1.25rem;
 }
 .colonne-video, .colonne-phrases { display: flex; flex-direction: column; min-height: 0; }
 .sous-video, #phrases { flex: 1; min-height: 0; overflow-y: auto; }
-.sous-video > :first-child { margin-top: .5rem; }
-/* Ligne sous la vidéo : voix du projet à gauche, son du lecteur (original / doublé) à droite. */
-.sous-ecran {
-  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem 1rem;
-  margin-bottom: .3rem;
+.sous-video > :first-child { margin-top: .4rem; }
+
+/* Cadre : contour léger, titre sur fond gris (masquage, phrases). */
+.cadre, .colonne-phrases { border: 1px solid var(--bord); border-radius: .4rem; background: #fff; }
+.cadre > h2, .colonne-phrases > h2 {
+  display: flex; align-items: baseline; gap: .5rem; margin: 0; padding: .45rem .75rem;
+  font-size: 1rem; background: var(--fond-titre); border-bottom: 1px solid var(--bord);
 }
-#choix-voix, #choix-son { margin: 0; }
-.colonne-phrases h2 { margin: 0 0 .3rem; font-size: 1.1rem; flex: none; }
-.colonne-phrases { border: 1px solid #ddd; border-radius: .3rem; padding: .5rem 0 0 .5rem; }
-#doublage h2 { font-size: 1.1rem; }
-.generer { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; }
+.cadre > h2 small, .colonne-phrases > h2 small { font-weight: normal; color: #666; }
+.cadre > h2 .lien-aide { margin-left: auto; }
+.colonne-phrases > h2 { flex: none; border-radius: 0; }
+#phrases { padding: 0 0 0 .4rem; }
+
+/* Voix du projet : en haut de la colonne des phrases. */
+#choix-voix {
+  flex: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .8rem; margin: 0;
+  padding: .5rem .75rem; border-bottom: 1px solid var(--bord); border-radius: .4rem .4rem 0 0;
+}
+#choix-voix label { font-weight: 600; }
+#choix-voix select { font-weight: normal; }
+
+/* Bouton principal (génération de la vidéo doublée). */
+button.principal {
+  padding: .35em 1em; border: 1px solid var(--accent); border-radius: .3em;
+  background: var(--accent); color: #fff; font: 600 .9rem/1.4 system-ui, sans-serif; cursor: pointer;
+}
+button.principal:hover { background: var(--accent-fonce); border-color: var(--accent-fonce); }
+
+/* Bandeau « Vidéo doublée » : génération à gauche, téléchargements à droite, avertissements dessous. */
+.bandeau {
+  grid-column: 1 / -1; display: flex; flex-direction: column; gap: .35rem;
+  padding: .5rem .9rem; border: 1px solid var(--bord); border-radius: .4rem; background: var(--fond-titre);
+}
+.bandeau .ligne { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.25rem; }
+.bandeau h2 { margin: 0; font-size: 1rem; white-space: nowrap; }
+.bandeau p { margin: 0; }
+.generer { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1rem; margin: 0; }
+#style-sous-titres { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem .8rem; }
+#style-sous-titres[hidden] { display: none; }
+#avertissement-sous-titres { color: #555; font-size: .85rem; }
+#avertissement-sous-titres[hidden] { display: none; }
+.bandeau .resultat { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .8rem; }
+.bandeau .date { color: #555; font-size: .85rem; }
+a.telecharger {
+  padding: .35em 1em; border: 1px solid var(--accent); border-radius: .3em; background: #fff;
+  color: var(--accent); font: 600 .9rem/1.4 system-ui, sans-serif; text-decoration: none; white-space: nowrap;
+}
+a.telecharger:hover { background: #eef3fe; }
+/* « Autres exports » : petite liste déroulante (voix seule, sous-titres). */
+.autres-exports { position: relative; }
+.autres-exports summary {
+  list-style: none; cursor: pointer; padding: .35em .8em; border: 1px solid #c8ccd3; border-radius: .3em;
+  background: #fff; font: .9rem/1.4 system-ui, sans-serif; white-space: nowrap;
+}
+.autres-exports summary::-webkit-details-marker { display: none; }
+.autres-exports summary::after { content: " ▾"; color: #666; }
+.autres-exports ul {
+  position: absolute; right: 0; top: calc(100% + .25rem); z-index: 20; margin: 0; padding: .3rem 0;
+  list-style: none; min-width: 12rem; background: #fff; border: 1px solid var(--bord); border-radius: .3rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+.autres-exports li a { display: block; padding: .3em .9em; color: inherit; text-decoration: none; }
+.autres-exports li a:hover { background: var(--fond-titre); }
+.bandeau .alertes { display: flex; flex-direction: column; gap: .25rem; font-size: .9em; }
+.bandeau .alertes:empty { display: none; }
+.alertes .info { color: #555; }
+.alertes .corrections { color: #b65c00; }
+.alertes .erreur { color: #b00; }
+.alertes .masquage-perime {
+  padding: .35em .7em; border-left: 4px solid #c62828; border-radius: .2rem; background: #fdecea;
+}
+.bandeau .progression { flex: 1; min-width: 16rem; }
+.bandeau .progression progress { width: 100%; }
+
+/* Sous la vidéo : ◀ n° d'image ▶ au centre, puis les cases à gauche et le son du lecteur à droite. */
+.lecteur { flex: none; }
+.options-lecteur {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem 1rem;
+  font-size: .9em; color: #444;
+}
+.options-lecteur .cases { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; }
+.options-lecteur small { color: #666; }
+.options-lecteur .contours[hidden] { display: none; }
+#choix-son { margin: 0; }
 
 /* Écran étroit : une seule colonne, la page défile, la vidéo reste en haut. */
 @media (max-width: 900px) {
@@ -104,6 +179,8 @@
   .ecran { position: sticky; top: 0; z-index: 1; }
   .sous-video, #phrases { overflow: visible; }
   .colonne-phrases { margin-top: 1rem; }
+  .bandeau { margin-bottom: .75rem; }
+  .bandeau .resultat { margin-left: 0; }
 }
 /* Voix en cours de génération : curseur d'attente sur toute la page. */
 html.travail, html.travail * { cursor: progress !important; }
@@ -138,13 +215,13 @@ html.travail, html.travail * { cursor: progress !important; }
 }
 #calque-masques.verification .masque > * { visibility: hidden; }
 #calque-masques.verification .masque::after { display: none; }
-.image-affichee .contours[hidden] { display: none; }
 #calque-masques .trace-en-cours { position: absolute; border: 2px dashed #ffd54a; background: rgba(255, 213, 74, .2); }
 
-#masquage h2 { font-size: 1.1rem; }
+#masquage .generer { padding: .5rem .75rem; }
+#aide-masquage { color: #555; }
 #aide-masquage.actif { color: #b65c00; font-weight: bold; }
 #boites { list-style: none; padding: 0; margin: 0; }
-#boites li { padding: .3em .4em; border-bottom: 1px solid #eee; font-size: .85em; cursor: pointer; }
+#boites li { padding: .35em .75em; border-bottom: 1px solid #eee; font-size: .85em; cursor: pointer; }
 #boites li.choisie { background: #fff3b0; }
 #boites .periode, #boites .reglages { display: flex; flex-wrap: wrap; align-items: center; gap: .3em; }
 #boites .reglages { margin-top: .2em; }
@@ -153,14 +230,13 @@ html.travail, html.travail * { cursor: progress !important; }
 #boites .aller-debut, #boites .aller-fin { font: .95em monospace; }
 #boites .moins-debut, #boites .moins-fin, #boites .plus-debut, #boites .plus-fin { padding: 0 .4em; }
 .image-affichee { margin: .3rem 0; display: flex; align-items: center; justify-content: center; gap: .6em; flex-wrap: wrap; }
-.image-affichee small { flex-basis: 100%; text-align: center; }
 .image-affichee button { padding: .1em .8em; }
 .image-affichee #image-affichee { font: 1.15em monospace; min-width: 4ch; display: inline-block; }
 .image-affichee #temps-image { font-family: monospace; color: #555; }
-.image-affichee small { color: #555; }
 #boites button { font-size: inherit; padding: 0 .5em; }
 #boites .texte { flex: 1; min-width: 10em; }
 #boites input[type="color"] { width: 2em; height: 1.4em; padding: 0; vertical-align: middle; }
 #boites input[type="range"] { width: 5em; vertical-align: middle; }
 #boites .supprimer { margin-left: auto; color: #b00; }
 .masquage-perime { color: #b00; }
+#boites:empty { display: none; }
