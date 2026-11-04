@@ -4,7 +4,19 @@ Questions qui demandent une réponse de votre part. Répondez directement sous c
 Tant qu'une question bloque une tâche, Claude avance sur les autres.
 
 ## Ouvertes
-(aucune)
+- Q18 — Espaces par utilisateur (idée du 2026-11-04 : « ne voient pas forcément les vidéos des autres »).
+  Contredit la Phase 1 (projets visibles par tous) et Q17 (vidéos gérées par les deux utilisateurs).
+  Chaque projet enregistre déjà son créateur, la mise en place est simple ; reste à trancher :
+  a) Par défaut, un projet est-il privé (visible par son seul créateur) ? Proposition : oui.
+  b) « Pas forcément » : faut-il pouvoir partager un projet avec un collègue, ou le rendre visible par
+     tous ? Proposition : non pour commencer (2-3 utilisateurs), à ajouter si le besoin apparaît.
+  c) Un compte administrateur qui voit tout (pour supprimer les projets oubliés, cf. Q17) ? Proposition :
+     non dans l'interface ; l'administrateur passe par la ligne de commande (lister / réattribuer / supprimer).
+  d) Projets existants : à qui les attribuer ? Proposition : à leur créateur enregistré, sans rien changer.
+  e) Les voix ajoutées au catalogue restent-elles communes à tous ? Proposition : oui (ce ne sont pas des
+     données patients, et une voix partagée évite les doublons).
+  Accès refusé à un projet d'un autre utilisateur : réponse « introuvable » (404), pour ne pas révéler
+  qu'il existe.
 
 ## Résolues
 - Q17 : vidéos conservées et gérées par les deux utilisateurs, supprimées manuellement (suppression du

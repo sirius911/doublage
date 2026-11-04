@@ -4,7 +4,8 @@ Ajoutez ici vos idées, remarques ou demandes, une par ligne, sans vous soucier 
 À chaque session, Claude les lit, les intègre au PLAN.md, puis les déplace dans la section « Intégrées ».
 
 ## Nouvelles
--
+- il faut que les utilisateurs rentres dans leur propre espaces et ne voient pas forcément les vidéo des autres utilisateurs
+  → en attente de Q18 (contredit la Phase 1 et Q17)
 
 ## Intégrées
 - Première phrase annoncée à 00:00 alors que la parole commence à 6 s → PLAN Phase 6 (début recalé sur le son)
