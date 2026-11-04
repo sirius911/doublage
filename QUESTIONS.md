@@ -10,7 +10,7 @@ Tant qu'une question bloque une tâche, Claude avance sur les autres.
 - Q18 : espaces par utilisateur. Projet privé par défaut ; le créateur peut le partager avec tous (et le
   rendre de nouveau privé). Pas de compte administrateur dans l'interface pour commencer : ligne de commande.
   Projets existants : à leur créateur, privés. Voix communes. Projet d'un autre non partagé : 404.
-  Choix de Claude, à contester : partage et suppression réservés au créateur ; projet partagé modifiable par tous.
+  Partage et suppression réservés au créateur ; projet partagé modifiable par tous (validé le 2026-11-04).
 - Q17 : vidéos conservées et gérées par les deux utilisateurs, supprimées manuellement (suppression du
   projet) une fois la vidéo doublée exportée ; pas de suppression automatique.
 - Q16 : usage du masquage validé par le DPO et la DSI.

@@ -10,7 +10,7 @@ Historique des sessions, la plus récente en haut.
   projet passent par là), bouton « Privé / Partagé » sur l'accueil, suppression et partage réservés au
   créateur (403 pour les autres sur un projet partagé), message « voix utilisée » sans les noms des projets
   privés des autres, `doublage projet liste | attribuer | supprimer`. Aide et README à jour.
-- Interprétation à confirmer : « Pour commencer Oui » (c) lu comme « ligne de commande, pas d'admin dans
+- Validé par l'utilisateur : « Pour commencer Oui » (c) = « ligne de commande, pas d'admin dans
   l'interface ». Choix de Claude : projet partagé modifiable par tous, mais seul le créateur le supprime.
 - Attention au déploiement : après la mise à jour, **tous les projets existants deviennent privés** ; chacun
   doit repartager les siens si besoin. `doublage projet supprimer` ne vérifie pas les traitements en cours.
